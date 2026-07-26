@@ -1,90 +1,252 @@
-# Running the viewer locally
+# Getting a real study on screen
 
-How to get a real CT or CBCT study on screen in the CloudFilm workspace, using
-Orthanc and OHIF on your own machine.
+Five steps, each independently verifiable. **Do not move to the next step until
+the current one produces the evidence shown.** A later check cannot mean
+anything while an earlier one is broken.
 
-Local development only. Nothing here touches a hospital system, and the
-production stack is unchanged by it.
+```
+Step 1  Orthanc is running
+Step 2  Orthanc contains studies
+Step 3  OHIF is served and can reach DICOMweb
+Step 4  The portal iframe loads OHIF
+Step 5  Open Study opens the correct Study Instance UID
+```
+
+Most of this is automated:
+
+```bash
+pnpm verify:imaging            # all steps, stops at the first failure
+pnpm verify:imaging --step 2   # one step
+```
+
+The verifier prints the evidence it used — status codes, study counts, UIDs — so
+its output is proof rather than a summary. Steps 4 and 5 finish with a visual
+check that no command can make for you.
+
+> **Nothing here is assumed to work.** The container image tags, config mount
+> paths and Orthanc environment mapping were written from documentation, not
+> from a running system. Each step below names the specific thing it is testing
+> and what to do when that assumption turns out to be wrong.
 
 ---
 
-## Why a seeding step exists
+## Step 1 — Orthanc is running
 
-The portal opens a study by handing OHIF a **Study Instance UID**. Those UIDs are
-minted by whatever produced the DICOM, so the built-in fixtures cannot guess
-them — their UIDs are synthetic and no viewer can resolve them.
-
-`pnpm seed:orthanc` closes that gap. It uploads DICOM to Orthanc, reads back
-what Orthanc actually stored, and writes the real UIDs into
-`packages/shared/mock/seeded-studies.json`. The mock layer prefers that file
-over its built-in fixtures, so the study list becomes a list of studies the
-viewer can genuinely open.
-
-```
-services/orthanc/seed/*.dcm
-        │  pnpm seed:orthanc
-        ▼
-     Orthanc  ──read back──►  packages/shared/mock/seeded-studies.json
-        ▲                              │
-        │ /dicom-web                   │ real Study Instance UIDs
-   OHIF nginx  ◄── iframe ──  CloudFilm workspace
-```
-
----
-
-## Steps
-
-### 1. Provide a study
-
-Drop DICOM files anywhere under:
-
-```
-services/orthanc/seed/
-```
-
-A whole directory tree is fine. The contents are git-ignored — sample studies
-are patient-shaped data and large, so they are never committed.
-
-Public CT and CBCT sample studies are published by the Orthanc project, the OHIF
-project, and The Cancer Imaging Archive. Alternatively point the script at a zip:
+**Run**
 
 ```bash
-CLOUDFILM_SAMPLE_DICOM_URL=https://example.org/sample.zip pnpm seed:orthanc
-```
-
-### 2. Start the stack
-
-The **development overlay is required**. It publishes Orthanc on 8042 so the
-seed script can reach it, and turns Orthanc's authentication off so the viewer's
-proxy can read DICOMweb without a credential.
-
-```bash
-./scripts/generate-secrets.sh          # first run only
-docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
+./scripts/generate-secrets.sh    # first run only
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 docker compose ps
+curl -i http://localhost:8042/system
 ```
 
-### 3. Seed
+The dev overlay is required: it publishes port 8042 and disables Orthanc's
+authentication so the viewer proxy can read DICOMweb.
+
+**Expected**
+
+`docker compose ps` lists `orthanc` as running, and:
+
+```
+HTTP/1.1 200 OK
+{"ApiVersion":...,"DatabaseVersion":...,"Name":"CloudFilm Orthanc","Version":"1.12.x"}
+```
+
+**Return this evidence**
+
+```bash
+docker compose ps
+curl -i http://localhost:8042/system
+docker compose logs --tail 40 orthanc
+```
+
+**Diagnosing failure**
+
+| Symptom | Cause | Fix |
+| --- | --- | --- |
+| `manifest unknown` / `pull access denied` on `up` | `ORTHANC_IMAGE` tag does not exist. This is a guess in `.env.example`. | `docker search orthancteam/orthanc`, pick a real tag, set `ORTHANC_IMAGE` in `.env`. |
+| Container exits immediately | Orthanc could not parse its configuration. | `docker compose logs orthanc`. Both `orthanc.json` and `zz-dev.json` are mounted; the log names the offending file. |
+| `curl: connection refused` | Port 8042 is not published — the dev overlay was not applied. | Restart with **both** `-f` files. |
+| Container restarts in a loop | Usually the PostgreSQL plugin cannot reach the database. | `docker compose logs orthanc \| grep -i postgres`; confirm `postgres` is healthy. |
+| `orthanc` never becomes healthy | Its health check shells out to `curl`, which the image may not carry. | Not blocking: the dev overlay starts `ohif` and `retrieve` on `service_started`. Report the log and I will replace the check. |
+
+---
+
+## Step 2 — Orthanc contains studies
+
+Orthanc starts empty. Nothing can be displayed until DICOM is imported.
+
+**Run**
+
+```bash
+# put one or more .dcm files anywhere under services/orthanc/seed/ first
+pnpm seed:orthanc
+pnpm verify:imaging --step 2
+```
+
+**Expected**
+
+```
+  PASS  GET http://localhost:8042/studies?expand -> 200, 1 study(ies)
+        1.3.6.1.4.1.14519...  20240318  LIDC-0001  CHEST CT W CONTRAST
+```
+
+**Return this evidence**
 
 ```bash
 pnpm seed:orthanc
+curl -s http://localhost:8042/studies | head
+pnpm verify:imaging --step 2
 ```
 
-It prints the Medical Record Numbers it loaded.
+**Diagnosing failure**
 
-### 4. Restart the portal and open a study
-
-```bash
-docker compose restart portal          # or restart `pnpm dev`
-```
-
-Search the MRN the script printed, then press **Open Study**.
-
-Expected: the workspace header names the patient, the navigator lists the
-studies, the status bar reads **Viewer Online**, and OHIF renders the series.
-Pan, zoom and window/level are OHIF's own tools and work as soon as pixels load.
+| Symptom | Cause | Fix |
+| --- | --- | --- |
+| `0 studies` after seeding | Orthanc rejected the uploads. | `curl -i -X POST http://localhost:8042/instances --data-binary @one-file.dcm` — the body says why. |
+| `accepted 0, rejected N` | The files are not DICOM instances (a DICOMDIR, JPEGs, or a zip). | Upload individual `.dcm` files. |
+| `401` from `/studies` | Authentication is on, so the dev overlay is not applied. | Restart with both compose files. |
+| Script cannot reach Orthanc | Port 8042 not published. | Same as above. |
 
 ---
+
+## Step 3 — OHIF is served and can reach DICOMweb
+
+This is the step most likely to fail, because it tests three unverified
+assumptions at once: that the image serves from `/usr/share/nginx/html`, that it
+reads nginx config from `/etc/nginx/conf.d/default.conf`, and that Orthanc's
+DICOMweb plugin is loaded.
+
+**Run**
+
+```bash
+pnpm verify:imaging --step 3
+curl -s -o /dev/null -w '%{http_code}\n' http://localhost:8081/
+curl -s http://localhost:8081/dicom-web/studies | head -c 400
+```
+
+**Expected**
+
+```
+  PASS  GET http://localhost:8081/ -> 200, NNNNN bytes
+  PASS  GET http://localhost:8081/app-config.js -> 200, CloudFilm data source present
+  PASS  GET http://localhost:8081/dicom-web/studies -> 200, 1 study(ies) via QIDO-RS
+        0020000D = 1.3.6.1.4.1.14519...
+```
+
+The `0020000D` value must equal a Study Instance UID from Step 2.
+
+**Return this evidence**
+
+```bash
+pnpm verify:imaging --step 3
+docker compose logs --tail 40 ohif
+docker compose exec ohif ls -l /usr/share/nginx/html/app-config.js
+docker compose exec ohif cat /etc/nginx/conf.d/default.conf | head -20
+```
+
+**Diagnosing failure**
+
+| Symptom | Cause | Fix |
+| --- | --- | --- |
+| `/` refused, container exited | nginx rejected the mounted config, or the mount path is wrong for this image. | `docker compose logs ohif`. If the path is wrong, correct the `ohif` volume in `docker-compose.yml`. |
+| `/app-config.js -> 404` | The image serves from a different document root. | `docker compose exec ohif sh -c 'ls /usr/share/nginx/html'`. Adjust the mount to the real root. |
+| `/dicom-web/studies -> 404` | The proxy location is not active, or Orthanc's DICOMweb plugin is not loaded. | `curl -i http://localhost:8042/dicom-web/studies` — if that 404s too, the plugin is the problem: `docker compose logs orthanc \| grep -i dicomweb`. |
+| `/dicom-web/studies -> 401` | Orthanc still wants credentials. | The dev overlay is not applied, or `zz-dev.json` did not load. `docker compose exec orthanc ls /etc/orthanc`. |
+| `/dicom-web/studies -> 502` | nginx cannot resolve `orthanc`. | Both containers must share the `internal` network. `docker compose exec ohif getent hosts orthanc`. |
+| 200 but `0 studies` | DICOMweb works, Orthanc is empty. | Return to Step 2. |
+
+---
+
+## Step 4 — The portal iframe loads OHIF
+
+No command can confirm an iframe painted. This step is visual.
+
+**Run**
+
+```bash
+pnpm verify:imaging --step 4
+```
+
+Then open <http://localhost:3000/> in a browser, search the record number
+Step 2 printed, and press **Open Study**.
+
+**Expected**
+
+- The status bar bottom-left reads **Viewer Online**.
+- The reading area shows OHIF, not the "Viewer Offline" panel.
+- The browser console shows no `ERR_CONNECTION_REFUSED` for port 8081.
+
+**Return this evidence**
+
+- A screenshot of the workspace.
+- The browser devtools **Console** tab, and the **Network** tab filtered to
+  `dicom-web`.
+
+**Diagnosing failure**
+
+| Symptom | Cause | Fix |
+| --- | --- | --- |
+| Status bar stays **Viewer Offline** | The browser cannot reach `CLOUDFILM_VIEWER_URL`. The portal probes it before mounting the iframe, which is why you get this panel and never a browser error page. | Confirm <http://localhost:8081> opens directly. Press **Check again** — no reload needed. |
+| **No imaging data for this study** | Correct behaviour: the study is a placeholder. | Step 2 and Step 5. |
+| Iframe is blank white | OHIF loaded but crashed on start-up. | Browser console inside the frame. Usually `app-config.js` is malformed. |
+| Iframe refuses to display | The viewer origin is sending a framing restriction. | `curl -I http://localhost:8081/` and look for `X-Frame-Options` or `Content-Security-Policy: frame-ancestors`. Our config sets neither, so it would be coming from the image. |
+
+---
+
+## Step 5 — Open Study opens the correct Study Instance UID
+
+**Run**
+
+```bash
+pnpm verify:imaging --step 5
+```
+
+**Expected**
+
+```
+  PASS  all N portal UID(s) exist in Orthanc
+  Open these to finish verification by eye:
+        workspace: http://localhost:3000/workspace/1.3.6...
+        viewer:    http://localhost:8081/viewer?StudyInstanceUIDs=1.3.6...
+```
+
+Open both. They must show the **same** study.
+
+**Expected in the workspace**
+
+- Header names the patient from Step 2.
+- Status bar shows that Study UID and a non-zero image count.
+- The CT renders, and OHIF's own tools work: drag to pan, scroll to zoom,
+  right-drag for window/level.
+
+**Return this evidence**
+
+- A screenshot of the rendered CT.
+- The status bar, legible.
+- `pnpm verify:imaging` output in full.
+
+**Diagnosing failure**
+
+| Symptom | Cause | Fix |
+| --- | --- | --- |
+| `seeded-studies.json contains no studies` | The portal is on built-in placeholders. | `pnpm seed:orthanc`, then restart the portal so it re-reads the file. |
+| `N portal UID(s) are not in Orthanc` | Fixtures are stale — Orthanc was wiped or reseeded. | `pnpm seed:orthanc` again, then restart the portal. |
+| Workspace correct, viewer empty | OHIF resolved the UID but found no series. | Compare `curl -s "http://localhost:8081/dicom-web/studies?StudyInstanceUID=<uid>"` with what Orthanc reports. |
+| Study opens, no image | Transfer syntax the browser cannot decode. | `docker compose logs orthanc`; try an uncompressed sample. |
+| Pan/zoom/window-level do nothing | OHIF's own tools; the portal is not involved. | Confirm at <http://localhost:8081> directly. If broken there too, it is an OHIF configuration issue. |
+
+---
+
+## Returning to placeholders
+
+```bash
+git checkout packages/shared/mock/seeded-studies.json
+```
+
+The portal falls back to built-in fixtures whenever that file has no records,
+which is why a fresh clone with no Docker still runs.
 
 ## Ports
 
@@ -95,29 +257,3 @@ Pan, zoom and window/level are OHIF's own tools and work as soon as pixels load.
 | 8081 | OHIF Viewer |
 | 8082 | Retrieve Service |
 | 8042 | Orthanc — dev overlay only |
-
----
-
-## Troubleshooting
-
-| Symptom | Cause | Fix |
-| --- | --- | --- |
-| Status bar stays **Viewer Offline** | Nothing is serving on `CLOUDFILM_VIEWER_URL`. | `docker compose ps`; confirm `ohif` is up and 8081 is published. Press **Check again** — no reload needed. |
-| Viewer loads, study is empty | The UID in the URL is not in Orthanc. | You are on built-in fixtures. Run `pnpm seed:orthanc`, then restart the portal so it re-reads the file. |
-| Viewer shows its study list instead of your study | Same cause; the study list is the deliberate fallback. | As above. Browse from the list to confirm Orthanc has the data. |
-| `pnpm seed:orthanc` cannot reach Orthanc | Started without the dev overlay, so 8042 is not published. | Restart with both compose files. |
-| Orthanc accepted 0 files | The files are not DICOM, or are DICOMDIR/JPEG. | Check with a DICOM tool; upload the individual `.dcm` instances. |
-| `/dicom-web` returns 401 | Orthanc authentication is on — you are not using the dev overlay. | Restart with both compose files. |
-| `orthanc` container never reports healthy | Its health check shells out to `curl`, which the image may not carry. | The dev overlay already starts `ohif` and `retrieve` on `service_started` rather than health, so this should not block you. Check `docker compose logs orthanc`. |
-| 3D / volume rendering unavailable | OHIF needs `SharedArrayBuffer`, which needs cross-origin isolation across both origins. | Expected. 2D review is unaffected; see the note in `services/ohif/default.conf`. |
-
----
-
-## Returning to fixtures
-
-```bash
-git checkout packages/shared/mock/seeded-studies.json
-```
-
-The portal falls back to its built-in fixtures whenever that file has no
-records, which is also why a fresh clone with no Docker still runs.

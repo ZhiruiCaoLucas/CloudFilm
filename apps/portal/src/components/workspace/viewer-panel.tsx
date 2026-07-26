@@ -2,6 +2,7 @@ import { buildViewerUrl } from '@cloudfilm/core';
 import type { Study } from '@cloudfilm/shared';
 import type { ViewerAvailability } from '@/hooks/use-viewer-availability';
 import { ViewerConnecting } from './viewer-connecting';
+import { ViewerNoData } from './viewer-no-data';
 import { ViewerOffline } from './viewer-offline';
 
 /**
@@ -18,16 +19,22 @@ export function ViewerPanel({
   study,
   viewerBaseUrl,
   status,
+  isStudyImported,
   onRetry,
 }: {
   readonly study: Study;
   readonly viewerBaseUrl: string;
   readonly status: ViewerAvailability;
+  readonly isStudyImported: boolean;
   readonly onRetry: () => void;
 }) {
   return (
     <section aria-label="Image viewer" className="relative flex min-w-0 flex-1 flex-col bg-black">
-      {status === 'online' ? (
+      {!isStudyImported ? (
+        <div className="flex h-full w-full items-center justify-center">
+          <ViewerNoData studyInstanceUid={study.studyInstanceUid} />
+        </div>
+      ) : status === 'online' ? (
         <iframe
           title={`OHIF Viewer — ${study.description}`}
           src={buildViewerUrl({ viewerBaseUrl, studyInstanceUid: study.studyInstanceUid })}

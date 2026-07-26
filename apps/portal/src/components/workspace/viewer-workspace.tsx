@@ -20,10 +20,12 @@ import { WorkspaceStatusBar } from './workspace-status-bar';
 export function ViewerWorkspace({
   study,
   viewerBaseUrl,
+  isStudyImported,
   children,
 }: {
   readonly study: Study;
   readonly viewerBaseUrl: string;
+  readonly isStudyImported: boolean;
   readonly children: ReactNode;
 }) {
   const { status, retry } = useViewerAvailability(viewerBaseUrl);
@@ -32,7 +34,13 @@ export function ViewerWorkspace({
     <>
       <div className="flex min-h-0 flex-1">
         {children}
-        <ViewerPanel study={study} viewerBaseUrl={viewerBaseUrl} status={status} onRetry={retry} />
+        <ViewerPanel
+          study={study}
+          viewerBaseUrl={viewerBaseUrl}
+          status={status}
+          isStudyImported={isStudyImported}
+          onRetry={retry}
+        />
       </div>
       <WorkspaceStatusBar study={study} viewerStatus={status} />
     </>

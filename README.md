@@ -87,8 +87,15 @@ pnpm seed:orthanc               # loads Orthanc, writes back the real study UIDs
 docker compose restart portal
 ```
 
-Search the MRN the script prints and press **Open Study**. Full walkthrough and
-troubleshooting: [`docs/local-imaging.md`](docs/local-imaging.md).
+Then verify each link in the chain, stopping at the first failure:
+
+```bash
+pnpm verify:imaging
+```
+
+Nothing about the imaging stack is assumed to work — the image tags and config
+mount paths are unverified. `docs/local-imaging.md` walks the five steps, with
+the evidence each one must produce and how to diagnose it when it does not.
 
 ### Port map
 

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { formatModality } from '@cloudfilm/shared';
-import { findStudyContext } from '@cloudfilm/shared/mock';
+import { findStudyContext, IS_SERVING_SEEDED_DATA } from '@cloudfilm/shared/mock';
 import { env } from '@/lib/env';
 import { StudyNavigator } from '@/components/workspace/study-navigator';
 import { ViewerWorkspace } from '@/components/workspace/viewer-workspace';
@@ -46,7 +46,11 @@ export default async function WorkspacePage({ params }: WorkspacePageProps) {
     <div id="main" className="flex h-dvh min-h-0 flex-col overflow-hidden">
       <WorkspaceHeader patient={context.patient} study={context.selectedStudy} />
 
-      <ViewerWorkspace study={context.selectedStudy} viewerBaseUrl={env.viewerUrl}>
+      <ViewerWorkspace
+        study={context.selectedStudy}
+        viewerBaseUrl={env.viewerUrl}
+        isStudyImported={IS_SERVING_SEEDED_DATA}
+      >
         <StudyNavigator
           patient={context.patient}
           studies={context.studies}

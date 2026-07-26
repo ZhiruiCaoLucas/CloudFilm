@@ -1,5 +1,6 @@
 import { PatientSearchForm } from '@/components/patient-search-form';
 import { RecentSearches } from '@/components/recent-searches';
+import { SampleDataNotice } from '@/components/sample-data-notice';
 import { PortalShell } from '@/components/portal-shell';
 
 export const metadata = {
@@ -22,6 +23,8 @@ export default function HomePage() {
             <PatientSearchForm />
           </div>
         </section>
+
+        <SampleDataNotice />
 
         <RecentSearches />
       </div>

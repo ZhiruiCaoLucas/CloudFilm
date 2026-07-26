@@ -12,6 +12,7 @@
   "scripts": {
     "dev": "pnpm --filter @cloudfilm/portal dev",
     "seed:orthanc": "node scripts/seed-orthanc.mjs",
+    "verify:imaging": "node scripts/verify-imaging.mjs",
     "build": "pnpm --filter @cloudfilm/portal build",
     "start": "pnpm --filter @cloudfilm/portal start",
     "lint": "eslint .",
