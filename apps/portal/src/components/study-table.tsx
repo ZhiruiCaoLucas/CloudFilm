@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import {
-  MODALITY_LABELS,
+  formatModality,
   STUDY_STATUS_LABELS,
   type Study,
   type StudyStatus,
@@ -68,7 +68,7 @@ function StudyRow({ study }: { readonly study: Study }) {
   return (
     <tr className="border-border border-t align-middle">
       <th scope="row" className="text-foreground px-5 py-4 font-medium">
-        {MODALITY_LABELS[study.modality]}
+        {formatModality(study.modality)}
       </th>
       <td className="text-muted px-5 py-4">{study.description}</td>
       <td className="text-foreground px-5 py-4 font-mono text-xs">{study.performedOn}</td>
@@ -86,7 +86,7 @@ function StudyRow({ study }: { readonly study: Study }) {
           >
             Open Study
             <span className="sr-only">
-              : {MODALITY_LABELS[study.modality]}, {study.performedOn}
+              : {formatModality(study.modality)}, {study.performedOn}
             </span>
           </Link>
         </div>

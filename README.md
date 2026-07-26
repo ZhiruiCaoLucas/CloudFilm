@@ -9,8 +9,9 @@ components — [Orthanc](https://www.orthanc-server.com/) for DICOM,
 for rendering — and supplies only the business logic that sits between them:
 authentication, hospital integration, access control and audit.
 
-> **Status:** Sprint 0 — repository initialised. Every service builds, the stack starts,
-> and no feature logic has been written yet. See [Roadmap](#roadmap).
+> **Status:** Sprint 3 — patient search, study list and an imaging workspace that
+> embeds OHIF. Studies can be loaded into a local Orthanc and opened in the viewer;
+> no hospital system is connected yet. See [Roadmap](#roadmap).
 
 ---
 
@@ -76,6 +77,19 @@ docker compose up --build -d
 docker compose ps               # wait for every service to report healthy
 ```
 
+### A real study in the viewer
+
+Put DICOM in `services/orthanc/seed/`, then:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
+pnpm seed:orthanc               # loads Orthanc, writes back the real study UIDs
+docker compose restart portal
+```
+
+Search the MRN the script prints and press **Open Study**. Full walkthrough and
+troubleshooting: [`docs/local-imaging.md`](docs/local-imaging.md).
+
 ### Port map
 
 One set of ports, whether a service runs in a container or from source — so the
@@ -88,6 +102,9 @@ portal's defaults work either way.
 | 8081 | OHIF Viewer | Compose |
 | 8082 | Retrieve Service | `dotnet run` and the dev overlay |
 | 5432 / 6379 / 8042 | PostgreSQL / Redis / Orthanc | **dev overlay only** |
+
+The dev overlay also disables Orthanc's authentication so the viewer proxy can
+read DICOMweb without a credential. Never apply it to a hospital deployment.
 
 | Surface | URL |
 | --- | --- |
@@ -218,11 +235,13 @@ remains the system of record.**
 | Sprint | Outcome |
 | --- | --- |
 | **0 — done** | Repository, build, Docker stack, CI. Everything compiles and runs. |
-| 1 | Identity schema, registration and login, JWT issuance, role model. |
-| 2 | First hospital adapter (DICOMweb), study staging into Orthanc, retrieve API. |
-| 3 | Study list and viewer launch in the portal, access-grant model. |
-| 4 | Sharing links with expiry, download, full audit trail. |
-| 5 | AI analysis service (Python FastAPI) plugged in behind an existing port. |
+| **1 — done** | Patient search and study list, driven by isolated fixtures. |
+| **2 — done** | Imaging workspace: study navigator, embedded OHIF, status bar. |
+| **3 — done** | Local Orthanc as a development data source; real studies open in the viewer. |
+| 4 | Identity schema, registration and login, JWT issuance, role model. |
+| 5 | First hospital adapter (DICOMweb), study staging into Orthanc, retrieve API. |
+| 6 | Access grants, sharing links with expiry, download, full audit trail. |
+| 7 | AI analysis service (Python FastAPI) plugged in behind an existing port. |
 
 One sprint at a time; every sprint leaves the application runnable.
 

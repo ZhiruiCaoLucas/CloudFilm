@@ -1,11 +1,14 @@
 # ---------------------------------------------------------------------------
 # Development overlay.
 #
-#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 #
-# Publishes the data tier to the host for debugging. NEVER apply this overlay to
-# a hospital deployment: it removes the network isolation that keeps PostgreSQL,
-# Redis and Orthanc unreachable from outside the compose network.
+# Publishes the data tier to the host and turns Orthanc's authentication off so
+# a developer can load sample DICOM and browse it directly.
+#
+# NEVER apply this overlay to a hospital deployment. It removes the network
+# isolation that keeps PostgreSQL, Redis and Orthanc unreachable from outside
+# the compose network, and it unauthenticates the imaging tier.
 # ---------------------------------------------------------------------------
 
 services:
@@ -18,15 +21,33 @@ services:
       - '6379:6379'
 
   orthanc:
+    # zz-dev.json sorts after orthanc.json, and Orthanc lets the last file read
+    # win, so this overrides the production defaults without editing them.
+    volumes:
+      - ./services/orthanc/orthanc.json:/etc/orthanc/orthanc.json:ro
+      - ./services/orthanc/zz-dev.json:/etc/orthanc/zz-dev.json:ro
+      - orthanc-storage:/var/lib/orthanc/db
     ports:
       - '8042:8042'
+
+  # The imaging services start as soon as Orthanc's process is up rather than
+  # waiting for its health check to pass. Locally that trades a few seconds of
+  # "Viewer Offline" for not having the whole stack blocked if the health check
+  # is unhappy; the production stack keeps the stricter gate.
+  retrieve:
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+    depends_on:
+      orthanc:
+        condition: service_started
+    ports:
+      - '8082:8080'
+
+  ohif:
+    depends_on:
+      orthanc:
+        condition: service_started
 
   api:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
-
-  retrieve:
-    environment:
-      ASPNETCORE_ENVIRONMENT: Development
-    ports:
-      - '8082:8080'

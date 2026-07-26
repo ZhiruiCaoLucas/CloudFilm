@@ -1,0 +1,13 @@
+{
+  "//Purpose": "Development-only overrides for Orthanc. Mounted alongside orthanc.json by docker-compose.dev.yml and NEVER by the production stack. Named to sort last: Orthanc merges every JSON file in /etc/orthanc, and the last value read wins.",
+
+  "//Authentication": "Off locally so the OHIF proxy can reach DICOMweb without a credential. Safe here because the dev stack runs on a developer's machine; the production stack keeps authentication on and injects a credential at the proxy.",
+  "AuthenticationEnabled": false,
+
+  "//Storage": "A developer's sample data is small, and evicting it mid-session would be confusing.",
+  "MaximumStorageSize": 0,
+  "MaximumStorageMode": "Recycle",
+
+  "//Stability": "Studies are considered stable quickly so seeded data is queryable straight after upload instead of a minute later.",
+  "StableAge": 5
+}

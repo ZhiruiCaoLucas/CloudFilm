@@ -36,6 +36,12 @@ secrets/
 .data/
 docker/volumes/
 
+# ---------- Local development imaging data ----------
+# Sample DICOM is patient-shaped data and can be large; it is supplied locally,
+# never committed. The directory itself is kept.
+services/orthanc/seed/*
+!services/orthanc/seed/.gitkeep
+
 # ---------- Editors & OS ----------
 .idea/
 .DS_Store

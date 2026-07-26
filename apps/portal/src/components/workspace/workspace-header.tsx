@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { MODALITY_LABELS, type Patient, type Study } from '@cloudfilm/shared';
+import { formatModality, type Patient, type Study } from '@cloudfilm/shared';
 import { CloudFilmLogo } from '@/components/cloudfilm-logo';
 
 /**
@@ -41,7 +41,7 @@ export function WorkspaceHeader({
           {patient.medicalRecordNumber}
         </HeaderField>
         <HeaderField label="Study">
-          {MODALITY_LABELS[study.modality]} · {study.description}
+          {formatModality(study.modality)} · {study.description}
         </HeaderField>
         <HeaderField label="Date" mono>
           {study.performedOn}

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { MODALITY_LABELS, STUDY_STATUS_LABELS, type Patient, type Study } from '@cloudfilm/shared';
+import { formatModality, STUDY_STATUS_LABELS, type Patient, type Study } from '@cloudfilm/shared';
 import { cn } from '@cloudfilm/ui';
 import { StudyThumbnail } from './study-thumbnail';
 
@@ -84,7 +84,7 @@ function StudyNavigatorItem({
 
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="text-foreground truncate text-sm font-medium">
-          {MODALITY_LABELS[study.modality]}
+          {formatModality(study.modality)}
         </span>
         <span className="text-muted truncate text-xs">{study.description}</span>
         <span className="text-muted flex items-center gap-2 font-mono text-xs">

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { MODALITY_LABELS } from '@cloudfilm/shared';
+import { formatModality } from '@cloudfilm/shared';
 import { findStudyContext } from '@cloudfilm/shared/mock';
 import { env } from '@/lib/env';
 import { StudyNavigator } from '@/components/workspace/study-navigator';
@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: WorkspacePageProps): Promise<
   }
 
   return {
-    title: `${MODALITY_LABELS[context.selectedStudy.modality]} — ${context.patient.fullName} · CloudFilm`,
+    title: `${formatModality(context.selectedStudy.modality)} — ${context.patient.fullName} · CloudFilm`,
   };
 }
 

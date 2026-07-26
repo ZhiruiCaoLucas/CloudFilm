@@ -7,7 +7,11 @@
  */
 window.config = {
   routerBasename: '/',
-  showStudyList: false,
+
+  // On, so that a study the portal deep-links to but Orthanc does not hold
+  // leaves the developer in a browsable viewer rather than a blank screen.
+  // The workspace still opens studies by URL; this is only a fallback.
+  showStudyList: true,
   showWarningMessageForCrossOrigin: false,
   maxNumberOfWebWorkers: 4,
 
