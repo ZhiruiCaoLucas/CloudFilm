@@ -1,6 +1,6 @@
 export { cn } from './cn';
-export { Button } from './button';
-export type { ButtonProps } from './button';
+export { Button, buttonClasses } from './button';
+export type { ButtonProps, ButtonVariant } from './button';
 export { Card, CardBody, CardHeader } from './card';
 export type { CardProps } from './card';
 export { EmptyState } from './empty-state';

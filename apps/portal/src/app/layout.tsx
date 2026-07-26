@@ -1,7 +1,5 @@
 import type { Metadata, Viewport } from 'next';
 import { ThemeScript } from '@/components/theme-script';
-import { TopNav } from '@/components/top-nav';
-import { SiteFooter } from '@/components/site-footer';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -15,6 +13,13 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
+/**
+ * Document shell only.
+ *
+ * Page chrome is chosen per route: {@link PortalShell} for the document-style
+ * pages, and a full-viewport shell for the imaging workspace. Both define the
+ * `#main` landmark the skip link targets.
+ */
 export default function RootLayout({ children }: { readonly children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
@@ -28,14 +33,7 @@ export default function RootLayout({ children }: { readonly children: React.Reac
         >
           Skip to content
         </a>
-
-        <TopNav />
-
-        <main id="main" className="mx-auto w-full max-w-5xl flex-1 px-6 py-10">
-          {children}
-        </main>
-
-        <SiteFooter />
+        {children}
       </body>
     </html>
   );

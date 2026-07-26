@@ -24,6 +24,15 @@ export interface Study {
 
   /** Number of series in the study. */
   readonly seriesCount: number;
+
+  /**
+   * Number of images across every series.
+   *
+   * Shown in the workspace status bar. Sprint 3 will read the authoritative
+   * count from the viewer once a study is loaded; until then this is what the
+   * study record claims.
+   */
+  readonly instanceCount: number;
 }
 
 /**

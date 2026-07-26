@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { buildViewerUrl } from '@cloudfilm/core';
 import { env } from '@/lib/env';
+import { PortalShell } from '@/components/portal-shell';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,18 +30,20 @@ export default async function ViewerPage({ params }: ViewerPageProps) {
   });
 
   return (
-    <div className="flex h-[calc(100dvh-14rem)] flex-col gap-4">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-lg font-semibold tracking-tight">Study viewer</h1>
-        <p className="text-muted font-mono text-xs">{studyInstanceUid}</p>
+    <PortalShell>
+      <div className="flex h-[calc(100dvh-14rem)] flex-col gap-4">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-lg font-semibold tracking-tight">Study viewer</h1>
+          <p className="text-muted font-mono text-xs">{studyInstanceUid}</p>
+        </div>
+        <iframe
+          title={`OHIF Viewer - study ${studyInstanceUid}`}
+          src={viewerUrl}
+          className="border-border h-full w-full rounded-lg border bg-black"
+          allow="fullscreen"
+          sandbox="allow-scripts allow-same-origin allow-forms allow-downloads"
+        />
       </div>
-      <iframe
-        title={`OHIF Viewer - study ${studyInstanceUid}`}
-        src={viewerUrl}
-        className="border-border h-full w-full rounded-lg border bg-black"
-        allow="fullscreen"
-        sandbox="allow-scripts allow-same-origin allow-forms allow-downloads"
-      />
-    </div>
+    </PortalShell>
   );
 }

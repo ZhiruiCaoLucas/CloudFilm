@@ -13,6 +13,20 @@ export interface PatientRecord {
 }
 
 /**
+ * One study, resolved together with the patient and siblings it belongs to.
+ *
+ * The workspace needs all three at once: the header identifies the patient, the
+ * navigator lists every study, and the viewer opens one of them. Resolving them
+ * in a single lookup keeps the page from making three separate queries that
+ * could disagree with each other.
+ */
+export interface StudyContext {
+  readonly patient: Patient;
+  readonly studies: readonly Study[];
+  readonly selectedStudy: Study;
+}
+
+/**
  * The fixture set backing the portal until the API exists.
  *
  * Study Instance UIDs use the DICOM-reserved `1.2.826.0.1.3680043.8.498.*`
@@ -35,6 +49,7 @@ const RECORDS: readonly PatientRecord[] = [
         performedOn: '2026-07-01',
         status: 'Completed',
         seriesCount: 2,
+        instanceCount: 512,
       },
       {
         studyInstanceUid: '1.2.826.0.1.3680043.8.498.10001.20260610',
@@ -43,6 +58,7 @@ const RECORDS: readonly PatientRecord[] = [
         performedOn: '2026-06-10',
         status: 'Completed',
         seriesCount: 4,
+        instanceCount: 240,
       },
       {
         studyInstanceUid: '1.2.826.0.1.3680043.8.498.10001.20260601',
@@ -51,6 +67,7 @@ const RECORDS: readonly PatientRecord[] = [
         performedOn: '2026-06-01',
         status: 'Completed',
         seriesCount: 1,
+        instanceCount: 1,
       },
     ],
   },
@@ -70,6 +87,26 @@ export function findPatientRecord(medicalRecordNumber: string): PatientRecord | 
   const normalised = medicalRecordNumber.trim().toLowerCase();
 
   return RECORDS.find((record) => record.patient.medicalRecordNumber.toLowerCase() === normalised);
+}
+
+/**
+ * Finds a study by its Study Instance UID, with the patient it belongs to.
+ *
+ * @param studyInstanceUid The DICOM Study Instance UID.
+ * @returns The study in context, or `undefined` when no fixture matches.
+ */
+export function findStudyContext(studyInstanceUid: string): StudyContext | undefined {
+  const normalised = studyInstanceUid.trim();
+
+  for (const record of RECORDS) {
+    const selectedStudy = record.studies.find((study) => study.studyInstanceUid === normalised);
+
+    if (selectedStudy !== undefined) {
+      return { patient: record.patient, studies: record.studies, selectedStudy };
+    }
+  }
+
+  return undefined;
 }
 
 /**

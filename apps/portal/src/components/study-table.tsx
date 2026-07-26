@@ -1,10 +1,11 @@
+import Link from 'next/link';
 import {
   MODALITY_LABELS,
   STUDY_STATUS_LABELS,
   type Study,
   type StudyStatus,
 } from '@cloudfilm/shared';
-import { Button, StatusBadge, type StatusTone } from '@cloudfilm/ui';
+import { buttonClasses, StatusBadge, type StatusTone } from '@cloudfilm/ui';
 
 /**
  * Maps a study's lifecycle state onto the design system's tones.
@@ -64,8 +65,6 @@ export function StudyTable({ studies }: { readonly studies: readonly Study[] }) 
 }
 
 function StudyRow({ study }: { readonly study: Study }) {
-  const pendingLabel = `pending-${study.studyInstanceUid}`;
-
   return (
     <tr className="border-border border-t align-middle">
       <th scope="row" className="text-foreground px-5 py-4 font-medium">
@@ -80,13 +79,16 @@ function StudyRow({ study }: { readonly study: Study }) {
         </StatusBadge>
       </td>
       <td className="px-5 py-4">
-        <div className="flex flex-col items-end gap-1">
-          <Button variant="secondary" disabled aria-describedby={pendingLabel}>
-            View
-          </Button>
-          <span id={pendingLabel} className="text-muted text-xs">
-            Coming in Sprint 2
-          </span>
+        <div className="flex justify-end">
+          <Link
+            href={`/workspace/${encodeURIComponent(study.studyInstanceUid)}`}
+            className={buttonClasses('secondary')}
+          >
+            Open Study
+            <span className="sr-only">
+              : {MODALITY_LABELS[study.modality]}, {study.performedOn}
+            </span>
+          </Link>
         </div>
       </td>
     </tr>
