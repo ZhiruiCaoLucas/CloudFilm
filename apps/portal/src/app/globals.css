@@ -1,0 +1,68 @@
+@import 'tailwindcss';
+
+/*
+  Dark mode is class driven rather than media driven so that a clinician can pin a
+  light reading room to dark, and so that the viewer chrome can be forced dark
+  independently of the operating system.
+*/
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme inline {
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-overlay: var(--surface-overlay);
+  --color-border: var(--border);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --font-sans: var(--font-sans);
+}
+
+:root {
+  --surface: #f8fafc;
+  --surface-raised: #ffffff;
+  --surface-overlay: #f1f5f9;
+  --border: #e2e8f0;
+  --foreground: #0f172a;
+  --muted: #64748b;
+  --accent: #0369a1;
+  --accent-foreground: #ffffff;
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+.dark {
+  --surface: #020617;
+  --surface-raised: #0f172a;
+  --surface-overlay: #1e293b;
+  --border: #1e293b;
+  --foreground: #e2e8f0;
+  --muted: #94a3b8;
+  --accent: #38bdf8;
+  --accent-foreground: #04141f;
+}
+
+@layer base {
+  html {
+    color-scheme: light dark;
+  }
+
+  body {
+    background-color: var(--surface);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Respect users who have asked the platform to reduce motion. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}

@@ -1,0 +1,43 @@
+# ---------- .NET ----------
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+artifacts/
+TestResults/
+*.trx
+*.coverage
+coverage/
+.vs/
+
+# ---------- Node ----------
+node_modules/
+.pnpm-store/
+dist/
+build/
+out/
+.next/
+next-env.d.ts
+*.tsbuildinfo
+.turbo/
+
+# ---------- Env & secrets ----------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.pfx
+secrets/
+
+# ---------- Docker / runtime data ----------
+.data/
+docker/volumes/
+
+# ---------- Editors & OS ----------
+.idea/
+.DS_Store
+Thumbs.db
+*.swp

@@ -1,0 +1,12 @@
+packages:
+  - 'apps/portal'
+  - 'packages/*'
+
+# Keeps the lockfile honest across machines and CI.
+strictPeerDependencies: false
+
+# Supply-chain quarantine: refuse any package version published less than three
+# days ago. A compromised npm publish is usually detected and yanked within
+# hours; this buys that window at the cost of never being on the newest patch on
+# its release day. Raise it, do not lower it.
+minimumReleaseAge: 4320

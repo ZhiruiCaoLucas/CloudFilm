@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Hospital integration contract.
+    Declares the port that every hospital specific adapter implements, plus the
+    registry that resolves an adapter by hospital code.
+
+    This project holds NO hospital specific code. Each integration ships as its own
+    assembly implementing IHospitalAdapter, which is how CloudFilm supports many
+    hospitals without a single conditional in the retrieve pipeline.
+  -->
+
+  <PropertyGroup>
+    <RootNamespace>CloudFilm.Retrieve.Hospital</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+</Project>

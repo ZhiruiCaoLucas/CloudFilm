@@ -1,0 +1,67 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.12.35506.116
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CloudFilm.Domain", "apps\api\src\CloudFilm.Domain\CloudFilm.Domain.csproj", "{A1000000-1111-4111-8111-000000000001}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CloudFilm.Application", "apps\api\src\CloudFilm.Application\CloudFilm.Application.csproj", "{A1000000-1111-4111-8111-000000000002}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CloudFilm.Infrastructure", "apps\api\src\CloudFilm.Infrastructure\CloudFilm.Infrastructure.csproj", "{A1000000-1111-4111-8111-000000000003}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CloudFilm.Api", "apps\api\src\CloudFilm.Api\CloudFilm.Api.csproj", "{A1000000-1111-4111-8111-000000000004}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CloudFilm.Api.Tests", "apps\api\tests\CloudFilm.Api.Tests\CloudFilm.Api.Tests.csproj", "{A1000000-1111-4111-8111-000000000005}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CloudFilm.Retrieve.Hospital", "apps\retrieve\src\CloudFilm.Retrieve.Hospital\CloudFilm.Retrieve.Hospital.csproj", "{A1000000-1111-4111-8111-000000000006}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CloudFilm.Retrieve", "apps\retrieve\src\CloudFilm.Retrieve\CloudFilm.Retrieve.csproj", "{A1000000-1111-4111-8111-000000000007}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CloudFilm.Retrieve.Tests", "apps\retrieve\tests\CloudFilm.Retrieve.Tests\CloudFilm.Retrieve.Tests.csproj", "{A1000000-1111-4111-8111-000000000008}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A1000000-1111-4111-8111-000000000001}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1000000-1111-4111-8111-000000000001}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1000000-1111-4111-8111-000000000001}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1000000-1111-4111-8111-000000000001}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1000000-1111-4111-8111-000000000002}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1000000-1111-4111-8111-000000000002}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1000000-1111-4111-8111-000000000002}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1000000-1111-4111-8111-000000000002}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1000000-1111-4111-8111-000000000003}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1000000-1111-4111-8111-000000000003}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1000000-1111-4111-8111-000000000003}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1000000-1111-4111-8111-000000000003}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1000000-1111-4111-8111-000000000004}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1000000-1111-4111-8111-000000000004}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1000000-1111-4111-8111-000000000004}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1000000-1111-4111-8111-000000000004}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1000000-1111-4111-8111-000000000005}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1000000-1111-4111-8111-000000000005}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1000000-1111-4111-8111-000000000005}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1000000-1111-4111-8111-000000000005}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1000000-1111-4111-8111-000000000006}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1000000-1111-4111-8111-000000000006}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1000000-1111-4111-8111-000000000006}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1000000-1111-4111-8111-000000000006}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1000000-1111-4111-8111-000000000007}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1000000-1111-4111-8111-000000000007}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1000000-1111-4111-8111-000000000007}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1000000-1111-4111-8111-000000000007}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1000000-1111-4111-8111-000000000008}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1000000-1111-4111-8111-000000000008}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1000000-1111-4111-8111-000000000008}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1000000-1111-4111-8111-000000000008}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C10DF11A-0000-4000-8000-000000000001}
+	EndGlobalSection
+EndGlobal

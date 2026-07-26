@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Application layer.
+    Owns use cases and the abstractions (ports) that infrastructure implements.
+    Depends on Domain only - never on EF Core, Redis, HTTP or any concrete technology.
+  -->
+
+  <PropertyGroup>
+    <RootNamespace>CloudFilm.Application</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CloudFilm.Domain\CloudFilm.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

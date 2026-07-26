@@ -1,0 +1,31 @@
+{
+  "name": "cloudfilm",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Cloud imaging platform giving patients and clinicians browser access to hospital imaging studies without exposing the PACS network.",
+  "license": "Apache-2.0",
+  "packageManager": "pnpm@11.17.0",
+  "engines": {
+    "node": ">=22.0.0",
+    "pnpm": ">=10.0.0"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @cloudfilm/portal dev",
+    "build": "pnpm --filter @cloudfilm/portal build",
+    "start": "pnpm --filter @cloudfilm/portal start",
+    "lint": "eslint .",
+    "typecheck": "pnpm --recursive --parallel typecheck",
+    "format": "prettier --write \"**/*.{ts,tsx,mjs,css,json,yml,yaml}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,mjs,css,json,yml,yaml}\"",
+    "verify": "pnpm lint && pnpm typecheck && pnpm build"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.2.11",
+    "prettier": "3.9.6",
+    "prettier-plugin-tailwindcss": "0.8.1",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.65.0"
+  }
+}

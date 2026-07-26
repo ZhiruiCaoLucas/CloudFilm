@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Domain layer.
+    Contains enterprise rules and entities only.
+    Intentionally has ZERO package references: it must remain independent of
+    ASP.NET Core, EF Core, and any infrastructure concern so that business rules
+    can be tested and reused without a host.
+  -->
+
+  <PropertyGroup>
+    <RootNamespace>CloudFilm.Domain</RootNamespace>
+  </PropertyGroup>
+
+</Project>

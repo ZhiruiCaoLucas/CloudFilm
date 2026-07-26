@@ -1,0 +1,32 @@
+# ---------------------------------------------------------------------------
+# Development overlay.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+#
+# Publishes the data tier to the host for debugging. NEVER apply this overlay to
+# a hospital deployment: it removes the network isolation that keeps PostgreSQL,
+# Redis and Orthanc unreachable from outside the compose network.
+# ---------------------------------------------------------------------------
+
+services:
+  postgres:
+    ports:
+      - '5432:5432'
+
+  redis:
+    ports:
+      - '6379:6379'
+
+  orthanc:
+    ports:
+      - '8042:8042'
+
+  api:
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+
+  retrieve:
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+    ports:
+      - '5081:8080'

@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <!--
+    Retrieve Service host.
+
+    A separate process, and deliberately not a module of the API. It is the only
+    component permitted to open a connection towards a hospital network, which lets
+    it be firewalled, scaled and replaced independently - including by a rewrite in
+    another language - because the API depends on its HTTP contract, not its code.
+  -->
+
+  <PropertyGroup>
+    <RootNamespace>CloudFilm.Retrieve</RootNamespace>
+    <UserSecretsId>cloudfilm-retrieve</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CloudFilm.Retrieve.Hospital\CloudFilm.Retrieve.Hospital.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Scalar.AspNetCore" />
+    <PackageReference Include="Serilog.AspNetCore" />
+    <PackageReference Include="Serilog.Sinks.Console" />
+    <PackageReference Include="AspNetCore.HealthChecks.Uris" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="CloudFilm.Retrieve.Tests" />
+  </ItemGroup>
+
+</Project>

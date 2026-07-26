@@ -1,0 +1,45 @@
+<Project>
+
+  <!--
+    Repository-wide MSBuild defaults.
+    Applies to every .csproj under the repository root.
+    Rationale: one place to enforce language level, nullability and warning policy
+    so that no individual project can silently opt out of the quality bar.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <!-- Quality gate: warnings are errors, everywhere, with no per-project escape hatch. -->
+  <PropertyGroup>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningLevel>9</WarningLevel>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!-- CS1591: missing XML comment. Documentation is enforced on public APIs only,
+         via the per-project NoWarn below for test/infrastructure projects. -->
+  </PropertyGroup>
+
+  <!-- Deterministic, reproducible builds - required for auditable hospital deployments. -->
+  <PropertyGroup>
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
+    <EnablePackageValidation>false</EnablePackageValidation>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Product>CloudFilm</Product>
+    <Company>CloudFilm</Company>
+    <Authors>CloudFilm Contributors</Authors>
+    <RepositoryType>git</RepositoryType>
+  </PropertyGroup>
+
+</Project>

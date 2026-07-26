@@ -1,0 +1,29 @@
+{
+  "name": "@cloudfilm/portal",
+  "version": "0.1.0",
+  "private": true,
+  "description": "CloudFilm patient and clinician portal.",
+  "type": "module",
+  "scripts": {
+    "dev": "next dev --port 3000",
+    "build": "next build",
+    "start": "next start --port 3000",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@cloudfilm/core": "workspace:*",
+    "@cloudfilm/shared": "workspace:*",
+    "@cloudfilm/ui": "workspace:*",
+    "next": "16.2.11",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "4.3.3",
+    "@types/node": "22.20.0",
+    "@types/react": "19.2.17",
+    "@types/react-dom": "19.2.3",
+    "tailwindcss": "4.3.3",
+    "typescript": "5.9.3"
+  }
+}

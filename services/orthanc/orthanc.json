@@ -1,0 +1,48 @@
+{
+  "//Purpose": "CloudFilm Orthanc configuration. Structure only - every secret is injected as an ORTHANC__* environment variable by docker-compose, so this file is safe to commit.",
+  "//Role": "Orthanc is a transient staging cache in front of the hospital archive, never a system of record.",
+
+  "Name": "CloudFilm Orthanc",
+  "StorageDirectory": "/var/lib/orthanc/db",
+  "IndexDirectory": "/var/lib/orthanc/db",
+
+  "HttpPort": 8042,
+  "DicomPort": 4242,
+
+  "//Access": "Reachable on the internal Docker network only; never published to the host or the internet. Credentials come from ORTHANC__REGISTERED_USERS__*.",
+  "RemoteAccessAllowed": true,
+  "AuthenticationEnabled": true,
+
+  "//Dimse": "The DIMSE server is disabled by default. Enable it only for a hospital that pushes studies to CloudFilm.",
+  "DicomServerEnabled": false,
+
+  "//Plugins": "DICOMweb is what OHIF speaks. PostgreSQL replaces the embedded SQLite index so the deployment is backed up and scaled with the rest of the database tier.",
+  "Plugins": ["/usr/share/orthanc/plugins"],
+
+  "DicomWeb": {
+    "Enable": true,
+    "Root": "/dicom-web/",
+    "EnableWado": true,
+    "WadoRoot": "/wado",
+    "StudiesMetadata": "MainDicomTags",
+    "SeriesMetadata": "MainDicomTags"
+  },
+
+  "//Postgres": "Host, port, database and username are structural. The password arrives as ORTHANC__POSTGRESQL__PASSWORD.",
+  "PostgreSQL": {
+    "EnableIndex": true,
+    "EnableStorage": false,
+    "Host": "postgres",
+    "Port": 5432,
+    "Database": "orthanc",
+    "Username": "orthanc"
+  },
+
+  "//Housekeeping": "Bounded storage: Orthanc recycles the least recently used studies once the cache exceeds this size, in megabytes.",
+  "MaximumStorageSize": 32768,
+  "MaximumStorageMode": "Recycle",
+
+  "//Safety": "CloudFilm never anonymises or edits studies in place; the hospital archive remains authoritative.",
+  "OverwriteInstances": true,
+  "StableAge": 60
+}
