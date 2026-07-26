@@ -26,11 +26,9 @@ COPY --from=deps /repo/apps/portal/node_modules  apps/portal/node_modules
 COPY --from=deps /repo/packages                  packages
 COPY . .
 
-# Only the public viewer address is needed at build time; it is inlined into the
-# client bundle. The API address is read at runtime and never reaches the browser.
-ARG NEXT_PUBLIC_VIEWER_URL
-ENV NEXT_PUBLIC_VIEWER_URL=$NEXT_PUBLIC_VIEWER_URL
-ENV CLOUDFILM_API_URL=http://api:8080
+# No application configuration is needed to build. Every address the portal uses
+# is read at runtime, so one image is valid for every hospital rather than being
+# pinned to the environment it was built for.
 ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN pnpm --filter @cloudfilm/portal build

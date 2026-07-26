@@ -38,6 +38,11 @@ docker compose ps   # every service must reach healthy
 drive CORS on the API and the viewer iframe URL, so they must be the externally
 visible hostnames, not container names.
 
+Both are read at **runtime**, not baked in at build time. The portal image is
+therefore environment-agnostic: the same digest that passed validation in staging
+is the one that runs in production. Changing a public hostname is a restart, not
+a rebuild.
+
 ## Pin the third-party images
 
 `ORTHANC_IMAGE` and `OHIF_IMAGE` default to `:latest` so a fresh clone runs. Before a

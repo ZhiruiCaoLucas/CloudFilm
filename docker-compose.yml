@@ -146,15 +146,13 @@ services:
     build:
       context: .
       dockerfile: docker/portal.Dockerfile
-      args:
-        NEXT_PUBLIC_VIEWER_URL: ${VIEWER_PUBLIC_URL}
     depends_on:
       api:
         condition: service_healthy
     environment:
       NODE_ENV: production
       CLOUDFILM_API_URL: 'http://api:8080'
-      NEXT_PUBLIC_VIEWER_URL: ${VIEWER_PUBLIC_URL}
+      CLOUDFILM_VIEWER_URL: ${VIEWER_PUBLIC_URL}
     ports:
       - '${PORTAL_PUBLIC_PORT:-3000}:3000'
     healthcheck:

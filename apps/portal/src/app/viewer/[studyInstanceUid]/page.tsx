@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { buildViewerUrl } from '@cloudfilm/core';
-import { publicEnv } from '@/lib/env';
+import { env } from '@/lib/env';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,7 +24,7 @@ export default async function ViewerPage({ params }: ViewerPageProps) {
   }
 
   const viewerUrl = buildViewerUrl({
-    viewerBaseUrl: publicEnv.viewerUrl,
+    viewerBaseUrl: env.viewerUrl,
     studyInstanceUid,
   });
 

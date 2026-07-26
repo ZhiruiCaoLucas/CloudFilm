@@ -10,3 +10,7 @@ strictPeerDependencies: false
 # hours; this buys that window at the cost of never being on the newest patch on
 # its release day. Raise it, do not lower it.
 minimumReleaseAge: 4320
+
+allowBuilds:
+  sharp: true
+  unrs-resolver: false

@@ -53,17 +53,41 @@ Decision records: [`docs/adr/`](docs/adr/).
 
 ## Quick start
 
-Requirements: Docker with Compose v2, and — for working on the code — .NET SDK 9 and
-Node 22 with pnpm 11.
+### Just the portal — no configuration
 
 ```bash
 git clone <repository-url> cloudfilm
 cd cloudfilm
 
+pnpm install
+pnpm dev            # http://localhost:3000
+```
+
+That is the whole setup. No `.env`, no Docker, no secrets. The portal starts,
+reports that the API is unreachable, and tells you what to run next. Every
+address it needs has a development default; override any of them in
+`apps/portal/.env.local` (see [`apps/portal/.env.example`](apps/portal/.env.example)).
+
+### The full stack
+
+```bash
 ./scripts/generate-secrets.sh   # writes .env with generated secrets
 docker compose up --build -d
 docker compose ps               # wait for every service to report healthy
 ```
+
+### Port map
+
+One set of ports, whether a service runs in a container or from source — so the
+portal's defaults work either way.
+
+| Port | Service | Published by |
+| --- | --- | --- |
+| 3000 | Portal | `pnpm dev` and Compose |
+| 8080 | API | `dotnet run` and Compose |
+| 8081 | OHIF Viewer | Compose |
+| 8082 | Retrieve Service | `dotnet run` and the dev overlay |
+| 5432 / 6379 / 8042 | PostgreSQL / Redis / Orthanc | **dev overlay only** |
 
 | Surface | URL |
 | --- | --- |
@@ -80,6 +104,21 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 ```
 
 `make help` lists every shortcut.
+
+### Configuration, and where strictness lives
+
+The portal is permissive in development and strict in production, deliberately:
+
+| Context | Missing variable |
+| --- | --- |
+| `pnpm dev` | Logs a warning, uses the local default |
+| `pnpm build` / CI | Uses the local default; the build must never depend on a live environment |
+| Production runtime | **Throws at start-up**, before a single request is served |
+
+That mirrors `ValidateOnStart()` in the API. A hospital deployment fails loudly
+and immediately rather than silently pointing at localhost. CI builds the portal
+with no environment at all, which is what keeps the zero-configuration path
+working.
 
 ---
 
@@ -102,8 +141,8 @@ make verify
 
 ```bash
 docker compose up -d postgres redis orthanc      # dependencies only
-dotnet run --project apps/api/src/CloudFilm.Api           # http://localhost:5080
-dotnet run --project apps/retrieve/src/CloudFilm.Retrieve # http://localhost:5081
+dotnet run --project apps/api/src/CloudFilm.Api           # http://localhost:8080
+dotnet run --project apps/retrieve/src/CloudFilm.Retrieve # http://localhost:8082
 pnpm dev                                                  # http://localhost:3000
 ```
 

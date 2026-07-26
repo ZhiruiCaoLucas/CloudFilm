@@ -5,7 +5,8 @@
       "commandName": "Project",
       "dotnetRunMessages": true,
       "launchBrowser": false,
-      "applicationUrl": "http://localhost:5080",
+      "//comment": "Port 8080 matches the port Docker Compose publishes, so the portal's default CLOUDFILM_API_URL works whether the API runs from source or in a container.",
+      "applicationUrl": "http://localhost:8080",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }

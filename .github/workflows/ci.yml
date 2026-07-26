@@ -67,13 +67,10 @@ jobs:
 
       - run: pnpm format:check
 
-      - name: Build portal
+      # Deliberately runs with no environment at all. A fresh clone must build
+      # and run with zero configuration, and this step is what keeps that true.
+      - name: Build portal (no configuration)
         run: pnpm build
-        env:
-          # Placeholders: the portal reads its real addresses at runtime, and the
-          # build must not depend on a reachable API.
-          CLOUDFILM_API_URL: http://api:8080
-          NEXT_PUBLIC_VIEWER_URL: http://localhost:8081
 
   images:
     name: Container images
@@ -103,8 +100,6 @@ jobs:
           file: ${{ matrix.dockerfile }}
           push: false
           load: false
-          build-args: |
-            NEXT_PUBLIC_VIEWER_URL=http://localhost:8081
           cache-from: type=gha,scope=${{ matrix.name }}
           cache-to: type=gha,scope=${{ matrix.name }},mode=max
 

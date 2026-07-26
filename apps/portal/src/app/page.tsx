@@ -1,6 +1,7 @@
 import { Card, CardBody, CardHeader, StatusBadge } from '@cloudfilm/ui';
 import type { SystemInfo } from '@cloudfilm/shared';
 import { serverApiClient } from '@/lib/api';
+import { env, isDevelopment } from '@/lib/env';
 
 // The landing page reports live platform state, so it must never be prerendered
 // at build time - the API is not reachable from the build container.
@@ -52,6 +53,37 @@ export default async function HomePage() {
           </dl>
         </CardBody>
       </Card>
+
+      {/* First-run guidance. The portal runs standalone by design, so an
+          unreachable API in development is an expected state, not an error -
+          but a new contributor should be told exactly how to fix it. */}
+      {isDevelopment && systemInfo === null ? (
+        <Card>
+          <CardHeader>
+            <h2 className="text-sm font-medium">The API is not running</h2>
+          </CardHeader>
+          <CardBody className="text-muted flex flex-col gap-3 text-sm">
+            <p>
+              The portal is looking for the API at{' '}
+              <code className="bg-surface-overlay text-foreground rounded px-1.5 py-0.5 font-mono text-xs">
+                {env.apiUrl}
+              </code>
+              . Start the backing services, then reload this page:
+            </p>
+            <pre className="bg-surface-overlay text-foreground overflow-x-auto rounded-md p-3 font-mono text-xs leading-relaxed">
+              {
+                '# everything, in containers\ndocker compose up -d\n\n# or just the dependencies, running the API from source\ndocker compose up -d postgres redis orthanc\ndotnet run --project apps/api/src/CloudFilm.Api'
+              }
+            </pre>
+            <p>
+              Override the address with{' '}
+              <code className="text-foreground font-mono text-xs">CLOUDFILM_API_URL</code> in{' '}
+              <code className="text-foreground font-mono text-xs">apps/portal/.env.local</code>.
+              This panel is shown in development only.
+            </p>
+          </CardBody>
+        </Card>
+      ) : null}
     </div>
   );
 }

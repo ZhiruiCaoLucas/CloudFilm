@@ -11,17 +11,24 @@ COMPOSE_DEV   := docker compose -f docker-compose.yml -f docker-compose.dev.yml
 help: ## Show this help
 	@grep -hE '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-18s\033[0m %s\n", $$1, $$2}'
 
-.PHONY: setup
-setup: ## Generate .env and install frontend dependencies
-	@test -f .env || ./scripts/generate-secrets.sh
+.PHONY: install
+install: ## Install frontend dependencies (all you need for `make dev`)
 	pnpm install
+
+.PHONY: dev
+dev: ## Run the portal alone, no configuration required (same as `pnpm dev`)
+	pnpm dev
+
+.PHONY: setup
+setup: install ## Generate .env for the full Docker stack, and install dependencies
+	@test -f .env || ./scripts/generate-secrets.sh
 
 .PHONY: up
 up: ## Start the full stack
 	$(COMPOSE) up --build -d
 
-.PHONY: dev
-dev: ## Start the full stack with the development overlay
+.PHONY: up-dev
+up-dev: ## Start the full stack with the development overlay (publishes the data tier)
 	$(COMPOSE_DEV) up --build -d
 
 .PHONY: down

@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import type { NextConfig } from 'next';
 
 const config: NextConfig = {
@@ -7,7 +8,10 @@ const config: NextConfig = {
   // node_modules nor pnpm - which is what keeps the portal image small and the
   // hospital deployment reproducible.
   output: 'standalone',
-  outputFileTracingRoot: new URL('../../', import.meta.url).pathname,
+
+  // fileURLToPath rather than URL.pathname: the latter yields "/C:/..." on
+  // Windows and breaks the trace root for contributors on that platform.
+  outputFileTracingRoot: fileURLToPath(new URL('../../', import.meta.url)),
 
   // Workspace packages ship TypeScript source rather than a build artefact.
   // Next compiles them with the app, so there is no build ordering to maintain.

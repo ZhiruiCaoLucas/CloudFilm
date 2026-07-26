@@ -1,5 +1,5 @@
 import { createApiClient, type ApiClient } from '@cloudfilm/core';
-import { serverEnv } from './env';
+import { env } from './env';
 
 /**
  * The API client used by server components and route handlers.
@@ -8,5 +8,5 @@ import { serverEnv } from './env';
  * here; user scoped requests will supply a bearer token explicitly.
  */
 export function serverApiClient(): ApiClient {
-  return createApiClient({ baseUrl: serverEnv.apiUrl });
+  return createApiClient({ baseUrl: env.apiUrl });
 }
