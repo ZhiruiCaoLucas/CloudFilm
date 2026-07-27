@@ -70,6 +70,63 @@ docker compose logs --tail 40 orthanc
 | `curl: connection refused` | Port 8042 is not published — the dev overlay was not applied. | Restart with **both** `-f` files. |
 | Container restarts in a loop | Usually the PostgreSQL plugin cannot reach the database. | `docker compose logs orthanc \| grep -i postgres`; confirm `postgres` is healthy. |
 | `orthanc` never becomes healthy | Its health check shells out to `curl`, which the image may not carry. | Not blocking: the dev overlay starts `ohif` and `retrieve` on `service_started`. Report the log and I will replace the check. |
+| **Logs stop at `generating temporary configuration file in /tmp/orthanc.json`, port 8042 never opens** | The container is *hung*, not crashed. Almost always the PostgreSQL plugin retrying a connection it can never complete. | See "Orthanc hangs after generating its configuration" below. |
+
+### Orthanc hangs after generating its configuration
+
+The image merges `/etc/orthanc/*.json` with every `ORTHANC__*` environment
+variable into `/tmp/orthanc.json`, then starts Orthanc with it. If the log stops
+there, Orthanc *did* start — it is blocked before opening its HTTP port.
+
+Collect everything at once:
+
+```bash
+./scripts/diagnose-orthanc.sh > orthanc-evidence.txt 2>&1
+```
+
+The two decisive sections are **generated configuration /tmp/orthanc.json** —
+the ground truth for what Orthanc actually received — and **can orthanc
+authenticate against postgres**.
+
+#### Known cause: the Orthanc role password did not match
+
+`scripts/init-databases.sh` runs inside the *postgres* container and used to read
+`ORTHANC__POSTGRESQL__PASSWORD`, a variable defined only on the *orthanc*
+service. It was therefore always unset there, a silent fallback won, and the role
+was created with a different password from the one Orthanc connects with. The
+PostgreSQL plugin then retried forever and the HTTP port never opened.
+
+Fixed: both services now receive `ORTHANC_DB_PASSWORD`, and the script fails
+loudly rather than defaulting.
+
+**The fix does not apply itself to an existing volume.** Scripts in
+`/docker-entrypoint-initdb.d` run only when the data directory is empty, so a
+database created before the fix still has the old password. Either repair it:
+
+```bash
+docker compose exec postgres sh -c \
+  'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c \
+   "ALTER ROLE orthanc WITH LOGIN PASSWORD '"'"'$ORTHANC_DB_PASSWORD'"'"'"'
+docker compose restart orthanc
+```
+
+or start from a clean volume — safe in development, it discards local data only:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.dev.yml down -v
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+```
+
+#### If the password was not the cause
+
+Work through `/tmp/orthanc.json` from the evidence file:
+
+| Look for | Meaning |
+| --- | --- |
+| No `PostgreSQL` block | The plugin is inert; Orthanc is on SQLite and would have started. The hang is elsewhere. |
+| `PostgreSQL` present, plugin missing from the plugin listing | The image gates plugins behind its own environment variables; the config block is being ignored. |
+| Settings from `zz-dev.json` absent | The image does not merge every file in `/etc/orthanc`. `AuthenticationEnabled` would still be `true`, which also breaks Step 3. |
+| Nothing listening on 8042 and no `ps` entry for Orthanc | The process died without logging; check `docker compose logs orthanc` for a segfault. |
 
 ---
 
