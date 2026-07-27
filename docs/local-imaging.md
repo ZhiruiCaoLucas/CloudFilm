@@ -69,7 +69,8 @@ docker compose logs --tail 40 orthanc
 | Container exits immediately | Orthanc could not parse its configuration. | `docker compose logs orthanc`. Both `orthanc.json` and `zz-dev.json` are mounted; the log names the offending file. |
 | `curl: connection refused` | Port 8042 is not published — the dev overlay was not applied. | Restart with **both** `-f` files. |
 | Container restarts in a loop | Usually the PostgreSQL plugin cannot reach the database. | `docker compose logs orthanc \| grep -i postgres`; confirm `postgres` is healthy. |
-| `orthanc` never becomes healthy | Its health check shells out to `curl`, which the image may not carry. | Not blocking: the dev overlay starts `ohif` and `retrieve` on `service_started`. Report the log and I will replace the check. |
+| `orthanc` never becomes healthy, log shows `curl: not found` | **Fixed.** The old health check shelled out to `curl`, which `orthancteam/orthanc` does not contain. It now uses the official `/probes/test-aliveness.py` shipped in the image. | Confirm you are on a build that includes this fix. |
+| `api` or `retrieve` never becomes healthy | Same defect, not yet fixed: their health checks call `curl`, and the .NET runtime images do not include it either. `portal` waits on `api`, so this blocks the portal. | See "Health checks and minimal images" below. |
 | **Logs stop at `generating temporary configuration file in /tmp/orthanc.json`, port 8042 never opens** | The container is *hung*, not crashed. Almost always the PostgreSQL plugin retrying a connection it can never complete. | See "Orthanc hangs after generating its configuration" below. |
 
 ### Orthanc hangs after generating its configuration
@@ -116,6 +117,32 @@ or start from a clean volume — safe in development, it discards local data onl
 docker compose -f docker-compose.yml -f docker-compose.dev.yml down -v
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 ```
+
+### Health checks and minimal images
+
+A container health check runs *inside* the container, so it can only use tools
+that image actually contains. Three of ours assumed `curl`:
+
+| Service | Image | Has curl | Status |
+| --- | --- | --- | --- |
+| `orthanc` | `orthancteam/orthanc` | No — confirmed at runtime | Fixed: uses the image's own `/probes/test-aliveness.py` |
+| `retrieve` | `mcr.microsoft.com/dotnet/aspnet:9.0-noble` | No — Microsoft excludes it from .NET images | Outstanding |
+| `api` | `mcr.microsoft.com/dotnet/aspnet:9.0-noble` | No | Outstanding |
+
+`postgres` (`pg_isready`), `redis` (`redis-cli`) and `portal` (busybox `wget`
+in `node:22-alpine`) all use tools their images do carry.
+
+To settle what the .NET images can actually run, before changing anything:
+
+```bash
+docker compose run --rm --entrypoint sh api -c \
+  'for t in curl wget bash python3 nc; do command -v $t || echo "no $t"; done'
+```
+
+- If `bash` is present, a dependency-free TCP probe works:
+  `test: ["CMD-SHELL", "timeout 3 bash -c '</dev/tcp/localhost/8080'"]`
+- If nothing is present, the health check has to be dropped and dependants
+  moved to `service_started`, or a health-probe binary added to the image.
 
 #### If the password was not the cause
 
