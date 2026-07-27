@@ -231,6 +231,7 @@ The Domain project has no package references at all, and that is enforced by rev
 | Audit | Every request logged with subject, correlation id and client address. |
 | Error hygiene | RFC 9457 problem details; internal detail never leaves the process. |
 | Secrets | Environment only. `.env` is git-ignored; `.env.example` holds no real values. |
+| Minimal images | No package is installed for the benefit of a health check; see [`docs/healthchecks.md`](docs/healthchecks.md). |
 
 CloudFilm is a transient cache in front of the hospital archive. **The hospital archive
 remains the system of record.**

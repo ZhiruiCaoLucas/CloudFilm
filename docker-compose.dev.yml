@@ -30,23 +30,17 @@ services:
     ports:
       - '8042:8042'
 
-  # The imaging services start as soon as Orthanc's process is up rather than
-  # waiting for its health check to pass. Locally that trades a few seconds of
-  # "Viewer Offline" for not having the whole stack blocked if the health check
-  # is unhappy; the production stack keeps the stricter gate.
+  # These previously downgraded to service_started, to work around an Orthanc
+  # health check that could never pass. That workaround is removed: masking a
+  # broken health check is what let the real fault go unnoticed. Development and
+  # production now gate identically, so a probe that breaks fails visibly here
+  # first. To bring one service up regardless while debugging:
+  #   docker compose up -d --no-deps ohif
   retrieve:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
-    depends_on:
-      orthanc:
-        condition: service_started
     ports:
       - '8082:8080'
-
-  ohif:
-    depends_on:
-      orthanc:
-        condition: service_started
 
   api:
     environment:
