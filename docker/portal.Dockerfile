@@ -16,8 +16,14 @@ COPY apps/portal/package.json     apps/portal/
 COPY packages/shared/package.json packages/shared/
 COPY packages/core/package.json   packages/core/
 COPY packages/ui/package.json     packages/ui/
+# --store-dir is required, not cosmetic. pnpm does not put its store under
+# PNPM_HOME: it picks a location on the same filesystem as the project, so
+# without this flag the store lands in /repo and the cache mount below caches
+# nothing. Every build then re-downloads the entire dependency tree, which is
+# both slow and a network failure waiting to happen. Pointing pnpm at the mount
+# is what makes the cache actually work.
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-    pnpm install --frozen-lockfile
+    pnpm install --frozen-lockfile --store-dir=/pnpm/store
 
 FROM base AS build
 WORKDIR /repo
