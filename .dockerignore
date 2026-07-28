@@ -10,3 +10,8 @@ docs
 .env
 .env.*
 !.env.example
+
+# Sample DICOM for the local Orthanc. The portal Dockerfile copies the whole
+# context, so without this a seeded CT study - hundreds of megabytes - is sent
+# to the daemon on every build. Nothing in any image needs it.
+services/orthanc/seed
