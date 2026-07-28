@@ -5,41 +5,23 @@
 # node_modules instead of the full workspace install.
 # ---------------------------------------------------------------------------
 
-FROM node:22-alpine AS base
-ENV PNPM_HOME=/pnpm PATH=/pnpm:$PATH
-RUN corepack enable
+FROM node:22-alpine AS build
+ENV CI=true \
+    NEXT_TELEMETRY_DISABLED=1 \
+    COREPACK_ENABLE_DOWNLOAD_PROMPT=0 \
+    npm_config_fund=false \
+    npm_config_audit=false \
+    npm_config_update_notifier=false
 
-FROM base AS deps
-WORKDIR /repo
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY apps/portal/package.json     apps/portal/
-COPY packages/shared/package.json packages/shared/
-COPY packages/core/package.json   packages/core/
-COPY packages/ui/package.json     packages/ui/
-# --store-dir is required, not cosmetic. pnpm does not put its store under
-# PNPM_HOME: it picks a location on the same filesystem as the project, so
-# without this flag the store lands in /repo and the cache mount below caches
-# nothing. Every build then re-downloads the entire dependency tree, which is
-# both slow and a network failure waiting to happen. Pointing pnpm at the mount
-# is what makes the cache actually work.
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-    pnpm install --frozen-lockfile --store-dir=/pnpm/store
+RUN npm install --global --no-fund --no-audit pnpm@11.17.0
 
-FROM base AS build
 WORKDIR /repo
-COPY --from=deps /repo/node_modules              node_modules
-COPY --from=deps /repo/apps/portal/node_modules  apps/portal/node_modules
-COPY --from=deps /repo/packages                  packages
 COPY . .
 
-# No application configuration is needed to build. Every address the portal uses
-# is read at runtime, so one image is valid for every hospital rather than being
-# pinned to the environment it was built for.
-ENV NEXT_TELEMETRY_DISABLED=1
-
+RUN pnpm install --frozen-lockfile
 RUN pnpm --filter @cloudfilm/portal build
 
-FROM base AS runtime
+FROM node:22-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
