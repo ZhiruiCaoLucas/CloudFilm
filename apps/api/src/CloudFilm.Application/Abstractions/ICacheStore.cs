@@ -17,7 +17,7 @@ public interface ICacheStore
     /// <param name="key">The cache key.</param>
     /// <param name="cancellationToken">A token to cancel the operation.</param>
     /// <returns>The cached value, or <see langword="null"/> when absent or expired.</returns>
-    Task<T?> GetAsync<T>(string key, CancellationToken cancellationToken = default)
+    public Task<T?> GetAsync<T>(string key, CancellationToken cancellationToken = default)
         where T : class;
 
     /// <summary>
@@ -29,7 +29,7 @@ public interface ICacheStore
     /// <param name="timeToLive">How long the entry remains valid.</param>
     /// <param name="cancellationToken">A token to cancel the operation.</param>
     /// <returns>A task that completes once the value has been written.</returns>
-    Task SetAsync<T>(string key, T value, TimeSpan timeToLive, CancellationToken cancellationToken = default)
+    public Task SetAsync<T>(string key, T value, TimeSpan timeToLive, CancellationToken cancellationToken = default)
         where T : class;
 
     /// <summary>
@@ -38,5 +38,5 @@ public interface ICacheStore
     /// <param name="key">The cache key.</param>
     /// <param name="cancellationToken">A token to cancel the operation.</param>
     /// <returns>A task that completes once the value has been removed.</returns>
-    Task RemoveAsync(string key, CancellationToken cancellationToken = default);
+    public Task RemoveAsync(string key, CancellationToken cancellationToken = default);
 }

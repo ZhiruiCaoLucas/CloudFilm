@@ -13,10 +13,10 @@ public interface IAuditableEntity
     /// <summary>
     /// Gets or sets the UTC instant at which the entity was created.
     /// </summary>
-    DateTimeOffset CreatedAtUtc { get; set; }
+    public DateTimeOffset CreatedAtUtc { get; set; }
 
     /// <summary>
     /// Gets or sets the UTC instant at which the entity was last modified.
     /// </summary>
-    DateTimeOffset? ModifiedAtUtc { get; set; }
+    public DateTimeOffset? ModifiedAtUtc { get; set; }
 }

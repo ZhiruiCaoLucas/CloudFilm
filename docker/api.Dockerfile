@@ -10,7 +10,7 @@ WORKDIR /src
 
 # Restore first, using only the project graph, so that a source-only change does
 # not invalidate the (slow) NuGet restore layer.
-COPY global.json Directory.Build.props Directory.Packages.props ./
+COPY global.json Directory.Build.props Directory.Packages.props .editorconfig ./
 COPY apps/api/src/CloudFilm.Domain/CloudFilm.Domain.csproj                 apps/api/src/CloudFilm.Domain/
 COPY apps/api/src/CloudFilm.Application/CloudFilm.Application.csproj       apps/api/src/CloudFilm.Application/
 COPY apps/api/src/CloudFilm.Infrastructure/CloudFilm.Infrastructure.csproj apps/api/src/CloudFilm.Infrastructure/

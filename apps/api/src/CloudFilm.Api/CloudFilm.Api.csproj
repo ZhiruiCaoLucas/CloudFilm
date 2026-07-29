@@ -1,11 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
-  <!--
-    API host - the composition root.
-    This is the only project that is allowed to know about every other layer.
-    It contains wiring and transport concerns, never business rules.
-  -->
-
   <PropertyGroup>
     <RootNamespace>CloudFilm.Api</RootNamespace>
     <UserSecretsId>cloudfilm-api</UserSecretsId>
@@ -25,6 +19,9 @@
     <PackageReference Include="AspNetCore.HealthChecks.NpgSql" />
     <PackageReference Include="AspNetCore.HealthChecks.Redis" />
     <PackageReference Include="AspNetCore.HealthChecks.Uris" />
+
+    <!-- 新增 -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>

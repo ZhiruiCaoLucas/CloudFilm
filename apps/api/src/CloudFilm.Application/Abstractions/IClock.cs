@@ -9,5 +9,5 @@ public interface IClock
     /// <summary>
     /// Gets the current instant in UTC.
     /// </summary>
-    DateTimeOffset UtcNow { get; }
+    public DateTimeOffset UtcNow { get; }
 }
