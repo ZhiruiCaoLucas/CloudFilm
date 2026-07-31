@@ -1,6 +1,6 @@
 import Link from 'next/link';
-import { KNOWN_MEDICAL_RECORD_NUMBERS } from '@cloudfilm/shared/mock';
 import { buttonClasses, Card, CardBody, CardHeader } from '@cloudfilm/ui';
+import { serverApiClient } from '@/lib/api';
 import { PortalShell } from '@/components/portal-shell';
 
 /**
@@ -10,7 +10,24 @@ import { PortalShell } from '@/components/portal-shell';
  * exists, the page also names the record numbers the fixtures actually contain,
  * so a developer is never left guessing what to type.
  */
-export default function PatientNotFound() {
+/**
+ * Lists the record numbers that do exist, so a user is not left guessing.
+ *
+ * A failure here must not replace a not-found page with an error page, so an
+ * unavailable API simply yields no suggestions.
+ */
+async function knownMedicalRecordNumbers(): Promise<readonly string[]> {
+  try {
+    const patients = await serverApiClient().listPatients();
+    return patients.map((patient) => patient.medicalRecordNumber);
+  } catch {
+    return [];
+  }
+}
+
+export default async function PatientNotFound() {
+  const knownNumbers = await knownMedicalRecordNumbers();
+
   return (
     <PortalShell>
       <div className="flex flex-col gap-8">

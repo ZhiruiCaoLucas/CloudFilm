@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { formatModality } from '@cloudfilm/shared';
-import { findStudyContext, IS_SERVING_SEEDED_DATA } from '@cloudfilm/shared/mock';
+import { serverApiClient } from '@/lib/api';
 import { env } from '@/lib/env';
 import { StudyNavigator } from '@/components/workspace/study-navigator';
 import { ViewerWorkspace } from '@/components/workspace/viewer-workspace';
@@ -13,9 +13,9 @@ interface WorkspacePageProps {
 
 export async function generateMetadata({ params }: WorkspacePageProps): Promise<Metadata> {
   const { studyUid } = await params;
-  const context = findStudyContext(decodeURIComponent(studyUid));
+  const context = await serverApiClient().getStudy(decodeURIComponent(studyUid));
 
-  if (context === undefined) {
+  if (context === null) {
     return { title: 'Study not found · CloudFilm' };
   }
 
@@ -36,9 +36,9 @@ export async function generateMetadata({ params }: WorkspacePageProps): Promise<
  */
 export default async function WorkspacePage({ params }: WorkspacePageProps) {
   const { studyUid } = await params;
-  const context = findStudyContext(decodeURIComponent(studyUid));
+  const context = await serverApiClient().getStudy(decodeURIComponent(studyUid));
 
-  if (context === undefined) {
+  if (context === null) {
     notFound();
   }
 
@@ -46,12 +46,18 @@ export default async function WorkspacePage({ params }: WorkspacePageProps) {
     <div id="main" className="flex h-dvh min-h-0 flex-col overflow-hidden">
       <WorkspaceHeader patient={context.patient} study={context.selectedStudy} />
 
+      {/*
+        isStudyImported is derived from the response rather than hard-coded: a
+        study the catalog knows about but which carries no images is a real
+        state, and the viewer has nothing to render for it. Keeping it truthful
+        leaves ViewerPanel and its no-data state untouched.
+      */}
       <ViewerWorkspace
         patient={context.patient}
         study={context.selectedStudy}
         studies={context.studies}
         viewerBaseUrl={env.viewerUrl}
-        isStudyImported={IS_SERVING_SEEDED_DATA}
+        isStudyImported={context.selectedStudy.instanceCount > 0}
       >
         <StudyNavigator
           patient={context.patient}

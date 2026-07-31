@@ -1,10 +1,9 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { findPatientRecord } from '@cloudfilm/shared/mock';
 import { PatientSummary } from '@/components/patient-summary';
-import { SampleDataNotice } from '@/components/sample-data-notice';
 import { StudyTable } from '@/components/study-table';
+import { serverApiClient } from '@/lib/api';
 import { PortalShell } from '@/components/portal-shell';
 
 interface PatientPageProps {
@@ -26,9 +25,9 @@ export async function generateMetadata({ params }: PatientPageProps): Promise<Me
  */
 export default async function PatientPage({ params }: PatientPageProps) {
   const { patientId } = await params;
-  const record = findPatientRecord(decodeURIComponent(patientId));
+  const record = await serverApiClient().getPatient(decodeURIComponent(patientId));
 
-  if (record === undefined) {
+  if (record === null) {
     notFound();
   }
 
@@ -43,8 +42,6 @@ export default async function PatientPage({ params }: PatientPageProps) {
             ← Patient search
           </Link>
         </nav>
-
-        <SampleDataNotice />
 
         <PatientSummary patient={record.patient} />
 

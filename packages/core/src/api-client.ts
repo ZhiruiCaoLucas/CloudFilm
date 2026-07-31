@@ -37,6 +37,26 @@ export interface ApiClientOptions {
 export interface ApiClient {
   /** Reads the API build and environment. */
   getSystemInfo(signal?: AbortSignal): Promise<SystemInfo>;
+
+  /** Lists the patients this deployment can serve. */
+  listPatients(signal?: AbortSignal): Promise<readonly Patient[]>;
+
+  /**
+   * Reads a patient and their studies.
+   *
+   * Resolves to `null` when no patient matches, rather than throwing. A patient
+   * who does not exist is an ordinary outcome of a search, not an error, and the
+   * caller renders a not-found page rather than an error page.
+   */
+  getPatient(medicalRecordNumber: string, signal?: AbortSignal): Promise<PatientRecord | null>;
+
+  /**
+   * Reads a study together with its patient and sibling studies.
+   *
+   * Resolves to `null` when no study matches, for the same reason as
+   * {@link ApiClient.getPatient}.
+   */
+  getStudy(studyInstanceUid: string, signal?: AbortSignal): Promise<StudyContext | null>;
 }
 
 /**
@@ -70,8 +90,24 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
     return (await response.json()) as T;
   }
 
+  async function requestOptional<T>(path: string, signal?: AbortSignal): Promise<T | null> {
+    try {
+      return await request<T>(path, signal);
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 404) {
+        return null;
+      }
+      throw error;
+    }
+  }
+
   return {
     getSystemInfo: (signal) => request<SystemInfo>(API_ROUTES.systemInfo, signal),
+    listPatients: (signal) => request<readonly Patient[]>(API_ROUTES.patients, signal),
+    getPatient: (medicalRecordNumber, signal) =>
+      requestOptional<PatientRecord>(API_ROUTES.patient(medicalRecordNumber), signal),
+    getStudy: (studyInstanceUid, signal) =>
+      requestOptional<StudyContext>(API_ROUTES.study(studyInstanceUid), signal),
   };
 }
 

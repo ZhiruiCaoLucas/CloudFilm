@@ -1,7 +1,16 @@
-import { PLACEHOLDER_VIEWER_TELEMETRY } from '@cloudfilm/shared/mock';
 import type { Study } from '@cloudfilm/shared';
 import { cn } from '@cloudfilm/ui';
 import type { ViewerAvailability } from '@/hooks/use-viewer-availability';
+
+/**
+ * Zoom and window level are properties of a loaded image, so only the viewer can
+ * report them. Until it does, these hold the bar's shape. They are rendered
+ * muted and marked pending, so they are not mistaken for live readings.
+ */
+const PENDING_TELEMETRY = {
+  zoom: '100%',
+  windowLevel: 'W 400 / L 40',
+} as const;
 
 const STATUS_LABELS: Record<ViewerAvailability, string> = {
   connecting: 'Connecting',
@@ -46,8 +55,8 @@ export function WorkspaceStatusBar({
 
       <StatusField label="Study UID" value={study.studyInstanceUid} mono truncate />
       <StatusField label="Images" value={String(study.instanceCount)} mono />
-      <StatusField label="Zoom" value={PLACEHOLDER_VIEWER_TELEMETRY.zoom} mono pending />
-      <StatusField label="W/L" value={PLACEHOLDER_VIEWER_TELEMETRY.windowLevel} mono pending />
+      <StatusField label="Zoom" value={PENDING_TELEMETRY.zoom} mono pending />
+      <StatusField label="W/L" value={PENDING_TELEMETRY.windowLevel} mono pending />
 
       {/* Discoverability: a shortcut nobody is told about is a shortcut nobody uses. */}
       <span className="ml-auto hidden lg:inline">

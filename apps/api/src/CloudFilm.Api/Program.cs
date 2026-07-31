@@ -60,6 +60,7 @@ app.MapHealthChecks("/health/ready", new HealthCheckOptions
 });
 
 app.MapSystemEndpoints();
+app.MapImagingEndpoints();
 
 try
 {

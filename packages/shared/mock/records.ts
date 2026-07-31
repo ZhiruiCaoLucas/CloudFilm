@@ -1,24 +1,8 @@
-import type { Patient, Study } from '../src/index';
-
 /**
- * A patient together with their imaging studies.
+ * The fixture set's shapes are the API's shapes.
  *
- * The shape the portal needs for one patient view. When the API arrives this is
- * what its response will deserialise into.
+ * Re-exported rather than redefined: these are transport contracts and belong in
+ * `src/`. The mock satisfies the same contract the API does, which is what lets
+ * it stand in during development and testing.
  */
-export interface PatientRecord {
-  readonly patient: Patient;
-  readonly studies: readonly Study[];
-}
-
-/**
- * One study, resolved together with the patient and siblings it belongs to.
- *
- * The workspace needs all three at once: the header identifies the patient, the
- * navigator lists every study, and the viewer opens one of them.
- */
-export interface StudyContext {
-  readonly patient: Patient;
-  readonly studies: readonly Study[];
-  readonly selectedStudy: Study;
-}
+export type { PatientRecord, StudyContext } from '../src/index';

@@ -1,6 +1,7 @@
 using CloudFilm.Application.Abstractions;
 using CloudFilm.Infrastructure.Caching;
 using CloudFilm.Infrastructure.Identity;
+using CloudFilm.Infrastructure.Imaging;
 using CloudFilm.Infrastructure.Persistence;
 using CloudFilm.Infrastructure.Persistence.Interceptors;
 using CloudFilm.Infrastructure.Time;
@@ -72,6 +73,10 @@ public static class DependencyInjection
             redis.InstanceName = options.RedisInstanceName;
         });
         services.AddSingleton<ICacheStore, RedisCacheStore>();
+
+        // The single line the next sprint replaces: swap this registration for a
+        // catalog backed by the Retrieve Service and no caller changes.
+        services.AddSingleton<IImagingCatalog, MockImagingCatalog>();
 
         if (options.AutoMigrate)
         {
