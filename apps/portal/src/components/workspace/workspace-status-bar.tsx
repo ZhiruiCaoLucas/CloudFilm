@@ -48,6 +48,14 @@ export function WorkspaceStatusBar({
       <StatusField label="Images" value={String(study.instanceCount)} mono />
       <StatusField label="Zoom" value={PLACEHOLDER_VIEWER_TELEMETRY.zoom} mono pending />
       <StatusField label="W/L" value={PLACEHOLDER_VIEWER_TELEMETRY.windowLevel} mono pending />
+
+      {/* Discoverability: a shortcut nobody is told about is a shortcut nobody uses. */}
+      <span className="ml-auto hidden lg:inline">
+        <kbd className="bg-surface-overlay text-foreground rounded px-1 font-mono">[</kbd>
+        {' / '}
+        <kbd className="bg-surface-overlay text-foreground rounded px-1 font-mono">]</kbd> previous
+        / next study
+      </span>
     </footer>
   );
 }

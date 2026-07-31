@@ -7,5 +7,7 @@ export { EmptyState } from './empty-state';
 export type { EmptyStateProps } from './empty-state';
 export { Input } from './input';
 export type { InputProps } from './input';
+export { Skeleton } from './skeleton';
+export type { SkeletonProps } from './skeleton';
 export { StatusBadge } from './status-badge';
 export type { StatusBadgeProps, StatusTone } from './status-badge';

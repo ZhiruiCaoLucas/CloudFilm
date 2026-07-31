@@ -1,8 +1,10 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import type { Study } from '@cloudfilm/shared';
+import type { Patient, Study } from '@cloudfilm/shared';
+import { useStudyShortcuts } from '@/hooks/use-study-shortcuts';
 import { useViewerAvailability } from '@/hooks/use-viewer-availability';
+import { StudyMetadataPanel } from './study-metadata-panel';
 import { ViewerPanel } from './viewer-panel';
 import { WorkspaceStatusBar } from './workspace-status-bar';
 
@@ -18,17 +20,22 @@ import { WorkspaceStatusBar } from './workspace-status-bar';
  * just because its sibling is interactive.
  */
 export function ViewerWorkspace({
+  patient,
   study,
+  studies,
   viewerBaseUrl,
   isStudyImported,
   children,
 }: {
+  readonly patient: Patient;
   readonly study: Study;
+  readonly studies: readonly Study[];
   readonly viewerBaseUrl: string;
   readonly isStudyImported: boolean;
   readonly children: ReactNode;
 }) {
   const { status, retry } = useViewerAvailability(viewerBaseUrl);
+  useStudyShortcuts(studies, study.studyInstanceUid);
 
   return (
     <>
@@ -41,6 +48,7 @@ export function ViewerWorkspace({
           isStudyImported={isStudyImported}
           onRetry={retry}
         />
+        <StudyMetadataPanel patient={patient} study={study} />
       </div>
       <WorkspaceStatusBar study={study} viewerStatus={status} />
     </>

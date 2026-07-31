@@ -47,7 +47,9 @@ export default async function WorkspacePage({ params }: WorkspacePageProps) {
       <WorkspaceHeader patient={context.patient} study={context.selectedStudy} />
 
       <ViewerWorkspace
+        patient={context.patient}
         study={context.selectedStudy}
+        studies={context.studies}
         viewerBaseUrl={env.viewerUrl}
         isStudyImported={IS_SERVING_SEEDED_DATA}
       >
