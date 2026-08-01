@@ -10,7 +10,7 @@ public sealed class EntityTests
     private sealed class Series(Guid id) : Entity<Guid>(id);
 
     [Fact]
-    public void Entities_WithSameTypeAndId_AreEqual()
+    public void EntitiesWithSameTypeAndIdAreEqual()
     {
         Guid id = Guid.NewGuid();
 
@@ -18,13 +18,13 @@ public sealed class EntityTests
     }
 
     [Fact]
-    public void Entities_WithDifferentIds_AreNotEqual()
+    public void EntitiesWithDifferentIdsAreNotEqual()
     {
         new Study(Guid.NewGuid()).Should().NotBe(new Study(Guid.NewGuid()));
     }
 
     [Fact]
-    public void Entities_OfDifferentTypes_AreNotEqual()
+    public void EntitiesOfDifferentTypesAreNotEqual()
     {
         Guid id = Guid.NewGuid();
 
@@ -32,7 +32,7 @@ public sealed class EntityTests
     }
 
     [Fact]
-    public void HashCode_IsStable_ForSameIdentity()
+    public void HashCodeIsStableForSameIdentity()
     {
         Guid id = Guid.NewGuid();
 

@@ -9,12 +9,17 @@ namespace CloudFilm.Api.Tests.Infrastructure;
 
 public sealed class RedisCacheStoreTests
 {
+    // Cached rather than constructed per call: JsonSerializerOptions is expensive
+    // to build and caching it is what the production RedisCacheStore does, so the
+    // test serialises exactly the way the code under test deserialises.
+    private static readonly JsonSerializerOptions _serializerOptions = new(JsonSerializerDefaults.Web);
+
     private sealed record Payload(string StudyInstanceUid, int SeriesCount);
 
     private readonly IDistributedCache _cache = Substitute.For<IDistributedCache>();
 
     [Fact]
-    public async Task GetAsync_ReturnsNull_WhenEntryIsAbsent()
+    public async Task GetAsyncReturnsNullWhenEntryIsAbsent()
     {
         _cache.GetAsync("missing", Arg.Any<CancellationToken>()).Returns((byte[]?)null);
 
@@ -24,10 +29,10 @@ public sealed class RedisCacheStoreTests
     }
 
     [Fact]
-    public async Task GetAsync_DeserialisesStoredPayload()
+    public async Task GetAsyncDeserialisesStoredPayload()
     {
         byte[] stored = Encoding.UTF8.GetBytes(
-            JsonSerializer.Serialize(new Payload("1.2.840.113619.2.55", 4), new JsonSerializerOptions(JsonSerializerDefaults.Web)));
+            JsonSerializer.Serialize(new Payload("1.2.840.113619.2.55", 4), _serializerOptions));
         _cache.GetAsync("study", Arg.Any<CancellationToken>()).Returns(stored);
 
         RedisCacheStore store = new(_cache);
@@ -39,7 +44,7 @@ public sealed class RedisCacheStoreTests
     }
 
     [Fact]
-    public async Task SetAsync_AlwaysAppliesAnAbsoluteExpiry()
+    public async Task SetAsyncAlwaysAppliesAnAbsoluteExpiry()
     {
         RedisCacheStore store = new(_cache);
 
@@ -56,7 +61,7 @@ public sealed class RedisCacheStoreTests
     [Theory]
     [InlineData(0)]
     [InlineData(-30)]
-    public async Task SetAsync_RejectsNonPositiveTimeToLive(int seconds)
+    public async Task SetAsyncRejectsNonPositiveTimeToLive(int seconds)
     {
         RedisCacheStore store = new(_cache);
 

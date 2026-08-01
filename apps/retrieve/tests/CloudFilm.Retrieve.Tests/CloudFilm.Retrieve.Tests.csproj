@@ -4,7 +4,14 @@
     <RootNamespace>CloudFilm.Retrieve.Tests</RootNamespace>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
-    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <!-- IDE0005 (unnecessary using directive) is only reported by the compiler
+         when a documentation file is generated, so this must stay true for the
+         repository's IDE0005-as-error policy to apply here at all.
+         CS1591 is suppressed alongside it: xUnit requires public test classes and
+         methods, and XML documentation on a test name adds nothing a reader of
+         the test does not already have. -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

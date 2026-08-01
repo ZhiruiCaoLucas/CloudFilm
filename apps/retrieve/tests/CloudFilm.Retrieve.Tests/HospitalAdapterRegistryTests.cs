@@ -30,13 +30,13 @@ public sealed class HospitalAdapterRegistryTests
     }
 
     [Fact]
-    public void Registry_IsEmpty_WhenNoAdapterIsRegistered()
+    public void RegistryIsEmptyWhenNoAdapterIsRegistered()
     {
         Build().Adapters.Should().BeEmpty();
     }
 
     [Fact]
-    public void Find_ResolvesAdapter_CaseInsensitively()
+    public void FindResolvesAdapterCaseInsensitively()
     {
         IHospitalAdapterRegistry registry = Build(new StubAdapter("STMARY"));
 
@@ -45,13 +45,13 @@ public sealed class HospitalAdapterRegistryTests
     }
 
     [Fact]
-    public void Find_ReturnsNull_ForUnknownHospital()
+    public void FindReturnsNullForUnknownHospital()
     {
         Build(new StubAdapter("STMARY")).Find("UNKNOWN").Should().BeNull();
     }
 
     [Fact]
-    public void Registry_RejectsDuplicateHospitalCodes()
+    public void RegistryRejectsDuplicateHospitalCodes()
     {
         Action act = () => Build(new StubAdapter("STMARY"), new StubAdapter("stmary"));
 
