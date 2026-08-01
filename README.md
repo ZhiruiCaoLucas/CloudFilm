@@ -9,9 +9,9 @@ components — [Orthanc](https://www.orthanc-server.com/) for DICOM,
 for rendering — and supplies only the business logic that sits between them:
 authentication, hospital integration, access control and audit.
 
-> **Status:** Sprint 3 — patient search, study list and an imaging workspace that
-> embeds OHIF. Studies can be loaded into a local Orthanc and opened in the viewer;
-> no hospital system is connected yet. See [Roadmap](#roadmap).
+> **Status:** Sprint 4 — the portal reads real patients and studies. The API
+> obtains them from the Retrieve Service, which queries Orthanc over DICOMweb.
+> No hospital system is connected yet. See [Roadmap](#roadmap).
 
 ---
 
@@ -245,7 +245,8 @@ remains the system of record.**
 | **0 — done** | Repository, build, Docker stack, CI. Everything compiles and runs. |
 | **1 — done** | Patient search and study list, driven by isolated fixtures. |
 | **2 — done** | Imaging workspace: study navigator, embedded OHIF, status bar. |
-| **3 — done** | Local Orthanc as a development data source; real studies open in the viewer. |
+| **3 — done** | Local Orthanc as a development data source; the portal reads through a typed API client. |
+| **4 — done** | Retrieve queries Orthanc over DICOMweb; the API serves real patients and studies. |
 | 4 | Identity schema, registration and login, JWT issuance, role model. |
 | 5 | First hospital adapter (DICOMweb), study staging into Orthanc, retrieve API. |
 | 6 | Access grants, sharing links with expiry, download, full audit trail. |

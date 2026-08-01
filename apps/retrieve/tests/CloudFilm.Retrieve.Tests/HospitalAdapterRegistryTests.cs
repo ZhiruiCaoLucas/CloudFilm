@@ -14,6 +14,22 @@ public sealed class HospitalAdapterRegistryTests
 
         public Task<HospitalConnectivity> ProbeAsync(CancellationToken cancellationToken = default) =>
             Task.FromResult(HospitalConnectivity.Reachable(TimeSpan.Zero));
+
+        // These tests cover registration and resolution, not querying, so the
+        // query members return empty results rather than being exercised.
+        public Task<IReadOnlyList<PatientSummary>> ListPatientsAsync(
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<PatientSummary>>([]);
+
+        public Task<PatientRecord?> FindPatientAsync(
+            string medicalRecordNumber,
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult<PatientRecord?>(null);
+
+        public Task<StudyContext?> FindStudyAsync(
+            string studyInstanceUid,
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult<StudyContext?>(null);
     }
 
     private static IHospitalAdapterRegistry Build(params IHospitalAdapter[] adapters)

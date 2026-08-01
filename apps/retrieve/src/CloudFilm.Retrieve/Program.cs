@@ -2,6 +2,7 @@ using CloudFilm.Retrieve;
 using CloudFilm.Retrieve.Endpoints;
 using CloudFilm.Retrieve.Health;
 using CloudFilm.Retrieve.Hospital;
+using CloudFilm.Retrieve.Orthanc;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Scalar.AspNetCore;
 using Serilog;
@@ -25,6 +26,16 @@ RetrieveOptions retrieve = builder.Configuration
 // Hospital integrations are additive: a deployment registers the adapters it needs
 // with AddHospitalAdapter<T>() and nothing else in this file changes.
 builder.Services.AddHospitalAdapters();
+
+// The named client carries the DICOMweb base address. Orthanc is reached over
+// the internal network only; nothing outside this service knows the address.
+builder.Services.AddHttpClient(OrthancDicomWebAdapter.HttpClientName, client =>
+{
+    client.BaseAddress = new Uri($"{retrieve.OrthancUrl.TrimEnd('/')}/dicom-web/");
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
+
+builder.Services.AddHospitalAdapter<OrthancDicomWebAdapter>();
 
 builder.Services.AddHealthChecks()
     .AddUrlGroup(new Uri($"{retrieve.OrthancUrl.TrimEnd('/')}/system"), name: "orthanc", tags: ["ready"])
@@ -50,6 +61,7 @@ app.MapHealthChecks("/health/ready", new HealthCheckOptions
 });
 
 app.MapHospitalEndpoints();
+app.MapImagingEndpoints();
 
 try
 {

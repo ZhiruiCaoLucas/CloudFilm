@@ -24,7 +24,7 @@ public interface IImagingCatalog
     /// </summary>
     /// <param name="cancellationToken">A token to cancel the operation.</param>
     /// <returns>Every known patient, ordered by medical record number.</returns>
-    Task<IReadOnlyList<PatientSummary>> ListPatientsAsync(CancellationToken cancellationToken = default);
+    public Task<IReadOnlyList<PatientSummary>> ListPatientsAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Finds a patient and their studies by Medical Record Number.
@@ -32,7 +32,7 @@ public interface IImagingCatalog
     /// <param name="medicalRecordNumber">The MRN to look up.</param>
     /// <param name="cancellationToken">A token to cancel the operation.</param>
     /// <returns>The record, or <see langword="null"/> when nothing matches.</returns>
-    Task<PatientRecord?> FindPatientAsync(
+    public Task<PatientRecord?> FindPatientAsync(
         string medicalRecordNumber,
         CancellationToken cancellationToken = default);
 
@@ -42,7 +42,7 @@ public interface IImagingCatalog
     /// <param name="studyInstanceUid">The DICOM Study Instance UID.</param>
     /// <param name="cancellationToken">A token to cancel the operation.</param>
     /// <returns>The study in context, or <see langword="null"/> when nothing matches.</returns>
-    Task<StudyContext?> FindStudyAsync(
+    public Task<StudyContext?> FindStudyAsync(
         string studyInstanceUid,
         CancellationToken cancellationToken = default);
 }

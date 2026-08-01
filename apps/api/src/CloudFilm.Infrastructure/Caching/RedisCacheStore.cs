@@ -13,7 +13,7 @@ namespace CloudFilm.Infrastructure.Caching;
 /// </remarks>
 internal sealed class RedisCacheStore(IDistributedCache cache) : ICacheStore
 {
-    private static readonly JsonSerializerOptions SerializerOptions = new(JsonSerializerDefaults.Web);
+    private static readonly JsonSerializerOptions _serializerOptions = new(JsonSerializerDefaults.Web);
 
     private readonly IDistributedCache _cache = cache;
 
@@ -25,7 +25,7 @@ internal sealed class RedisCacheStore(IDistributedCache cache) : ICacheStore
 
         return payload is null or { Length: 0 }
             ? null
-            : JsonSerializer.Deserialize<T>(payload, SerializerOptions);
+            : JsonSerializer.Deserialize<T>(payload, _serializerOptions);
     }
 
     /// <inheritdoc />
@@ -34,7 +34,7 @@ internal sealed class RedisCacheStore(IDistributedCache cache) : ICacheStore
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(timeToLive, TimeSpan.Zero);
 
-        byte[] payload = JsonSerializer.SerializeToUtf8Bytes(value, SerializerOptions);
+        byte[] payload = JsonSerializer.SerializeToUtf8Bytes(value, _serializerOptions);
         DistributedCacheEntryOptions options = new() { AbsoluteExpirationRelativeToNow = timeToLive };
 
         return _cache.SetAsync(key, payload, options, cancellationToken);

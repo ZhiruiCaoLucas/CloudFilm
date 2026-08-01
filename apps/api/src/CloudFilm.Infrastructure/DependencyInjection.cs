@@ -74,9 +74,18 @@ public static class DependencyInjection
         });
         services.AddSingleton<ICacheStore, RedisCacheStore>();
 
-        // The single line the next sprint replaces: swap this registration for a
-        // catalog backed by the Retrieve Service and no caller changes.
-        services.AddSingleton<IImagingCatalog, MockImagingCatalog>();
+        // Imaging reads go through the Retrieve Service, which is the only
+        // component permitted to reach an imaging source. The address is read
+        // from the existing Downstream section rather than a new setting, so no
+        // deployment configuration changes.
+        string retrieveServiceUrl =
+            configuration["Downstream:RetrieveServiceUrl"]?.TrimEnd('/') ?? string.Empty;
+
+        services.AddHttpClient<IImagingCatalog, RetrieveImagingCatalog>(client =>
+        {
+            client.BaseAddress = new Uri($"{retrieveServiceUrl}/");
+            client.Timeout = TimeSpan.FromSeconds(30);
+        });
 
         if (options.AutoMigrate)
         {

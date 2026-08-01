@@ -14,14 +14,14 @@ namespace CloudFilm.Infrastructure.Persistence;
 /// </remarks>
 public sealed class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<CloudFilmDbContext>
 {
-    private const string DefaultConnectionString =
+    private const string _defaultConnectionString =
         "Host=localhost;Port=5432;Database=cloudfilm;Username=cloudfilm;Password=cloudfilm";
 
     /// <inheritdoc />
     public CloudFilmDbContext CreateDbContext(string[] args)
     {
         string connectionString =
-            Environment.GetEnvironmentVariable("CLOUDFILM_DB_CONNECTION") ?? DefaultConnectionString;
+            Environment.GetEnvironmentVariable("CLOUDFILM_DB_CONNECTION") ?? _defaultConnectionString;
 
         DbContextOptions<CloudFilmDbContext> options =
             new DbContextOptionsBuilder<CloudFilmDbContext>()
