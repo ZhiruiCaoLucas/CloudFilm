@@ -16,9 +16,40 @@ ENV CI=true \
 RUN npm install --global --no-fund --no-audit pnpm@11.17.0
 
 WORKDIR /repo
+
+# Dependency manifests only, ahead of the source tree.
+#
+# This layer is keyed on the lockfile and the workspace manifests, so editing a
+# component does not invalidate it and the install below is skipped entirely.
+# Copying the whole tree first made every source edit re-run a full install.
+#
+# These are exactly the five importers pnpm-lock.yaml declares. --frozen-lockfile
+# fails if any is missing, and COPY fails on a path that does not exist, so this
+# list and the workspace must stay in step. apps/api and apps/retrieve are .NET
+# and have no package.json.
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/portal/package.json     apps/portal/
+COPY packages/core/package.json   packages/core/
+COPY packages/shared/package.json packages/shared/
+COPY packages/ui/package.json     packages/ui/
+
+# --store-dir is required, not decoration.
+#
+# pnpm does not keep its store at ~/.local/share/pnpm/store unconditionally: it
+# relocates the store onto the same filesystem as the project so it can hardlink
+# into node_modules. A cache mounted at the default path is a different device
+# from /repo, which is precisely the condition that makes pnpm move the store
+# somewhere else - and the mount would then cache nothing. Naming the directory
+# explicitly makes the store location independent of filesystem topology.
+#
+# The store outlives the layer, so a lockfile change re-links packages but does
+# not re-download them.
+RUN --mount=type=cache,id=cloudfilm-pnpm-store,target=/pnpm-store \
+    pnpm install --frozen-lockfile --store-dir=/pnpm-store
+
+# Source tree. Everything above this line is cached across source edits.
 COPY . .
 
-RUN pnpm install --frozen-lockfile
 RUN pnpm --filter @cloudfilm/portal build
 
 FROM node:22-alpine AS runtime
