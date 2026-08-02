@@ -20,6 +20,26 @@ public sealed class RetrieveOptions
     public string OrthancUrl { get; set; } = string.Empty;
 
     /// <summary>
+    /// Gets or sets the user name Orthanc's HTTP API is authenticated with.
+    /// </summary>
+    /// <remarks>
+    /// Optional. Local development runs Orthanc with authentication disabled, and
+    /// leaving this empty sends anonymous requests. Any deployment with
+    /// authentication enabled must set it, or Orthanc answers 401.
+    /// </remarks>
+    public string OrthancUsername { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the password paired with <see cref="OrthancUsername"/>.
+    /// </summary>
+    /// <remarks>
+    /// Supplied through the environment or a secret store, never committed. Only
+    /// the Retrieve Service holds it: the credential must never reach the API,
+    /// and must never reach a browser.
+    /// </remarks>
+    public string OrthancPassword { get; set; } = string.Empty;
+
+    /// <summary>
     /// Gets or sets how long a staged study remains in Orthanc before it is eligible for eviction.
     /// </summary>
     /// <remarks>

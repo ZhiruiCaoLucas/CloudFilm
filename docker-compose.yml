@@ -107,6 +107,10 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
       Retrieve__OrthancUrl: 'http://orthanc:8042'
+      # The user Orthanc registers above. Only Retrieve receives these: it is the
+      # only component permitted to reach the imaging tier.
+      Retrieve__OrthancUsername: cloudfilm
+      Retrieve__OrthancPassword: ${ORTHANC_PASSWORD}
       Retrieve__StagingLifetime: '${RETRIEVE_STAGING_LIFETIME:-12:00:00}'
     healthcheck:
       # The .NET runtime images contain no HTTP client: Microsoft excludes curl,
@@ -174,7 +178,7 @@ services:
         condition: service_healthy
     volumes:
       - ./services/ohif/app-config.js:/usr/share/nginx/html/app-config.js
-      - ./services/ohif/default.conf:/etc/nginx/conf.d/default.conf
+      - ./services/ohif/default.conf.template:/usr/src/default.conf.template
     ports:
       - '${VIEWER_PUBLIC_PORT:-8081}:80'
     networks: [edge, internal]

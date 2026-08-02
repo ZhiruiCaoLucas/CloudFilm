@@ -1,3 +1,5 @@
+using System.Net.Http.Headers;
+using System.Text;
 using CloudFilm.Retrieve;
 using CloudFilm.Retrieve.Endpoints;
 using CloudFilm.Retrieve.Health;
@@ -33,6 +35,23 @@ builder.Services.AddHttpClient(OrthancDicomWebAdapter.HttpClientName, client =>
 {
     client.BaseAddress = new Uri($"{retrieve.OrthancUrl.TrimEnd('/')}/dicom-web/");
     client.Timeout = TimeSpan.FromSeconds(30);
+
+    // Orthanc rejects anonymous DICOMweb requests with 401 whenever
+    // AuthenticationEnabled is on. Credentials are attached to the client rather
+    // than to individual calls, so every request the adapter makes carries them,
+    // including its connectivity probe.
+    //
+    // Left unset when no user name is configured: local development runs Orthanc
+    // with authentication disabled, and sending an empty credential there would
+    // be noise rather than a fallback.
+    if (retrieve.OrthancUsername.Length > 0)
+    {
+        string credentials = Convert.ToBase64String(
+            Encoding.UTF8.GetBytes($"{retrieve.OrthancUsername}:{retrieve.OrthancPassword}"));
+
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Basic", credentials);
+    }
 });
 
 builder.Services.AddHospitalAdapter<OrthancDicomWebAdapter>();
