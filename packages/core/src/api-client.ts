@@ -1,7 +1,10 @@
 import {
   API_ROUTES,
   isProblemDetails,
+  type Patient,
+  type PatientRecord,
   type ProblemDetails,
+  type StudyContext,
   type SystemInfo,
 } from '@cloudfilm/shared';
 
