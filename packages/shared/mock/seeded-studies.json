@@ -1,5 +1,63 @@
 {
-  "generatedAt": null,
-  "source": null,
-  "records": []
+  "generatedAt": "2026-08-08T10:04:37.471Z",
+  "source": "http://localhost:8042",
+  "records": [
+    {
+      "patient": {
+        "medicalRecordNumber": "1000192961",
+        "fullName": "LI ZHENYU S",
+        "gender": "Male",
+        "birthDate": "1971-07-24"
+      },
+      "studies": [
+        {
+          "studyInstanceUid": "1.2.840.113564.145320946818674.1292.636566240007310666.706",
+          "modality": "CR",
+          "description": "Untitled study",
+          "performedOn": "2018-03-14",
+          "status": "Completed",
+          "seriesCount": 1,
+          "instanceCount": 2
+        }
+      ]
+    },
+    {
+      "patient": {
+        "medicalRecordNumber": "1000282359",
+        "fullName": "YANG JUNXIA",
+        "gender": "Female",
+        "birthDate": "1970-08-14"
+      },
+      "studies": [
+        {
+          "studyInstanceUid": "1.2.840.113564.132129489829529.5240.636075394732635570.221",
+          "modality": "CR",
+          "description": "Untitled study",
+          "performedOn": "2016-08-23",
+          "status": "Completed",
+          "seriesCount": 1,
+          "instanceCount": 1
+        }
+      ]
+    },
+    {
+      "patient": {
+        "medicalRecordNumber": "3301778492",
+        "fullName": "WANG GUOLAN",
+        "gender": "Female",
+        "birthDate": "1968-07-05"
+      },
+      "studies": [
+        {
+          "studyInstanceUid": "1.2.840.113564.91767784197.93352.639168669044646628.855",
+          "modality": "CT",
+          "description": "Untitled study",
+          "performedOn": "2026-06-12",
+          "status": "Completed",
+          "seriesCount": 1,
+          "instanceCount": 266
+        }
+      ]
+    }
+  ]
 }

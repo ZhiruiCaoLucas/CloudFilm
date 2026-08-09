@@ -1,5 +1,6 @@
 import { createApiClient, type ApiClient } from '@cloudfilm/core';
 import { env } from './env';
+import 'server-only';
 
 /**
  * The API client used by server components.

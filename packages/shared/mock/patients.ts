@@ -26,6 +26,7 @@ const BUILTIN_RECORDS: readonly PatientRecord[] = [
         studyInstanceUid: '1.2.826.0.1.3680043.8.498.10001.20260701',
         modality: 'CBCT',
         description: 'Maxillofacial cone beam CT',
+        accessionNumber: '',
         performedOn: '2026-07-01',
         status: 'Completed',
         seriesCount: 2,
@@ -35,6 +36,7 @@ const BUILTIN_RECORDS: readonly PatientRecord[] = [
         studyInstanceUid: '1.2.826.0.1.3680043.8.498.10001.20260610',
         modality: 'CT',
         description: 'Head CT without contrast',
+        accessionNumber: '',
         performedOn: '2026-06-10',
         status: 'Completed',
         seriesCount: 4,
@@ -44,6 +46,7 @@ const BUILTIN_RECORDS: readonly PatientRecord[] = [
         studyInstanceUid: '1.2.826.0.1.3680043.8.498.10001.20260601',
         modality: 'PX',
         description: 'Full mouth panoramic radiograph',
+        accessionNumber: '',
         performedOn: '2026-06-01',
         status: 'Completed',
         seriesCount: 1,
@@ -97,7 +100,9 @@ export function findStudyContext(studyInstanceUid: string): StudyContext | undef
     );
 
     if (selectedStudy !== undefined) {
-      return { patient: record.patient, studies: record.studies, selectedStudy };
+      // No series: the built-in fixtures describe studies that no archive
+      // holds, so there is nothing to enumerate and nothing may be invented.
+      return { patient: record.patient, studies: record.studies, selectedStudy, series: [] };
     }
   }
 

@@ -90,6 +90,10 @@ function toStudy(value: unknown): Study | undefined {
     studyInstanceUid,
     modality: asText(entry['modality']) ?? 'OT',
     description: asText(entry['description']) ?? 'Untitled study',
+
+    // No fallback text: an absent accession number is absent, not "Unknown".
+    // Fixtures generated before this field existed simply carry none.
+    accessionNumber: asText(entry['accessionNumber']) ?? '',
     performedOn: asText(entry['performedOn']) ?? 'Unknown',
     status: asMember(entry['status'], STATUSES) ?? 'Completed',
     seriesCount: asCount(entry['seriesCount']),

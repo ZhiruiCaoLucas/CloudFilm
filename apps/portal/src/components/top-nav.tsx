@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { CloudFilmLogo } from './cloudfilm-logo';
 import { EnvironmentBadge } from './environment-badge';
-import { isDevelopment } from '@/lib/env';
+import { isDevelopment } from '@/lib/runtime';
 
 /** Application chrome: identity of the system, and which instance of it. */
 export function TopNav() {

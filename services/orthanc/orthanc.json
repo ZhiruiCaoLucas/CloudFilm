@@ -24,8 +24,8 @@
     "Root": "/dicom-web/",
     "EnableWado": true,
     "WadoRoot": "/wado",
-    "StudiesMetadata": "MainDicomTags",
-    "SeriesMetadata": "MainDicomTags"
+    "StudiesMetadata": "Full",
+    "SeriesMetadata": "Full"
   },
 
   "//Postgres": "Host, port, database and username are structural. The password arrives as ORTHANC__POSTGRESQL__PASSWORD.",

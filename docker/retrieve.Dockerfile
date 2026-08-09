@@ -8,7 +8,7 @@
 FROM mcr.microsoft.com/dotnet/sdk:9.0-noble AS build
 WORKDIR /src
 
-COPY global.json Directory.Build.props Directory.Packages.props ./
+COPY global.json Directory.Build.props Directory.Packages.props .editorconfig ./
 COPY apps/retrieve/src/CloudFilm.Retrieve.Hospital/CloudFilm.Retrieve.Hospital.csproj apps/retrieve/src/CloudFilm.Retrieve.Hospital/
 COPY apps/retrieve/src/CloudFilm.Retrieve/CloudFilm.Retrieve.csproj                   apps/retrieve/src/CloudFilm.Retrieve/
 RUN dotnet restore apps/retrieve/src/CloudFilm.Retrieve/CloudFilm.Retrieve.csproj

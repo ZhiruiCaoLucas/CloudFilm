@@ -62,38 +62,31 @@ services:
 
   orthanc:
     <<: *restart
-    # Version-pinned, never :latest. Replace with an immutable digest before
-    # any hospital deployment: a tag can be moved, a digest cannot.
     image: ${ORTHANC_IMAGE:-orthancteam/orthanc:25.4.2}
+
     depends_on:
       postgres:
         condition: service_healthy
+
     environment:
       ORTHANC__REGISTERED_USERS__cloudfilm: ${ORTHANC_PASSWORD}
       ORTHANC__POSTGRESQL__PASSWORD: ${ORTHANC_DB_PASSWORD:?set ORTHANC_DB_PASSWORD in .env}
       VERBOSE_STARTUP: 'true'
+
     volumes:
       - ./services/orthanc/orthanc.json:/etc/orthanc/orthanc.json:ro
       - orthanc-storage:/var/lib/orthanc/db
+
+    ports:
+      - '8042:8042'
+
     healthcheck:
-      # The official probe shipped inside the image since 21.10.0. The previous
-      # check shelled out to curl, which orthancteam/orthanc does not contain,
-      # so it failed permanently and depends_on: service_healthy stopped OHIF
-      # from ever starting.
-      #
-      # The probe also reads the port, scheme and credentials from Orthanc's own
-      # configuration, so it stays correct whether authentication is on (the
-      # production stack) or off (the development overlay) - the old check
-      # hardcoded a user and would have broken in the other direction.
-      #
-      # It requests /changes rather than /system, which exercises the database
-      # connection, so "healthy" here means the PostgreSQL index is reachable
-      # and not merely that the HTTP port is open.
       test: ['CMD', 'python3', '/probes/test-aliveness.py']
       interval: 15s
       timeout: 5s
       retries: 10
       start_period: 30s
+
     networks: [internal]
 
   retrieve:
@@ -176,9 +169,35 @@ services:
     depends_on:
       orthanc:
         condition: service_healthy
+    environment:
+      # Base64 of cloudfilm:<ORTHANC_PASSWORD>. Only nginx sees it; the browser
+      # reaches DICOMweb through this proxy and never holds a credential.
+      ORTHANC_BASIC_AUTH: ${ORTHANC_BASIC_AUTH:?set in .env - printf 'cloudfilm:%s' "$ORTHANC_PASSWORD" | base64}
+      # Consumed by the envsubst below. The image's entrypoint defaults these
+      # internally, but our command runs in a fresh shell and would otherwise
+      # substitute them to empty, producing "listen  default_server;".
+      PORT: '80'
+      PUBLIC_URL: /
     volumes:
       - ./services/ohif/app-config.js:/usr/share/nginx/html/app-config.js
       - ./services/ohif/default.conf.template:/usr/src/default.conf.template
+    # The image's entrypoint substitutes only ${PORT} and ${PUBLIC_URL}, so
+    # ${ORTHANC_BASIC_AUTH} reached nginx literally and nginx parsed it as its
+    # own ${name} variable syntax - "unknown orthanc_basic_auth variable", and
+    # the container restart-looped.
+    #
+    # This re-renders the template with all three named explicitly. The list is
+    # explicit on purpose: it substitutes exactly these and leaves $host,
+    # $http_host, $uri and every other nginx variable untouched. The entrypoint
+    # still runs first, so any other setup the image performs is preserved.
+    command:
+      - /bin/sh
+      - -c
+      - >-
+        envsubst '$$PORT $$PUBLIC_URL $$ORTHANC_BASIC_AUTH'
+        < /usr/src/default.conf.template
+        > /etc/nginx/conf.d/default.conf
+        && exec nginx -g 'daemon off;'
     ports:
       - '${VIEWER_PUBLIC_PORT:-8081}:80'
     networks: [edge, internal]

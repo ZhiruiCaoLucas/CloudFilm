@@ -56,6 +56,7 @@ export default async function WorkspacePage({ params }: WorkspacePageProps) {
         patient={context.patient}
         study={context.selectedStudy}
         studies={context.studies}
+        series={context.series}
         viewerBaseUrl={env.viewerUrl}
         isStudyImported={context.selectedStudy.instanceCount > 0}
       >

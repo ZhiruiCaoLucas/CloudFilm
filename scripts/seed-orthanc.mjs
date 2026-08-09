@@ -38,7 +38,29 @@ const SEED_DIR = join(REPO_ROOT, 'services', 'orthanc', 'seed');
 const FIXTURE_FILE = join(REPO_ROOT, 'packages', 'shared', 'mock', 'seeded-studies.json');
 
 const ORTHANC_URL = (process.env['ORTHANC_URL'] ?? 'http://localhost:8042').replace(/\/+$/, '');
+const ORTHANC_USERNAME = process.env['ORTHANC_USERNAME'] ?? 'cloudfilm';
+const ORTHANC_PASSWORD = process.env['ORTHANC_PASSWORD'] ?? '';
 const SAMPLE_URL = process.env['CLOUDFILM_SAMPLE_DICOM_URL'] ?? '';
+
+/**
+ * Builds request headers, adding Basic authentication when a password is set.
+ *
+ * Orthanc rejects anonymous requests with 401 whenever AuthenticationEnabled is
+ * on. Left off when no password is configured, so a development Orthanc with
+ * authentication disabled still works unchanged.
+ */
+function orthancHeaders(extra = {}) {
+  if (ORTHANC_PASSWORD.length === 0) {
+    return extra;
+  }
+
+  const token = Buffer.from(`${ORTHANC_USERNAME}:${ORTHANC_PASSWORD}`).toString('base64');
+
+  return {
+    Authorization: `Basic ${token}`,
+    ...extra,
+  };
+}
 
 /** Files that are certainly not DICOM, so we do not waste a POST on them. */
 const IGNORED_NAMES = new Set(['.gitkeep', '.gitignore', '.DS_Store', 'README.md']);
@@ -82,7 +104,9 @@ async function main() {
 
 async function assertOrthancReachable() {
   try {
-    const response = await fetch(`${ORTHANC_URL}/system`);
+    const response = await fetch(`${ORTHANC_URL}/system`, {
+      headers: orthancHeaders(),
+    });
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
     }
@@ -170,7 +194,9 @@ async function uploadAll(files) {
     const body = await readFile(file);
     const response = await fetch(`${ORTHANC_URL}/instances`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/dicom' },
+      headers: orthancHeaders({
+        'Content-Type': 'application/dicom',
+      }),
       body,
     });
 
@@ -239,7 +265,9 @@ async function readBackRecords() {
 }
 
 async function getJson(path) {
-  const response = await fetch(`${ORTHANC_URL}${path}`);
+  const response = await fetch(`${ORTHANC_URL}${path}`, {
+    headers: orthancHeaders(),
+  });
   if (!response.ok) {
     throw new Error(`GET ${path} failed with HTTP ${response.status}`);
   }

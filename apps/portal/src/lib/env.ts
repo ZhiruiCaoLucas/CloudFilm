@@ -1,3 +1,4 @@
+import 'server-only';
 /**
  * Runtime configuration for the portal.
  *
@@ -87,7 +88,7 @@ export const env = {
 } as const;
 
 /** True when the portal is running in development. */
-export const isDevelopment = process.env.NODE_ENV !== 'production';
+// export const isDevelopment = process.env.NODE_ENV !== 'production';
 
 /**
  * Forces configuration to be resolved, and logs what was resolved.

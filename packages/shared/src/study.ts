@@ -22,6 +22,19 @@ export interface Study {
   /** Short clinical description of what was imaged. */
   readonly description: string;
 
+  /**
+   * DICOM Accession Number, or an empty string when the archive holds none.
+   *
+   * The identifier the ordering system knows the study by, and the one a
+   * clinician uses to reconcile an image against a report or a RIS order.
+   *
+   * Empty rather than optional: the field is Type 2 in DICOM - always present,
+   * possibly blank - and modelling "blank" as a missing property would put a
+   * `null` on the wire that this interface claims is `undefined`. Callers should
+   * test for length and render nothing when it is zero.
+   */
+  readonly accessionNumber: string;
+
   /** Date the study was performed, as an ISO 8601 calendar date (`YYYY-MM-DD`). */
   readonly performedOn: string;
 

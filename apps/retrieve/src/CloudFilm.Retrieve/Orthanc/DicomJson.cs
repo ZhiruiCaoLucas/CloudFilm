@@ -29,6 +29,18 @@ internal static class DicomJson
     /// <summary>Study Date.</summary>
     public const string StudyDate = "00080020";
 
+    /// <summary>
+    /// Accession Number.
+    /// </summary>
+    /// <remarks>
+    /// A required Study level attribute of the QIDO-RS Search transaction
+    /// (PS3.18 Table 10.6.1-5), so it arrives in the study query already made -
+    /// no additional request is needed to read it. Type 2 in DICOM: present but
+    /// permitted to be empty, which <see cref="Text"/> already reports as an
+    /// empty string.
+    /// </remarks>
+    public const string AccessionNumber = "00080050";
+
     /// <summary>Study Description.</summary>
     public const string StudyDescription = "00081030";
 
@@ -43,6 +55,41 @@ internal static class DicomJson
 
     /// <summary>Number of Study Related Instances.</summary>
     public const string InstanceCount = "00201208";
+
+    /// <summary>Series Instance UID.</summary>
+    public const string SeriesInstanceUid = "0020000E";
+
+    /// <summary>Series Number.</summary>
+    /// <remarks>
+    /// Integer String, Type 2: a series may legitimately carry no number, in
+    /// which case <see cref="Integer"/> reports zero. Zero is not a valid DICOM
+    /// series number, so callers may read it as "not reported".
+    /// </remarks>
+    public const string SeriesNumber = "00200011";
+
+    /// <summary>Modality, at the series level.</summary>
+    /// <remarks>
+    /// Distinct from <see cref="ModalitiesInStudy"/>: that is the set across a
+    /// whole study, this is the one modality that produced this series.
+    /// </remarks>
+    public const string Modality = "00080060";
+
+    /// <summary>Series Description.</summary>
+    public const string SeriesDescription = "0008103E";
+
+    /// <summary>Number of Series Related Instances.</summary>
+    /// <remarks>
+    /// Published by the archive on the series query, which is why CloudFilm
+    /// never enumerates instances to count them.
+    /// </remarks>
+    public const string SeriesInstanceCount = "00201209";
+
+    /// <summary>Institution Name.</summary>
+    /// <remarks>
+    /// General Equipment module, so it is recorded per series rather than per
+    /// study, and it is Type 3 - frequently absent altogether.
+    /// </remarks>
+    public const string InstitutionName = "00080080";
 
     /// <summary>
     /// Reads the first value of an attribute as text.

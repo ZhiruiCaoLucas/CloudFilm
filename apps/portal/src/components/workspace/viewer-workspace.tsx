@@ -1,19 +1,19 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import type { Patient, Study } from '@cloudfilm/shared';
+import type { Patient, Series, Study } from '@cloudfilm/shared';
 import { useStudyShortcuts } from '@/hooks/use-study-shortcuts';
-import { useViewerAvailability } from '@/hooks/use-viewer-availability';
 import { StudyMetadataPanel } from './study-metadata-panel';
 import { ViewerPanel } from './viewer-panel';
 import { WorkspaceStatusBar } from './workspace-status-bar';
 
 /**
- * Owns viewer availability and shares it with everything that displays it.
+ * Composes the reading area: navigator, viewer and metadata, over a status bar.
  *
- * The reading area and the status bar are not adjacent in the layout, but both
- * need the same answer to "is the viewer up?". Holding that state in their
- * nearest common ancestor keeps one probe and one source of truth.
+ * The client boundary exists for the keyboard shortcuts. Loading the viewer is
+ * the iframe's own responsibility - the portal does not probe it first, because
+ * the only probe available to it is blocked by a Cross-Origin-Resource-Policy
+ * header and so could never succeed.
  *
  * The navigator arrives as `children` so it stays a server component: it is
  * static markup, and there is no reason to ship it to the browser as JavaScript
@@ -23,6 +23,7 @@ export function ViewerWorkspace({
   patient,
   study,
   studies,
+  series,
   viewerBaseUrl,
   isStudyImported,
   children,
@@ -30,11 +31,11 @@ export function ViewerWorkspace({
   readonly patient: Patient;
   readonly study: Study;
   readonly studies: readonly Study[];
+  readonly series: readonly Series[];
   readonly viewerBaseUrl: string;
   readonly isStudyImported: boolean;
   readonly children: ReactNode;
 }) {
-  const { status, retry } = useViewerAvailability(viewerBaseUrl);
   useStudyShortcuts(studies, study.studyInstanceUid);
 
   return (
@@ -44,13 +45,11 @@ export function ViewerWorkspace({
         <ViewerPanel
           study={study}
           viewerBaseUrl={viewerBaseUrl}
-          status={status}
           isStudyImported={isStudyImported}
-          onRetry={retry}
         />
-        <StudyMetadataPanel patient={patient} study={study} />
+        <StudyMetadataPanel patient={patient} study={study} series={series} />
       </div>
-      <WorkspaceStatusBar study={study} viewerStatus={status} />
+      <WorkspaceStatusBar study={study} />
     </>
   );
 }

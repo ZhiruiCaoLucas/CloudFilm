@@ -1,62 +1,29 @@
 import type { Study } from '@cloudfilm/shared';
 import { cn } from '@cloudfilm/ui';
-import type { ViewerAvailability } from '@/hooks/use-viewer-availability';
-
-/**
- * Zoom and window level are properties of a loaded image, so only the viewer can
- * report them. Until it does, these hold the bar's shape. They are rendered
- * muted and marked pending, so they are not mistaken for live readings.
- */
-const PENDING_TELEMETRY = {
-  zoom: '100%',
-  windowLevel: 'W 400 / L 40',
-} as const;
-
-const STATUS_LABELS: Record<ViewerAvailability, string> = {
-  connecting: 'Connecting',
-  online: 'Online',
-  offline: 'Offline',
-};
-
-const STATUS_DOT: Record<ViewerAvailability, string> = {
-  connecting: 'bg-amber-500',
-  online: 'bg-emerald-500',
-  offline: 'bg-slate-500',
-};
 
 /**
  * Workstation status strip.
  *
- * Viewer status and image count are real. Zoom and window level are properties
- * of a loaded image and can only come from the viewer itself, so they are
- * placeholders until Sprint 3 — shown so the bar's shape is settled, and marked
- * in the markup so they are not mistaken for live readings.
+ * Shows only what CloudFilm actually knows: the study it resolved and the image
+ * count the archive reported. Both come from the API.
+ *
+ * It previously also showed viewer reachability, zoom and window level. All
+ * three were wrong on screen at once - the bar read "Viewer Offline" beside a
+ * rendering X-ray, and "W 400 / L 40" while the viewer's own overlay read
+ * "W: 4095 L: 2048". Zoom and window level belong to a loaded image and only
+ * the viewer can report them; reachability came from a probe that a
+ * Cross-Origin-Resource-Policy header makes permanently unanswerable. A status
+ * bar that contradicts the image beside it is worse than a shorter one, so the
+ * three unknowable fields are gone until the viewer can report them for real.
  */
-export function WorkspaceStatusBar({
-  study,
-  viewerStatus,
-}: {
-  readonly study: Study;
-  readonly viewerStatus: ViewerAvailability;
-}) {
+export function WorkspaceStatusBar({ study }: { readonly study: Study }) {
   return (
     <footer
       aria-label="Workspace status"
       className="border-border bg-surface-raised text-muted flex shrink-0 flex-wrap items-center gap-x-6 gap-y-1 border-t px-4 py-2 text-xs"
     >
-      <div className="flex items-center gap-2">
-        <span
-          aria-hidden="true"
-          className={cn('h-2 w-2 shrink-0 rounded-full', STATUS_DOT[viewerStatus])}
-        />
-        <span>Viewer</span>
-        <span className="text-foreground font-medium">{STATUS_LABELS[viewerStatus]}</span>
-      </div>
-
       <StatusField label="Study UID" value={study.studyInstanceUid} mono truncate />
       <StatusField label="Images" value={String(study.instanceCount)} mono />
-      <StatusField label="Zoom" value={PENDING_TELEMETRY.zoom} mono pending />
-      <StatusField label="W/L" value={PENDING_TELEMETRY.windowLevel} mono pending />
 
       {/* Discoverability: a shortcut nobody is told about is a shortcut nobody uses. */}
       <span className="ml-auto hidden lg:inline">
