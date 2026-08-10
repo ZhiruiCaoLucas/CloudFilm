@@ -1,5 +1,5 @@
 using System.Text;
-using CloudFilm.Api.Configuration;
+using CloudFilm.Infrastructure.Configuration;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 
@@ -17,11 +17,12 @@ internal static class AuthenticationExtensions
     /// <returns>The same builder, to allow chaining.</returns>
     public static WebApplicationBuilder AddCloudFilmAuthentication(this WebApplicationBuilder builder)
     {
-        builder.Services.AddOptions<JwtOptions>()
-            .Bind(builder.Configuration.GetSection(JwtOptions.SectionName))
-            .ValidateDataAnnotations()
-            .ValidateOnStart();
-
+        // JwtOptions is bound and validated once, by AddInfrastructure, because
+        // the token issuer lives there and Infrastructure cannot reference this
+        // project. Binding it a second time here would register a duplicate
+        // validation and invite the two copies to disagree. This reads the same
+        // section directly, because the bearer handler is configured before the
+        // service provider exists.
         JwtOptions jwt = builder.Configuration
             .GetSection(JwtOptions.SectionName)
             .Get<JwtOptions>() ?? new JwtOptions();

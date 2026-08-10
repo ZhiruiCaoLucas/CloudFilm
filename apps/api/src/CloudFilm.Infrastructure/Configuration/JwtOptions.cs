@@ -1,10 +1,17 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace CloudFilm.Api.Configuration;
+namespace CloudFilm.Infrastructure.Configuration;
 
 /// <summary>
-/// Bearer token validation settings.
+/// Bearer token settings, used both to issue tokens and to validate them.
 /// </summary>
+/// <remarks>
+/// Lives in Infrastructure rather than in the API project because the token
+/// issuer needs it and Infrastructure cannot reference the API - the dependency
+/// runs the other way. The section name and every environment variable
+/// (<c>Jwt__Issuer</c>, <c>Jwt__Audience</c>, <c>Jwt__SigningKey</c>) are
+/// unchanged by the move, so no deployment configuration changes.
+/// </remarks>
 public sealed class JwtOptions
 {
     /// <summary>
@@ -40,4 +47,15 @@ public sealed class JwtOptions
     /// </summary>
     [Range(0, 300)]
     public int ClockSkewSeconds { get; set; } = 30;
+
+    /// <summary>
+    /// Gets or sets how long an issued access token remains valid, in minutes.
+    /// </summary>
+    /// <remarks>
+    /// Bounded rather than free-form: a token that never expires is a permanent
+    /// credential, and CloudFilm issues no refresh token yet, so the upper bound
+    /// is a working day rather than a week.
+    /// </remarks>
+    [Range(1, 480)]
+    public int AccessTokenLifetimeMinutes { get; set; } = 60;
 }

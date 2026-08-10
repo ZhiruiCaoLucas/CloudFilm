@@ -141,6 +141,11 @@ services:
       Jwt__Issuer: ${JWT_ISSUER}
       Jwt__Audience: ${JWT_AUDIENCE}
       Jwt__SigningKey: ${JWT_SIGNING_KEY}
+      # The first administrator account, created at start-up when both values
+      # are set. Left empty the seeder does nothing and the API still starts,
+      # which is what a deployment that provisions accounts elsewhere wants.
+      Seed__AdminEmail: ${SEED_ADMIN_EMAIL:-}
+      Seed__AdminPassword: ${SEED_ADMIN_PASSWORD:-}
       Portal__AllowedOrigins__0: ${PORTAL_PUBLIC_URL}
       Downstream__RetrieveServiceUrl: 'http://retrieve:8080'
       Downstream__OrthancUrl: 'http://orthanc:8042'

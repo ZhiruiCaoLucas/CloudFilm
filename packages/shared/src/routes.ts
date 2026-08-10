@@ -8,6 +8,10 @@ export const API_ROUTES = {
     `/api/v1/patients/${encodeURIComponent(medicalRecordNumber)}`,
   study: (studyInstanceUid: string): string =>
     `/api/v1/studies/${encodeURIComponent(studyInstanceUid)}`,
+  auth: {
+    login: '/api/v1/auth/login',
+    me: '/api/v1/auth/me',
+  },
   healthLive: '/health/live',
   healthReady: '/health/ready',
 } as const;

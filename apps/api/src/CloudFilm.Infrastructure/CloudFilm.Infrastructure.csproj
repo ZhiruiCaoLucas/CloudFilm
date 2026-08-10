@@ -26,6 +26,11 @@
 
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
 
+    <!-- Token issuance. Version matches the Microsoft.IdentityModel stack that
+         Microsoft.AspNetCore.Authentication.JwtBearer 9.0.0 already resolves in
+         the API project, so validation and issuance share one implementation. -->
+    <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" />
+
     <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
 

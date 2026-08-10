@@ -6,5 +6,6 @@ export { API_ROUTES, RETRIEVE_ROUTES } from './routes';
 export type { Patient, PatientGender } from './patient';
 export type { Study, StudyStatus } from './study';
 export type { Series } from './series';
+export type { LoginRequest, LoginResponse, CurrentUser } from './auth';
 export type { PatientRecord, StudyContext } from './records';
 export { formatModality, STUDY_STATUS_LABELS } from './study';

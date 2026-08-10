@@ -1,5 +1,6 @@
 using CloudFilm.Application.Abstractions;
 using CloudFilm.Infrastructure.Caching;
+using CloudFilm.Infrastructure.Configuration;
 using CloudFilm.Infrastructure.Identity;
 using CloudFilm.Infrastructure.Imaging;
 using CloudFilm.Infrastructure.Persistence;
@@ -65,7 +66,31 @@ public static class DependencyInjection
             })
             .AddRoles<ApplicationRole>()
             .AddEntityFrameworkStores<CloudFilmDbContext>()
+
+            // AddIdentityCore does not register a SignInManager, and the lockout
+            // and confirmed-e-mail options above are enforced by the sign-in
+            // manager alone. Without this they are configuration that never runs.
+            .AddSignInManager()
             .AddDefaultTokenProviders();
+
+        // SignInManager takes an IHttpContextAccessor. AddSignInManager registers
+        // one, but stating it here means a future change to that call cannot
+        // remove the dependency silently.
+        services.AddHttpContextAccessor();
+
+        // Token settings are bound once, here, and validated on start-up. The API
+        // project reads the same section to configure bearer validation, so the
+        // key that signs a token and the key that validates it cannot drift.
+        services.AddOptions<JwtOptions>()
+            .Bind(configuration.GetSection(JwtOptions.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        services.AddOptions<SeedOptions>()
+            .Bind(configuration.GetSection(SeedOptions.SectionName));
+
+        services.AddScoped<IAuthenticationService, IdentityAuthenticationService>();
+        services.AddSingleton<IAccessTokenIssuer, JwtAccessTokenIssuer>();
 
         services.AddStackExchangeRedisCache(redis =>
         {
@@ -91,6 +116,10 @@ public static class DependencyInjection
         {
             services.AddHostedService<DatabaseMigrator>();
         }
+
+        // Registered after the migrator: hosted services start in registration
+        // order, and seeding a user into tables that do not exist yet would fail.
+        services.AddHostedService<IdentitySeeder>();
 
         return services;
     }
