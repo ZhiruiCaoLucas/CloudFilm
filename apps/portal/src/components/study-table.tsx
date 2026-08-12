@@ -1,11 +1,13 @@
 import Link from 'next/link';
 import {
   formatModality,
-  STUDY_STATUS_LABELS,
+  STUDY_STATUS_MESSAGE_KEYS,
   type Study,
   type StudyStatus,
+  type Translator,
 } from '@cloudfilm/shared';
 import { buttonClasses, StatusBadge, type StatusTone } from '@cloudfilm/ui';
+import { serverTranslations } from '@/lib/locale';
 
 /**
  * Maps a study's lifecycle state onto the design system's tones.
@@ -27,36 +29,38 @@ const STATUS_TONES: Record<StudyStatus, StatusTone> = {
  * reading a bare date. It scrolls horizontally rather than reflowing, so columns
  * never silently disappear on a ward tablet.
  */
-export function StudyTable({ studies }: { readonly studies: readonly Study[] }) {
+export async function StudyTable({ studies }: { readonly studies: readonly Study[] }) {
+  const t = await serverTranslations();
+
   return (
     <div className="border-border overflow-x-auto rounded-lg border">
       <table className="w-full min-w-[42rem] border-collapse text-left text-sm">
-        <caption className="sr-only">Imaging studies for this patient</caption>
+        <caption className="sr-only">{t('study.tableCaption')}</caption>
         <thead className="bg-surface-overlay text-muted text-xs tracking-wide uppercase">
           <tr>
             <th scope="col" className="px-5 py-3 font-medium">
-              Modality
+              {t('study.modality')}
             </th>
             <th scope="col" className="px-5 py-3 font-medium">
-              Description
+              {t('study.description')}
             </th>
             <th scope="col" className="px-5 py-3 font-medium">
-              Study date
+              {t('study.date')}
             </th>
             <th scope="col" className="px-5 py-3 font-medium">
-              Series
+              {t('study.series')}
             </th>
             <th scope="col" className="px-5 py-3 font-medium">
-              Status
+              {t('study.status')}
             </th>
             <th scope="col" className="px-5 py-3 text-right font-medium">
-              <span className="sr-only">Actions</span>
+              <span className="sr-only">{t('study.actions')}</span>
             </th>
           </tr>
         </thead>
         <tbody>
           {studies.map((study) => (
-            <StudyRow key={study.studyInstanceUid} study={study} />
+            <StudyRow key={study.studyInstanceUid} study={study} t={t} />
           ))}
         </tbody>
       </table>
@@ -64,7 +68,7 @@ export function StudyTable({ studies }: { readonly studies: readonly Study[] }) 
   );
 }
 
-function StudyRow({ study }: { readonly study: Study }) {
+function StudyRow({ study, t }: { readonly study: Study; readonly t: Translator }) {
   return (
     <tr className="border-border border-t align-middle">
       <th scope="row" className="text-foreground px-5 py-4 font-medium">
@@ -75,7 +79,7 @@ function StudyRow({ study }: { readonly study: Study }) {
       <td className="text-muted px-5 py-4 tabular-nums">{study.seriesCount}</td>
       <td className="px-5 py-4">
         <StatusBadge tone={STATUS_TONES[study.status]}>
-          {STUDY_STATUS_LABELS[study.status]}
+          {t(STUDY_STATUS_MESSAGE_KEYS[study.status])}
         </StatusBadge>
       </td>
       <td className="px-5 py-4">
@@ -84,7 +88,7 @@ function StudyRow({ study }: { readonly study: Study }) {
             href={`/workspace/${encodeURIComponent(study.studyInstanceUid)}`}
             className={buttonClasses('secondary')}
           >
-            Open Study
+            {t('study.open')}
             <span className="sr-only">
               : {formatModality(study.modality)}, {study.performedOn}
             </span>

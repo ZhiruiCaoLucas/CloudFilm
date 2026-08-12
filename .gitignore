@@ -47,3 +47,6 @@ services/orthanc/seed/*
 .DS_Store
 Thumbs.db
 *.swp
+
+# Build output captured while debugging a container build. Never a source file.
+build.log

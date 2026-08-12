@@ -1,6 +1,9 @@
 import {
   API_ROUTES,
   isProblemDetails,
+  type CurrentUser,
+  type LoginRequest,
+  type LoginResponse,
   type Patient,
   type PatientRecord,
   type ProblemDetails,
@@ -60,6 +63,25 @@ export interface ApiClient {
    * {@link ApiClient.getPatient}.
    */
   getStudy(studyInstanceUid: string, signal?: AbortSignal): Promise<StudyContext | null>;
+
+  /**
+   * Exchanges credentials for an access token.
+   *
+   * Resolves to `null` when the credentials are rejected. A failed sign-in is an
+   * ordinary outcome of a form submission, not an exceptional one, and the API
+   * answers every rejection identically - so there is nothing for a caller to
+   * branch on beyond "no token".
+   */
+  login(request: LoginRequest, signal?: AbortSignal): Promise<LoginResponse | null>;
+
+  /**
+   * Reads the signed-in user from the supplied bearer token.
+   *
+   * Resolves to `null` when no token is attached, or when the token has expired
+   * or is otherwise not accepted. That makes it usable as a session probe: a
+   * caller asks who this is and gets either an answer or nobody.
+   */
+  getCurrentUser(signal?: AbortSignal): Promise<CurrentUser | null>;
 }
 
 /**
@@ -72,7 +94,7 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
   const baseUrl = options.baseUrl.replace(/\/+$/, '');
   const fetchImpl = options.fetch ?? globalThis.fetch;
 
-  async function request<T>(path: string, signal?: AbortSignal): Promise<T> {
+  async function request<T>(path: string, signal?: AbortSignal, body?: unknown): Promise<T> {
     const token = options.getAccessToken?.();
     const headers: Record<string, string> = { Accept: 'application/json' };
 
@@ -80,9 +102,14 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
+    if (body !== undefined) {
+      headers['Content-Type'] = 'application/json';
+    }
+
     const response = await fetchImpl(`${baseUrl}${path}`, {
       headers,
       cache: 'no-store',
+      ...(body === undefined ? {} : { method: 'POST', body: JSON.stringify(body) }),
       ...(signal ? { signal } : {}),
     });
 
@@ -93,11 +120,23 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
     return (await response.json()) as T;
   }
 
-  async function requestOptional<T>(path: string, signal?: AbortSignal): Promise<T | null> {
+  /**
+   * Runs a request, turning the listed statuses into `null` rather than a throw.
+   *
+   * 404 means "no such record" and 401 means "not signed in". Both are ordinary
+   * answers to a question, and a caller that has to wrap every lookup in a
+   * try/catch to discover that is a caller that will forget to.
+   */
+  async function requestOptional<T>(
+    path: string,
+    absentStatuses: readonly number[],
+    signal?: AbortSignal,
+    body?: unknown,
+  ): Promise<T | null> {
     try {
-      return await request<T>(path, signal);
+      return await request<T>(path, signal, body);
     } catch (error) {
-      if (error instanceof ApiError && error.status === 404) {
+      if (error instanceof ApiError && absentStatuses.includes(error.status)) {
         return null;
       }
       throw error;
@@ -108,9 +147,12 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
     getSystemInfo: (signal) => request<SystemInfo>(API_ROUTES.systemInfo, signal),
     listPatients: (signal) => request<readonly Patient[]>(API_ROUTES.patients, signal),
     getPatient: (medicalRecordNumber, signal) =>
-      requestOptional<PatientRecord>(API_ROUTES.patient(medicalRecordNumber), signal),
+      requestOptional<PatientRecord>(API_ROUTES.patient(medicalRecordNumber), [404], signal),
     getStudy: (studyInstanceUid, signal) =>
-      requestOptional<StudyContext>(API_ROUTES.study(studyInstanceUid), signal),
+      requestOptional<StudyContext>(API_ROUTES.study(studyInstanceUid), [404], signal),
+    login: (request_, signal) =>
+      requestOptional<LoginResponse>(API_ROUTES.auth.login, [401], signal, request_),
+    getCurrentUser: (signal) => requestOptional<CurrentUser>(API_ROUTES.auth.me, [401], signal),
   };
 }
 

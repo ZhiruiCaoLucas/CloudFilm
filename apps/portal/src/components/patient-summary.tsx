@@ -1,6 +1,7 @@
 import type { Patient } from '@cloudfilm/shared';
 import { Card, CardBody, CardHeader } from '@cloudfilm/ui';
 import { DefinitionItem } from './definition-item';
+import { serverTranslations } from '@/lib/locale';
 
 /**
  * Patient identification banner.
@@ -9,7 +10,9 @@ import { DefinitionItem } from './definition-item';
  * they are the three fields a clinician checks to confirm they are looking at
  * the right person before reading anything below.
  */
-export function PatientSummary({ patient }: { readonly patient: Patient }) {
+export async function PatientSummary({ patient }: { readonly patient: Patient }) {
+  const t = await serverTranslations();
+
   return (
     <Card>
       <CardHeader>
@@ -17,9 +20,15 @@ export function PatientSummary({ patient }: { readonly patient: Patient }) {
       </CardHeader>
       <CardBody>
         <dl className="grid grid-cols-1 gap-6 sm:grid-cols-3">
-          <DefinitionItem label="Medical record number" value={patient.medicalRecordNumber} />
-          <DefinitionItem label="Gender" value={patient.gender} />
-          <DefinitionItem label="Birth date" value={patient.birthDate} />
+          <DefinitionItem
+            label={t('patient.medicalRecordNumber')}
+            value={patient.medicalRecordNumber}
+          />
+          {/* The gender label and its value are both UI vocabulary derived from
+              a DICOM code, so both are translated. The birth date is archive
+              data and is rendered exactly as the archive reported it. */}
+          <DefinitionItem label={t('patient.gender')} value={t(`gender.${patient.gender}`)} />
+          <DefinitionItem label={t('patient.birthDate')} value={patient.birthDate} />
         </dl>
       </CardBody>
     </Card>

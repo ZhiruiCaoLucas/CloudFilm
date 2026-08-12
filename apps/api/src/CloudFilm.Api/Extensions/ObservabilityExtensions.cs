@@ -1,4 +1,4 @@
-using System.Security.Claims;
+using Microsoft.IdentityModel.JsonWebTokens;
 using Serilog;
 using Serilog.Events;
 
@@ -48,7 +48,14 @@ internal static class ObservabilityExtensions
             options.EnrichDiagnosticContext = static (diagnosticContext, httpContext) =>
             {
                 diagnosticContext.Set("CorrelationId", httpContext.TraceIdentifier);
-                diagnosticContext.Set("Subject", httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "anonymous");
+                // JwtRegisteredClaimNames.Sub, not ClaimTypes.NameIdentifier. The bearer
+                // handler sets MapInboundClaims = false, so inbound claims keep their
+                // registered short names and are never rewritten to the WS-Federation
+                // URIs. Reading the URI form matched nothing, so every authenticated
+                // request was logged as "anonymous".
+                diagnosticContext.Set(
+                    "Subject",
+                    httpContext.User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value ?? "anonymous");
                 diagnosticContext.Set("ClientIp", httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown");
             };
         });

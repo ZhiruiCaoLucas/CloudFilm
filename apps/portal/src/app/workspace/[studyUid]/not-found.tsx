@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { buttonClasses, Card, CardBody, CardHeader } from '@cloudfilm/ui';
+import { serverTranslations } from '@/lib/locale';
 
 /**
  * Shown when no study matches the requested Study Instance UID.
@@ -8,21 +9,22 @@ import { buttonClasses, Card, CardBody, CardHeader } from '@cloudfilm/ui';
  * chrome, so a bad study link does not drop the user into a differently shaped
  * page than the one they were navigating to.
  */
-export default function WorkspaceNotFound() {
+export default async function WorkspaceNotFound() {
+  const t = await serverTranslations();
+
   return (
     <div id="main" className="flex h-dvh items-center justify-center px-6">
       <Card className="max-w-lg">
         <CardHeader>
-          <h1 className="text-foreground text-lg font-semibold tracking-tight">Study not found</h1>
+          <h1 className="text-foreground text-lg font-semibold tracking-tight">
+            {t('workspace.notFoundTitle')}
+          </h1>
         </CardHeader>
         <CardBody className="flex flex-col gap-4">
-          <p className="text-muted text-sm">
-            No study with that Study Instance UID is available. It may belong to a patient this
-            build does not carry, or the link may be incomplete.
-          </p>
+          <p className="text-muted text-sm">{t('workspace.notFoundBody')}</p>
           <div>
             <Link href="/" className={buttonClasses()}>
-              Back to patient search
+              {t('patient.backToSearch')}
             </Link>
           </div>
         </CardBody>

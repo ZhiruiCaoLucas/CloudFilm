@@ -1,3 +1,7 @@
+'use client';
+
+import { useTranslations } from '@/components/locale-provider';
+
 /**
  * Shown when the open study is a placeholder rather than imported DICOM.
  *
@@ -6,6 +10,8 @@
  * states the actual reason instead.
  */
 export function ViewerNoData({ studyInstanceUid }: { readonly studyInstanceUid: string }) {
+  const t = useTranslations();
+
   return (
     <div className="flex h-full flex-col items-center justify-center gap-5 px-6 text-center">
       <svg
@@ -34,18 +40,13 @@ export function ViewerNoData({ studyInstanceUid }: { readonly studyInstanceUid: 
       </svg>
 
       <div className="flex flex-col gap-2">
-        <p className="text-base font-medium text-slate-200">No imaging data for this study</p>
-        <p className="max-w-md text-sm text-slate-400">
-          This is a placeholder study. Its identifier is synthetic, so no archive holds pixel data
-          for it.
-        </p>
+        <p className="text-base font-medium text-slate-200">{t('viewer.noDataTitle')}</p>
+        <p className="max-w-md text-sm text-slate-400">{t('viewer.noDataBody')}</p>
         <p className="font-mono text-xs break-all text-slate-500">{studyInstanceUid}</p>
       </div>
 
       <p className="max-w-md text-sm text-slate-500">
-        Import a study into the local Orthanc with{' '}
-        <code className="font-mono text-slate-400">pnpm seed:orthanc</code>, then restart the portal
-        and search the record number it prints.
+        {t('viewer.noDataHint', { command: 'pnpm seed:orthanc' })}
       </p>
     </div>
   );

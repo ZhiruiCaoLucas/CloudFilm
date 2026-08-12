@@ -3,6 +3,7 @@
 import { useId, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Input } from '@cloudfilm/ui';
+import { useTranslations } from './locale-provider';
 
 /**
  * Accepted Medical Record Number shape.
@@ -21,6 +22,7 @@ const MEDICAL_RECORD_NUMBER = /^[A-Za-z0-9][A-Za-z0-9-]{0,31}$/;
  * keyboard and screen-reader users without any extra handling.
  */
 export function PatientSearchForm() {
+  const t = useTranslations();
   const inputId = useId();
   const hintId = useId();
   const errorId = useId();
@@ -36,12 +38,12 @@ export function PatientSearchForm() {
     const medicalRecordNumber = value.trim();
 
     if (medicalRecordNumber.length === 0) {
-      setError('Enter a patient ID to search.');
+      setError(t('home.errorEmpty'));
       return;
     }
 
     if (!MEDICAL_RECORD_NUMBER.test(medicalRecordNumber)) {
-      setError('A patient ID may contain letters, numbers and hyphens only.');
+      setError(t('home.errorFormat'));
       return;
     }
 
@@ -54,7 +56,7 @@ export function PatientSearchForm() {
   return (
     <form onSubmit={handleSubmit} noValidate className="flex w-full flex-col gap-3">
       <label htmlFor={inputId} className="text-foreground text-sm font-medium">
-        Patient ID
+        {t('home.searchLabel')}
       </label>
 
       <div className="flex flex-col gap-3 sm:flex-row">
@@ -65,14 +67,14 @@ export function PatientSearchForm() {
           onChange={(event) => setValue(event.target.value)}
           invalid={error !== null}
           aria-describedby={error === null ? hintId : `${errorId} ${hintId}`}
-          placeholder="e.g. 10001"
+          placeholder={t('home.searchPlaceholder')}
           autoComplete="off"
           enterKeyHint="search"
           spellCheck={false}
           className="sm:flex-1"
         />
         <Button type="submit" disabled={isNavigating} className="sm:w-32">
-          {isNavigating ? 'Searching…' : 'Search'}
+          {isNavigating ? t('home.searchSubmitting') : t('home.searchSubmit')}
         </Button>
       </div>
 
@@ -83,7 +85,7 @@ export function PatientSearchForm() {
       ) : null}
 
       <p id={hintId} className="text-muted text-sm">
-        Enter the patient&rsquo;s Medical Record Number to open their imaging studies.
+        {t('home.searchHint')}
       </p>
     </form>
   );

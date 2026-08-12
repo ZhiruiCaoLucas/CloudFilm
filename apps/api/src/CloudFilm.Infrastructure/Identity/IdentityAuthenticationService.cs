@@ -1,4 +1,5 @@
 using CloudFilm.Application.Abstractions;
+using CloudFilm.Application.Auditing;
 using CloudFilm.Application.Auth;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
@@ -28,6 +29,7 @@ internal sealed class IdentityAuthenticationService(
     SignInManager<ApplicationUser> signInManager,
     UserManager<ApplicationUser> userManager,
     IAccessTokenIssuer tokenIssuer,
+    IAuditLogService auditLog,
     ILogger<IdentityAuthenticationService> logger) : IAuthenticationService
 {
     /// <summary>
@@ -36,9 +38,11 @@ internal sealed class IdentityAuthenticationService(
     /// </summary>
     private static readonly ApplicationUser _timingDecoy = new() { UserName = "timing-decoy" };
 
+
     private readonly SignInManager<ApplicationUser> _signInManager = signInManager;
     private readonly UserManager<ApplicationUser> _userManager = userManager;
     private readonly IAccessTokenIssuer _tokenIssuer = tokenIssuer;
+    private readonly IAuditLogService _auditLog = auditLog;
     private readonly ILogger<IdentityAuthenticationService> _logger = logger;
 
     /// <summary>
@@ -74,6 +78,12 @@ internal sealed class IdentityAuthenticationService(
 
             _logger.LogInformation("Sign-in rejected: no account matched the supplied address.");
 
+            // No actor: nobody owns this address. The address itself is not
+            // recorded - a row saying "failed sign-in, no actor, alice@x.test"
+            // would tell any reader of the table that alice@x.test does not
+            // exist, which is the disclosure this whole path avoids.
+            await AuditAsync(null, AuditAction.LoginFailed, cancellationToken).ConfigureAwait(false);
+
             return null;
         }
 
@@ -92,6 +102,11 @@ internal sealed class IdentityAuthenticationService(
                 result.IsLockedOut,
                 result.IsNotAllowed);
 
+            // One action for all four rejection reasons. The account exists, so it
+            // has an actor - but which of wrong password, lockout or unconfirmed
+            // e-mail occurred is deliberately not written down.
+            await AuditAsync(user.Id, AuditAction.LoginFailed, cancellationToken).ConfigureAwait(false);
+
             return null;
         }
 
@@ -102,6 +117,37 @@ internal sealed class IdentityAuthenticationService(
 
         _logger.LogInformation("Sign-in succeeded for {UserId}.", user.Id);
 
+        await AuditAsync(user.Id, AuditAction.LoginSucceeded, cancellationToken).ConfigureAwait(false);
+
         return new LoginResult(token.Value, token.ExpiresAt, user.DisplayName ?? email);
+    }
+
+    /// <summary>
+    /// Records a sign-in outcome without letting the audit trail change it.
+    /// </summary>
+    /// <remarks>
+    /// Swallows write failures on purpose, and this is the one place in CloudFilm
+    /// where that is correct. If an audit outage turned a valid sign-in into a
+    /// rejection, the login endpoint would become a probe for the audit
+    /// database's health, and a clinician with the right password would be told
+    /// it was wrong. The failure is logged as an error so it is visible to
+    /// operators, who can then decide whether to take the service out of use.
+    ///
+    /// PHI access takes the opposite decision - see ImagingEndpoints.
+    /// </remarks>
+    private async Task AuditAsync(Guid? actorUserId, string action, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _auditLog
+                .RecordAsync(
+                    new AuditEntry(actorUserId, action, AuditResourceType.Authentication, ResourceId: null),
+                    cancellationToken)
+                .ConfigureAwait(false);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            _logger.LogError(exception, "Could not record a {Action} audit event.", action);
+        }
     }
 }

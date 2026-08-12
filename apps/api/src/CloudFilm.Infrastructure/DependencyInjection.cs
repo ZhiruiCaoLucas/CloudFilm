@@ -1,4 +1,5 @@
 using CloudFilm.Application.Abstractions;
+using CloudFilm.Infrastructure.Auditing;
 using CloudFilm.Infrastructure.Caching;
 using CloudFilm.Infrastructure.Configuration;
 using CloudFilm.Infrastructure.Identity;
@@ -88,6 +89,11 @@ public static class DependencyInjection
 
         services.AddOptions<SeedOptions>()
             .Bind(configuration.GetSection(SeedOptions.SectionName));
+
+        // Scoped: it shares the request's DbContext, so an audit write joins the
+        // same connection and the same unit of work as everything else in that
+        // request rather than opening a second one.
+        services.AddScoped<IAuditLogService, AuditLogService>();
 
         services.AddScoped<IAuthenticationService, IdentityAuthenticationService>();
         services.AddSingleton<IAccessTokenIssuer, JwtAccessTokenIssuer>();

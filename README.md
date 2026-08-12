@@ -226,9 +226,9 @@ The Domain project has no package references at all, and that is enforced by rev
 | PACS never exposed | Only the Retrieve Service may reach a hospital network. |
 | DICOM tier unreachable | Orthanc, PostgreSQL and Redis publish no ports; browsers use the OHIF proxy. |
 | Transient storage | Orthanc recycles studies; every Redis entry carries a mandatory TTL. |
-| Authentication | ASP.NET Identity with JWT bearer tokens; 12-character minimum passwords, lockout, confirmed e-mail. |
-| Authorisation | Role-based, added per feature module. |
-| Audit | Every request logged with subject, correlation id and client address. |
+| Authentication | ASP.NET Core Identity; `POST /api/v1/auth/login` issues an HMAC-SHA256 JWT; the portal holds it in an `HttpOnly` cookie and the browser never sees it. 12-character minimum passwords, lockout after 5 failures, confirmed e-mail required. |
+| Authorisation | Authenticated by default: an authorisation fallback policy covers every endpoint that does not opt out. Only sign-in, `/api/v1/system/info`, the two health probes and the development-only OpenAPI documents are `AllowAnonymous`. **Role-based access control is not implemented** - every signed-in user has the same rights. |
+| Audit | `cloudfilm.AuditLogs` records `LOGIN_SUCCEEDED`, `LOGIN_FAILED`, `VIEW_PATIENT` and `VIEW_STUDY` with the actor, the resource identifier and the request's correlation id. A failed audit write blocks the patient response rather than following it. Not every HTTP request is audited - see [`SECURITY.md`](SECURITY.md). |
 | Error hygiene | RFC 9457 problem details; internal detail never leaves the process. |
 | Secrets | Environment only. `.env` is git-ignored; `.env.example` holds no real values. |
 | Minimal images | No package is installed for the benefit of a health check; see [`docs/healthchecks.md`](docs/healthchecks.md). |
@@ -247,10 +247,10 @@ remains the system of record.**
 | **2 — done** | Imaging workspace: study navigator, embedded OHIF, status bar. |
 | **3 — done** | Local Orthanc as a development data source; the portal reads through a typed API client. |
 | **4 — done** | Retrieve queries Orthanc over DICOMweb; the API serves real patients and studies. |
-| 4 | Identity schema, registration and login, JWT issuance, role model. |
-| 5 | First hospital adapter (DICOMweb), study staging into Orthanc, retrieve API. |
-| 6 | Access grants, sharing links with expiry, download, full audit trail. |
-| 7 | AI analysis service (Python FastAPI) plugged in behind an existing port. |
+| **5 — done** | Identity schema and migrations, sign-in and JWT issuance, portal session, PHI endpoints closed by default, English/Chinese UI, clinical access audit. |
+| 6 | Role-based access control; search by name, date and accession number. |
+| 7 | Access grants, sharing links with expiry, download. |
+| 8 | AI analysis service (Python FastAPI) plugged in behind an existing port. |
 
 One sprint at a time; every sprint leaves the application runnable.
 

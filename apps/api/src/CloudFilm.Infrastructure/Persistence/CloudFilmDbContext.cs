@@ -1,4 +1,5 @@
 using CloudFilm.Application.Abstractions;
+using CloudFilm.Infrastructure.Auditing;
 using CloudFilm.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -20,6 +21,16 @@ public sealed class CloudFilmDbContext(DbContextOptions<CloudFilmDbContext> opti
     /// The PostgreSQL schema that owns every CloudFilm table.
     /// </summary>
     public const string Schema = "cloudfilm";
+
+    /// <summary>
+    /// The clinical access audit trail.
+    /// </summary>
+    /// <remarks>
+    /// Append-only by convention: nothing in CloudFilm updates or deletes an
+    /// audit record. The convention is not enforced by the database yet, which
+    /// is a known limitation rather than an oversight.
+    /// </remarks>
+    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder builder)

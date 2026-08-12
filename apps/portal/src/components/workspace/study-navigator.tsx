@@ -1,7 +1,14 @@
 import Link from 'next/link';
-import { formatModality, STUDY_STATUS_LABELS, type Patient, type Study } from '@cloudfilm/shared';
+import {
+  formatModality,
+  STUDY_STATUS_MESSAGE_KEYS,
+  type Patient,
+  type Study,
+  type Translator,
+} from '@cloudfilm/shared';
 import { cn } from '@cloudfilm/ui';
 import { StudyThumbnail } from './study-thumbnail';
+import { serverTranslations } from '@/lib/locale';
 
 /**
  * Left rail: who the patient is, and every study available for them.
@@ -11,7 +18,7 @@ import { StudyThumbnail } from './study-thumbnail';
  * Tab — all of which come free from `<a>` and none of which come free from a
  * `div` with an `onClick`.
  */
-export function StudyNavigator({
+export async function StudyNavigator({
   patient,
   studies,
   selectedStudyInstanceUid,
@@ -20,33 +27,37 @@ export function StudyNavigator({
   readonly studies: readonly Study[];
   readonly selectedStudyInstanceUid: string;
 }) {
+  const t = await serverTranslations();
+
   return (
     <aside
-      aria-label="Study navigator"
+      aria-label={t('workspace.navigatorLabel')}
       className="border-border bg-surface-raised flex w-80 shrink-0 flex-col overflow-y-auto border-r"
     >
       <section className="border-border shrink-0 border-b px-4 py-4">
-        <h2 className="text-muted mb-2 text-xs tracking-wide uppercase">Patient</h2>
+        <h2 className="text-muted mb-2 text-xs tracking-wide uppercase">
+          {t('workspace.patient')}
+        </h2>
         <p className="text-foreground text-sm font-medium">{patient.fullName}</p>
         <dl className="text-muted mt-1 space-y-0.5 text-xs">
           <div className="flex gap-2">
-            <dt>MRN</dt>
+            <dt>{t('workspace.mrn')}</dt>
             <dd className="text-foreground font-mono">{patient.medicalRecordNumber}</dd>
           </div>
           <div className="flex gap-2">
-            <dt>Born</dt>
+            <dt>{t('workspace.born')}</dt>
             <dd className="text-foreground font-mono">{patient.birthDate}</dd>
           </div>
           <div className="flex gap-2">
-            <dt>Gender</dt>
-            <dd className="text-foreground">{patient.gender}</dd>
+            <dt>{t('workspace.gender')}</dt>
+            <dd className="text-foreground">{t(`gender.${patient.gender}`)}</dd>
           </div>
         </dl>
       </section>
 
-      <nav aria-label="Studies" className="flex-1 px-2 py-3">
+      <nav aria-label={t('workspace.studiesLabel')} className="flex-1 px-2 py-3">
         <h2 className="text-muted px-2 pb-2 text-xs tracking-wide uppercase">
-          Studies ({studies.length})
+          {t('workspace.studiesCount', { count: studies.length })}
         </h2>
         <ul className="flex flex-col gap-1">
           {studies.map((study) => (
@@ -54,6 +65,7 @@ export function StudyNavigator({
               <StudyNavigatorItem
                 study={study}
                 isSelected={study.studyInstanceUid === selectedStudyInstanceUid}
+                t={t}
               />
             </li>
           ))}
@@ -66,9 +78,11 @@ export function StudyNavigator({
 function StudyNavigatorItem({
   study,
   isSelected,
+  t,
 }: {
   readonly study: Study;
   readonly isSelected: boolean;
+  readonly t: Translator;
 }) {
   return (
     <Link
@@ -90,7 +104,7 @@ function StudyNavigatorItem({
         <span className="text-muted flex items-center gap-2 font-mono text-xs">
           <span>{study.performedOn}</span>
           <span aria-hidden="true">·</span>
-          <span>{STUDY_STATUS_LABELS[study.status]}</span>
+          <span>{t(STUDY_STATUS_MESSAGE_KEYS[study.status])}</span>
         </span>
       </span>
     </Link>

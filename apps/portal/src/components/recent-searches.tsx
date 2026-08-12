@@ -1,4 +1,5 @@
 import { EmptyState } from '@cloudfilm/ui';
+import { serverTranslations } from '@/lib/locale';
 
 /**
  * Recently opened patients.
@@ -8,16 +9,15 @@ import { EmptyState } from '@cloudfilm/ui';
  * audit trail to record the access — storing them in the browser first would
  * leak one clinician's patients to the next person at the workstation.
  */
-export function RecentSearches() {
+export async function RecentSearches() {
+  const t = await serverTranslations();
+
   return (
     <section aria-labelledby="recent-searches-heading" className="flex flex-col gap-4">
       <h2 id="recent-searches-heading" className="text-foreground text-sm font-medium">
-        Recent searches
+        {t('home.recentTitle')}
       </h2>
-      <EmptyState
-        title="No recent searches"
-        description="Patients you open will be listed here once sign-in and access auditing are in place."
-      />
+      <EmptyState title={t('home.recentEmptyTitle')} description={t('home.recentEmptyBody')} />
     </section>
   );
 }

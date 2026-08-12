@@ -44,20 +44,28 @@ app.UseAuthorization();
 
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
-    app.MapScalarApiReference();
+    // Anonymous under the fallback policy, and only ever mapped in development.
+    // The schema describes the API rather than exposing any of its data.
+    app.MapOpenApi().AllowAnonymous();
+    app.MapScalarApiReference().AllowAnonymous();
 }
 
+// Health probes are anonymous by necessity, not by oversight. Docker's
+// healthcheck carries no credential, so a probe behind the fallback policy would
+// answer 401, the container would be marked unhealthy, and everything that waits
+// on `service_healthy` - the portal included - would never start. Neither probe
+// discloses patient data: liveness runs no checks at all, and readiness reports
+// only check names and durations.
 app.MapHealthChecks("/health/live", new HealthCheckOptions
 {
     Predicate = static _ => false,
-});
+}).AllowAnonymous();
 
 app.MapHealthChecks("/health/ready", new HealthCheckOptions
 {
     Predicate = static check => check.Tags.Contains(HealthCheckExtensions.ReadinessTag),
     ResponseWriter = WriteHealthResponseAsync,
-});
+}).AllowAnonymous();
 
 app.MapSystemEndpoints();
 app.MapAuthEndpoints();

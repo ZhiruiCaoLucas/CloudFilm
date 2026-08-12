@@ -1,4 +1,5 @@
 import { Skeleton } from '@cloudfilm/ui';
+import { serverTranslations } from '@/lib/locale';
 
 /**
  * Shown while a study is being resolved.
@@ -7,7 +8,9 @@ import { Skeleton } from '@cloudfilm/ui';
  * collapse the layout and rebuild it. The reading area stays black throughout,
  * because that is the surround a clinician's eyes are already adapted to.
  */
-export default function WorkspaceLoading() {
+export default async function WorkspaceLoading() {
+  const t = await serverTranslations();
+
   return (
     <div className="flex h-dvh min-h-0 flex-col overflow-hidden">
       <div className="border-border bg-surface-raised flex shrink-0 items-center gap-6 border-b px-4 py-2.5">
@@ -30,7 +33,7 @@ export default function WorkspaceLoading() {
         </div>
         <div className="flex flex-1 items-center justify-center bg-black">
           <p className="text-sm text-slate-500" role="status">
-            Loading study…
+            {t('workspace.loading')}
           </p>
         </div>
       </div>

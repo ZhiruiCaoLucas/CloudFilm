@@ -6,7 +6,6 @@ CloudFilm/
 │   ├── portal/                          Next.js portal
 │   │   ├── src/app/                     App Router routes
 │   │   │   ├── page.tsx                 landing page, platform status
-│   │   │   ├── viewer/[studyInstanceUid]/  OHIF host page
 │   │   │   └── api/health/route.ts      container liveness probe
 │   │   ├── src/components/              app-specific components
 │   │   ├── src/lib/                     env validation, API client factory

@@ -1,6 +1,7 @@
 using System.Text;
 using CloudFilm.Infrastructure.Configuration;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 
 namespace CloudFilm.Api.Extensions;
@@ -46,8 +47,20 @@ internal static class AuthenticationExtensions
                 };
             });
 
-        // Feature modules declare their own role based policies as they are introduced.
-        builder.Services.AddAuthorization();
+        // Authenticated by default. The fallback policy applies to every endpoint
+        // that declares no authorisation metadata of its own, which inverts the
+        // failure mode: an endpoint added without thinking about authorisation is
+        // now closed rather than open. For a service that returns patient
+        // demographics, "forgot to protect it" must not be a silent disclosure.
+        //
+        // The cost is that genuinely public endpoints have to say so out loud -
+        // health probes, system info and sign-in all carry AllowAnonymous, and a
+        // missing one shows up immediately as a 401 rather than years later as a
+        // breach. Feature modules still add their own role based policies on top.
+        builder.Services.AddAuthorization(options =>
+            options.FallbackPolicy = new AuthorizationPolicyBuilder()
+                .RequireAuthenticatedUser()
+                .Build());
 
         return builder;
     }

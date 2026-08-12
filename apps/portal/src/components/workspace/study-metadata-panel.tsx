@@ -3,12 +3,14 @@
 import { useState } from 'react';
 import {
   formatModality,
-  STUDY_STATUS_LABELS,
+  STUDY_STATUS_MESSAGE_KEYS,
   type Patient,
   type Series,
   type Study,
+  type Translator,
 } from '@cloudfilm/shared';
 import { Button, cn } from '@cloudfilm/ui';
+import { useTranslations } from '@/components/locale-provider';
 
 /**
  * Study and patient metadata, alongside the reading area.
@@ -30,31 +32,34 @@ export function StudyMetadataPanel({
   readonly study: Study;
   readonly series: readonly Series[];
 }) {
+  const t = useTranslations();
   const [isOpen, setIsOpen] = useState(true);
 
   return (
     <aside
-      aria-label="Study metadata"
+      aria-label={t('workspace.metadataLabel')}
       className="border-border bg-surface-raised hidden shrink-0 flex-col border-l lg:flex"
     >
       <div className="border-border flex items-center justify-between gap-2 border-b px-3 py-2">
-        {isOpen ? <h2 className="text-muted text-xs tracking-wide uppercase">Metadata</h2> : null}
+        {isOpen ? (
+          <h2 className="text-muted text-xs tracking-wide uppercase">{t('workspace.metadata')}</h2>
+        ) : null}
         <Button
           variant="ghost"
           onClick={() => setIsOpen((open) => !open)}
           aria-expanded={isOpen}
           className="min-h-8 px-2 text-xs"
         >
-          {isOpen ? 'Hide' : 'Info'}
+          {isOpen ? t('workspace.hide') : t('workspace.info')}
         </Button>
       </div>
 
       {isOpen ? (
         <div className="w-72 overflow-y-auto px-3 py-4">
-          <MetadataSection title="Study">
-            <MetadataRow label="Description" value={study.description} />
-            <MetadataRow label="Modality" value={formatModality(study.modality)} />
-            <MetadataRow label="Study date" value={study.performedOn} mono />
+          <MetadataSection title={t('workspace.study')}>
+            <MetadataRow label={t('study.description')} value={study.description} />
+            <MetadataRow label={t('study.modality')} value={formatModality(study.modality)} />
+            <MetadataRow label={t('study.date')} value={study.performedOn} mono />
 
             {/*
               Omitted rather than shown blank. A study with no accession number
@@ -62,13 +67,16 @@ export function StudyMetadataPanel({
               the value failed to load.
             */}
             {study.accessionNumber.length > 0 ? (
-              <MetadataRow label="Accession" value={study.accessionNumber} mono />
+              <MetadataRow label={t('study.accession')} value={study.accessionNumber} mono />
             ) : null}
 
-            <MetadataRow label="Status" value={STUDY_STATUS_LABELS[study.status]} />
-            <MetadataRow label="Series" value={String(study.seriesCount)} mono />
-            <MetadataRow label="Images" value={String(study.instanceCount)} mono />
-            <MetadataRow label="Study UID" value={study.studyInstanceUid} mono wrap />
+            <MetadataRow
+              label={t('study.status')}
+              value={t(STUDY_STATUS_MESSAGE_KEYS[study.status])}
+            />
+            <MetadataRow label={t('study.series')} value={String(study.seriesCount)} mono />
+            <MetadataRow label={t('study.images')} value={String(study.instanceCount)} mono />
+            <MetadataRow label={t('study.studyUid')} value={study.studyInstanceUid} mono wrap />
           </MetadataSection>
 
           {/*
@@ -77,27 +85,27 @@ export function StudyMetadataPanel({
             rendered as an empty heading.
           */}
           {series.map((item) => (
-            <MetadataSection key={item.seriesInstanceUid} title={seriesTitle(item)}>
+            <MetadataSection key={item.seriesInstanceUid} title={seriesTitle(item, t)}>
               {item.modality.length > 0 ? (
-                <MetadataRow label="Modality" value={formatModality(item.modality)} />
+                <MetadataRow label={t('series.modality')} value={formatModality(item.modality)} />
               ) : null}
               {item.description.length > 0 ? (
-                <MetadataRow label="Description" value={item.description} />
+                <MetadataRow label={t('series.description')} value={item.description} />
               ) : null}
               {item.instanceCount > 0 ? (
-                <MetadataRow label="Images" value={String(item.instanceCount)} mono />
+                <MetadataRow label={t('series.images')} value={String(item.instanceCount)} mono />
               ) : null}
               {item.institutionName.length > 0 ? (
-                <MetadataRow label="Institution" value={item.institutionName} />
+                <MetadataRow label={t('series.institution')} value={item.institutionName} />
               ) : null}
             </MetadataSection>
           ))}
 
-          <MetadataSection title="Patient">
-            <MetadataRow label="Name" value={patient.fullName} />
-            <MetadataRow label="MRN" value={patient.medicalRecordNumber} mono />
-            <MetadataRow label="Birth date" value={patient.birthDate} mono />
-            <MetadataRow label="Gender" value={patient.gender} />
+          <MetadataSection title={t('workspace.patient')}>
+            <MetadataRow label={t('patient.name')} value={patient.fullName} />
+            <MetadataRow label={t('workspace.mrn')} value={patient.medicalRecordNumber} mono />
+            <MetadataRow label={t('patient.birthDate')} value={patient.birthDate} mono />
+            <MetadataRow label={t('patient.gender')} value={t(`gender.${patient.gender}`)} />
           </MetadataSection>
         </div>
       ) : null}
@@ -112,8 +120,10 @@ export function StudyMetadataPanel({
  * number rather than claiming "Series 0" - which is not a value DICOM can hold
  * and would read as a real series identifier.
  */
-function seriesTitle(series: Series): string {
-  return series.seriesNumber > 0 ? `Series ${series.seriesNumber}` : 'Series';
+function seriesTitle(series: Series, t: Translator): string {
+  return series.seriesNumber > 0
+    ? t('series.numbered', { number: series.seriesNumber })
+    : t('series.unnumbered');
 }
 
 function MetadataSection({

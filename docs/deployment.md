@@ -45,8 +45,9 @@ a rebuild.
 
 ## Pin the third-party images
 
-`ORTHANC_IMAGE` and `OHIF_IMAGE` default to `:latest` so a fresh clone runs. Before a
-hospital deployment, pin both to an immutable digest:
+`ORTHANC_IMAGE` and `OHIF_IMAGE` are version-pinned in `docker-compose.yml`, never
+`:latest`. A tag is still mutable - the publisher can move it - so pin both to an
+immutable digest before a hospital deployment, and record which digest was verified:
 
 ```bash
 docker pull orthancteam/orthanc:<version>

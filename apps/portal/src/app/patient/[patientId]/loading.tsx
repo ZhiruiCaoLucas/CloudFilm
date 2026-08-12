@@ -1,5 +1,6 @@
 import { Card, CardBody, CardHeader, Skeleton } from '@cloudfilm/ui';
 import { PortalShell } from '@/components/portal-shell';
+import { serverTranslations } from '@/lib/locale';
 
 /**
  * Shown while a patient record is being resolved.
@@ -8,7 +9,9 @@ import { PortalShell } from '@/components/portal-shell';
  * screen with no indication anything was happening. The shape mirrors the real
  * page so the layout does not jump when content arrives.
  */
-export default function PatientLoading() {
+export default async function PatientLoading() {
+  const t = await serverTranslations();
+
   return (
     <PortalShell>
       <div className="flex flex-col gap-10">
@@ -40,7 +43,7 @@ export default function PatientLoading() {
         </div>
       </div>
       <span className="sr-only" role="status">
-        Loading patient record
+        {t('patient.loading')}
       </span>
     </PortalShell>
   );

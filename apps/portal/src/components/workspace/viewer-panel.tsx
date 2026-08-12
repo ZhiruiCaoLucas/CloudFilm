@@ -1,6 +1,9 @@
+'use client';
+
 import { buildViewerUrl } from '@cloudfilm/core';
 import type { Study } from '@cloudfilm/shared';
 import { ViewerNoData } from './viewer-no-data';
+import { useTranslations } from '@/components/locale-provider';
 
 /**
  * The reading area.
@@ -30,11 +33,16 @@ export function ViewerPanel({
   readonly viewerBaseUrl: string;
   readonly isStudyImported: boolean;
 }) {
+  const t = useTranslations();
+
   return (
-    <section aria-label="Image viewer" className="relative flex min-w-0 flex-1 flex-col bg-black">
+    <section
+      aria-label={t('viewer.label')}
+      className="relative flex min-w-0 flex-1 flex-col bg-black"
+    >
       {isStudyImported ? (
         <iframe
-          title={`OHIF Viewer — ${study.description}`}
+          title={t('viewer.title', { description: study.description })}
           src={buildViewerUrl({ viewerBaseUrl, studyInstanceUid: study.studyInstanceUid })}
           className="h-full w-full border-0"
           allow="fullscreen"

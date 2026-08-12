@@ -2,6 +2,7 @@
 
 import { Button, Card, CardBody, CardHeader } from '@cloudfilm/ui';
 import { PortalShell } from '@/components/portal-shell';
+import { useTranslations } from '@/components/locale-provider';
 
 /**
  * Catches unexpected failures while rendering a patient record.
@@ -21,26 +22,23 @@ export default function PatientError({
   readonly error: Error & { digest?: string };
   readonly reset: () => void;
 }) {
+  const t = useTranslations();
+
   return (
     <PortalShell>
       <Card>
         <CardHeader>
           <h1 className="text-foreground text-lg font-semibold tracking-tight">
-            This patient record could not be displayed
+            {t('patient.errorTitle')}
           </h1>
         </CardHeader>
         <CardBody className="flex flex-col gap-4">
-          <p className="text-muted text-sm">
-            Nothing has been changed. Retry, or return to search and try again.
-          </p>
+          <p className="text-muted text-sm">{t('patient.errorBody')}</p>
           {error.digest === undefined ? null : (
-            <p className="text-muted text-xs">
-              Reference <code className="text-foreground font-mono">{error.digest}</code> — quote
-              this when reporting the problem.
-            </p>
+            <p className="text-muted text-xs">{t('common.reference', { digest: error.digest })}</p>
           )}
           <div className="flex gap-3">
-            <Button onClick={reset}>Retry</Button>
+            <Button onClick={reset}>{t('common.retry')}</Button>
           </div>
         </CardBody>
       </Card>
