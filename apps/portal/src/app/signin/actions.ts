@@ -3,7 +3,13 @@
 import { redirect } from 'next/navigation';
 import type { LoginResponse } from '@cloudfilm/shared';
 import { serverApiClient } from '@/lib/api';
-import { SIGN_IN_PATH, clearSession, toInternalPath, writeSession } from '@/lib/session';
+import {
+  NO_ROLE_PATH,
+  SIGN_IN_PATH,
+  clearSession,
+  toInternalPath,
+  writeSession,
+} from '@/lib/session';
 import type { SignInState } from './sign-in-state';
 
 /**
@@ -44,7 +50,28 @@ export async function signIn(_state: SignInState, formData: FormData): Promise<S
 
   await writeSession(session.accessToken, session.expiresAt);
 
-  // Throws NEXT_REDIRECT; must stay outside the try above so it is not caught.
+  // The session is written either way: the account authenticated, and signing
+  // in again would not give it a role. Where it lands differs.
+  //
+  // An account with no application role is sent somewhere that says so, rather
+  // than to a start page that looks like everything worked - which it does,
+  // because the panels on it tolerate a refusal and simply render empty. The
+  // reader would go looking for a patient before discovering anything was
+  // wrong.
+  //
+  // This is where the reader is taken, not what they are allowed to see. The
+  // API refuses every protected call from such an account on its own, and keeps
+  // refusing if this check is ever bypassed or if the role is withdrawn while
+  // the token is still valid - which is why the 403 handling that already
+  // routes here stays exactly as it is. Deleting one in favour of the other
+  // would be a mistake in either direction.
+  //
+  // Both branches throw NEXT_REDIRECT and must stay outside the try above so
+  // they are not caught.
+  if (session.roles.length === 0) {
+    redirect(NO_ROLE_PATH);
+  }
+
   redirect(returnUrl);
 }
 

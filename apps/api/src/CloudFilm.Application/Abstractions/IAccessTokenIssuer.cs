@@ -18,8 +18,31 @@ public interface IAccessTokenIssuer
     /// <param name="userId">The account identifier, written to the <c>sub</c> claim.</param>
     /// <param name="email">The e-mail address, written to the <c>email</c> claim.</param>
     /// <param name="displayName">The display name, written to the <c>name</c> claim.</param>
+    /// <param name="roles">
+    /// The application roles the account holds, written as role claims. Empty
+    /// when it holds none.
+    /// </param>
     /// <returns>The signed token and the instant it expires.</returns>
-    public AccessToken Issue(string userId, string email, string displayName);
+    /// <remarks>
+    /// <para>
+    /// The subject is a <see cref="Guid"/> rather than a string. Every token
+    /// CloudFilm issues is for an account, and an account is identified by a
+    /// Guid; taking the string form here would let a caller mint a token whose
+    /// subject nothing downstream can resolve to an account, which is precisely
+    /// the state every endpoint has to defend against.
+    /// </para>
+    /// <para>
+    /// Roles are a required argument with no default and no overload that omits
+    /// them. A caller that has not decided what a token may do has not finished
+    /// deciding whether to issue one, and a defaulted empty list would make
+    /// "this account has no roles" indistinguishable from "nobody looked".
+    /// </para>
+    /// </remarks>
+    public AccessToken Issue(
+        Guid userId,
+        string email,
+        string displayName,
+        IReadOnlyList<string> roles);
 }
 
 /// <summary>

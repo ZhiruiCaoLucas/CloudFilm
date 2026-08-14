@@ -83,7 +83,10 @@ public sealed class AuthEndpointsTests(AuthApiFactory factory) : IClassFixture<A
 
         _factory.Authentication
             .LoginAsync(Arg.Any<LoginRequest>(), Arg.Any<CancellationToken>())
-            .Returns(new LoginResult("a.b.c", expiry, "Administrator"));
+            .Returns(new LoginResult("a.b.c", expiry, "Seed Administrator")
+            {
+                Roles = [RoleNames.Administrator],
+            });
 
         using HttpClient client = _factory.CreateClient();
 
@@ -97,7 +100,8 @@ public sealed class AuthEndpointsTests(AuthApiFactory factory) : IClassFixture<A
 
         body.Should().NotBeNull();
         body!.AccessToken.Should().Be("a.b.c");
-        body.DisplayName.Should().Be("Administrator");
+        body.DisplayName.Should().Be("Seed Administrator");
+        body.Roles.Should().Equal(RoleNames.Administrator);
     }
 
     [Fact]
@@ -179,9 +183,10 @@ public sealed class AuthEndpointsTests(AuthApiFactory factory) : IClassFixture<A
         IAccessTokenIssuer issuer = scope.ServiceProvider.GetRequiredService<IAccessTokenIssuer>();
 
         AccessToken token = issuer.Issue(
-            "11111111-2222-3333-4444-555555555555",
+            Guid.Parse("11111111-2222-3333-4444-555555555555"),
             "admin@example.test",
-            "Administrator");
+            "Seed Administrator",
+            [RoleNames.Administrator]);
 
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Value);
 
@@ -194,6 +199,96 @@ public sealed class AuthEndpointsTests(AuthApiFactory factory) : IClassFixture<A
         user.Should().NotBeNull();
         user!.UserId.Should().Be("11111111-2222-3333-4444-555555555555");
         user.Email.Should().Be("admin@example.test");
-        user.DisplayName.Should().Be("Administrator");
+        user.DisplayName.Should().Be("Seed Administrator");
+
+        // Read back from the token the API itself issued, so this is the round
+        // trip: roles written at issuance are the roles the API reports.
+        user.Roles.Should().Equal(RoleNames.Administrator);
+    }
+
+    [Fact]
+    public async Task MeReportsEveryRoleTheTokenCarries()
+    {
+        using HttpClient client = _factory.CreateClient();
+
+        using IServiceScope scope = _factory.Services.CreateScope();
+        IAccessTokenIssuer issuer = scope.ServiceProvider.GetRequiredService<IAccessTokenIssuer>();
+
+        AccessToken token = issuer.Issue(
+            Guid.Parse("11111111-2222-3333-4444-555555555555"),
+            "admin@example.test",
+            "Seed Administrator",
+            [RoleNames.Administrator, RoleNames.Clinician]);
+
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Value);
+
+        using HttpResponseMessage response = await client.GetAsync("/api/v1/auth/me");
+
+        CurrentUser? user = await response.Content.ReadFromJsonAsync<CurrentUser>();
+
+        user!.Roles.Should().BeEquivalentTo(RoleNames.All);
+    }
+
+    /// <summary>
+    /// An account nobody has given a role to authenticates and reports none. It
+    /// is not promoted, and the empty list is a statement rather than missing
+    /// information.
+    /// </summary>
+    [Fact]
+    public async Task MeReportsNoRolesForAnAccountThatHasNone()
+    {
+        using HttpClient client = _factory.CreateClient();
+
+        using IServiceScope scope = _factory.Services.CreateScope();
+        IAccessTokenIssuer issuer = scope.ServiceProvider.GetRequiredService<IAccessTokenIssuer>();
+
+        AccessToken token = issuer.Issue(
+            Guid.Parse("11111111-2222-3333-4444-555555555555"),
+            "nobody@example.test",
+            "Dr. Example",
+            []);
+
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Value);
+
+        using HttpResponseMessage response = await client.GetAsync("/api/v1/auth/me");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        CurrentUser? user = await response.Content.ReadFromJsonAsync<CurrentUser>();
+
+        user!.Roles.Should().NotBeNull();
+        user.Roles.Should().BeEmpty();
+    }
+
+    /// <summary>
+    /// The sign-in response now carries roles, and still carries nothing else
+    /// the account holds.
+    /// </summary>
+    [Fact]
+    public async Task LoginReportsNoRolesForAnAccountThatHasNone()
+    {
+        _factory.Authentication
+            .LoginAsync(Arg.Any<LoginRequest>(), Arg.Any<CancellationToken>())
+            .Returns(new LoginResult("a.b.c", DateTimeOffset.UtcNow.AddHours(1), "Dr. Example"));
+
+        using HttpClient client = _factory.CreateClient();
+
+        using HttpResponseMessage response = await client.PostAsJsonAsync(
+            "/api/v1/auth/login",
+            new LoginRequest("nobody@example.test", "correct horse battery staple"));
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        string body = await response.Content.ReadAsStringAsync();
+
+        body.Should().Contain("roles");
+        body.Should().NotContain("passwordHash");
+        body.Should().NotContain("securityStamp");
+        body.Should().NotContain("lockout");
+
+        LoginResult? parsed = await response.Content.ReadFromJsonAsync<LoginResult>();
+
+        parsed!.Roles.Should().NotBeNull();
+        parsed.Roles.Should().BeEmpty();
     }
 }

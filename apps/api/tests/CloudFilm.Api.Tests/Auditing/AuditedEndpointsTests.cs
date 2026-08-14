@@ -3,6 +3,7 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using CloudFilm.Application.Abstractions;
 using CloudFilm.Application.Auditing;
+using CloudFilm.Application.Auth;
 using CloudFilm.Application.Imaging;
 using FluentAssertions;
 using Microsoft.AspNetCore.Hosting;
@@ -116,7 +117,8 @@ public sealed class AuditedEndpointsTests : IClassFixture<AuditedApiFactory>
     /// </summary>
     private const string _fixturePatientName = "Fixture Patient";
 
-    private static readonly Guid _actorId = Guid.Parse("11111111-2222-3333-4444-555555555555");
+    private static readonly Guid _actorId =
+        Guid.Parse("11111111-2222-3333-4444-555555555555");
 
     private readonly AuditedApiFactory _factory;
 
@@ -134,28 +136,52 @@ public sealed class AuditedEndpointsTests : IClassFixture<AuditedApiFactory>
         HttpClient client = _factory.CreateClient();
 
         using IServiceScope scope = _factory.Services.CreateScope();
-        IAccessTokenIssuer issuer = scope.ServiceProvider.GetRequiredService<IAccessTokenIssuer>();
+        IAccessTokenIssuer issuer =
+            scope.ServiceProvider.GetRequiredService<IAccessTokenIssuer>();
 
-        AccessToken token = issuer.Issue(_actorId.ToString(), "clinician@example.test", "Clinician");
+        AccessToken token = issuer.Issue(
+            _actorId,
+            "clinician@example.test",
+            "Dr. Example",
+            [RoleNames.Clinician]);
 
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Value);
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", token.Value);
 
         return client;
     }
 
     private static PatientRecord APatient() =>
-        new(new PatientSummary(_mrn, _fixturePatientName, "Unknown", "1971-07-24"), []);
+        new(
+            new PatientSummary(
+                _mrn,
+                _fixturePatientName,
+                "Unknown",
+                "1971-07-24"),
+            []);
 
     private static StudyContext AStudy()
-    {
-        StudySummary study = new(_studyUid, "CR", "Untitled study", "201803140707", "2018-03-14", "Completed", 1, 2);
+{
+    StudySummary study = new(
+        _studyUid,
+        "CR",
+        "Untitled study",
+        "201803140707",
+        "2018-03-14",
+        "Completed",
+        1,
+        2);
 
-        return new StudyContext(
-            new PatientSummary(_mrn, _fixturePatientName, "Unknown", "1971-07-24"),
-            [study],
-            study,
-            []);
-    }
+    return new StudyContext(
+        new PatientSummary(
+            _mrn,
+            _fixturePatientName,
+            "Unknown",
+            "1971-07-24"),
+        [study],
+        study,
+        []);
+}
 
     [Fact]
     public async Task ViewingAPatientRecordsAnAuditEventCarryingTheMedicalRecordNumber()

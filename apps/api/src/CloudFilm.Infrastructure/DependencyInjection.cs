@@ -1,4 +1,5 @@
 using CloudFilm.Application.Abstractions;
+using CloudFilm.Infrastructure.Access;
 using CloudFilm.Infrastructure.Auditing;
 using CloudFilm.Infrastructure.Caching;
 using CloudFilm.Infrastructure.Configuration;
@@ -6,6 +7,7 @@ using CloudFilm.Infrastructure.Identity;
 using CloudFilm.Infrastructure.Imaging;
 using CloudFilm.Infrastructure.Persistence;
 using CloudFilm.Infrastructure.Persistence.Interceptors;
+using CloudFilm.Infrastructure.ReadState;
 using CloudFilm.Infrastructure.Time;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -95,6 +97,19 @@ public static class DependencyInjection
         // request rather than opening a second one.
         services.AddScoped<IAuditLogService, AuditLogService>();
 
+        // Reads the audit trail; shares the request's DbContext like the writer.
+        services.AddScoped<IRecentPatientAccess, RecentPatientAccessQuery>();
+
+        // CloudFilm-owned clinical workflow state. Scoped, so it shares the
+        // request's DbContext with the audit writer and both can be enclosed in
+        // one transaction.
+        services.AddScoped<IStudyReadStateStore, StudyReadStateStore>();
+
+        // The transaction boundary itself. Scoped for the same reason: it must
+        // open its transaction on the same context the writers are using, or it
+        // would enclose nothing.
+        services.AddScoped<IUnitOfWork, TransactionalUnitOfWork>();
+
         services.AddScoped<IAuthenticationService, IdentityAuthenticationService>();
         services.AddSingleton<IAccessTokenIssuer, JwtAccessTokenIssuer>();
 
@@ -112,11 +127,20 @@ public static class DependencyInjection
         string retrieveServiceUrl =
             configuration["Downstream:RetrieveServiceUrl"]?.TrimEnd('/') ?? string.Empty;
 
-        services.AddHttpClient<IImagingCatalog, RetrieveImagingCatalog>(client =>
+        void ConfigureRetrieveClient(HttpClient client)
         {
             client.BaseAddress = new Uri($"{retrieveServiceUrl}/");
             client.Timeout = TimeSpan.FromSeconds(30);
-        });
+        }
+
+        services.AddHttpClient<IImagingCatalog, RetrieveImagingCatalog>(ConfigureRetrieveClient);
+
+        // Registered as its own typed client rather than resolved by casting the
+        // one above. Both are the same class over the same address, but a cast
+        // would make search depend on which implementation happens to be
+        // registered for IImagingCatalog - and a test that substitutes that port
+        // would turn search into an InvalidCastException at run time.
+        services.AddHttpClient<IStudySearchCatalog, RetrieveImagingCatalog>(ConfigureRetrieveClient);
 
         if (options.AutoMigrate)
         {

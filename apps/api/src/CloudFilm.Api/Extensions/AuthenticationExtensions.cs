@@ -1,4 +1,5 @@
 using System.Text;
+using CloudFilm.Application.Auth;
 using CloudFilm.Infrastructure.Configuration;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -58,9 +59,32 @@ internal static class AuthenticationExtensions
         // missing one shows up immediately as a 401 rather than years later as a
         // breach. Feature modules still add their own role based policies on top.
         builder.Services.AddAuthorization(options =>
+        {
             options.FallbackPolicy = new AuthorizationPolicyBuilder()
                 .RequireAuthenticatedUser()
-                .Build());
+                .Build();
+
+            // One step beyond the fallback, and a different question. The
+            // fallback asks whether the caller signed in and answers 401 when
+            // they did not; this asks whether the account they signed in as is
+            // one of ours, and answers 403 when it is not. Two questions, two
+            // status codes, and neither one masquerading as the other.
+            //
+            // RequireRole over the whole set rather than a policy per role:
+            // Administrator and Clinician currently reach exactly the same
+            // functionality, so separate policies would encode a difference that
+            // does not exist yet and would have to be unpicked the day one does.
+            //
+            // An authenticated account holding no role - or holding some role
+            // this application never defined - satisfies the fallback and fails
+            // here. That is the whole point: nothing anywhere promotes an
+            // unassigned account, and the refusal is a 403 that says so.
+            options.AddPolicy(
+                AuthorizationPolicies.RequiresApplicationRole,
+                policy => policy
+                    .RequireAuthenticatedUser()
+                    .RequireRole(RoleNames.All.ToArray()));
+        });
 
         return builder;
     }

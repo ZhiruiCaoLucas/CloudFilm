@@ -26,6 +26,7 @@ export function ViewerWorkspace({
   series,
   viewerBaseUrl,
   isStudyImported,
+  isRead,
   children,
 }: {
   readonly patient: Patient;
@@ -34,6 +35,7 @@ export function ViewerWorkspace({
   readonly series: readonly Series[];
   readonly viewerBaseUrl: string;
   readonly isStudyImported: boolean;
+  readonly isRead: boolean;
   readonly children: ReactNode;
 }) {
   useStudyShortcuts(studies, study.studyInstanceUid);
@@ -49,7 +51,7 @@ export function ViewerWorkspace({
         />
         <StudyMetadataPanel patient={patient} study={study} series={series} />
       </div>
-      <WorkspaceStatusBar study={study} />
+      <WorkspaceStatusBar study={study} isRead={isRead} />
     </>
   );
 }

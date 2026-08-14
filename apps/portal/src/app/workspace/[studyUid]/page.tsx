@@ -55,8 +55,17 @@ export async function generateMetadata(): Promise<Metadata> {
  */
 export default async function WorkspacePage({ params }: WorkspacePageProps) {
   const { studyUid } = await params;
+  const studyInstanceUid = decodeURIComponent(studyUid);
   const client = await serverApiClient();
-  const context = await client.getStudy(decodeURIComponent(studyUid));
+
+  // Two requests, issued together rather than one after the other. The read
+  // state is CloudFilm's own row and does not depend on what the archive
+  // returns, so waiting for the study first would add a round trip to every
+  // workspace load for nothing.
+  const [context, readState] = await Promise.all([
+    client.getStudy(studyInstanceUid),
+    client.getStudyReadState(studyInstanceUid),
+  ]);
 
   if (context === null) {
     notFound();
@@ -79,6 +88,7 @@ export default async function WorkspacePage({ params }: WorkspacePageProps) {
         series={context.series}
         viewerBaseUrl={env.viewerUrl}
         isStudyImported={context.selectedStudy.instanceCount > 0}
+        isRead={readState.read}
       >
         <StudyNavigator
           patient={context.patient}

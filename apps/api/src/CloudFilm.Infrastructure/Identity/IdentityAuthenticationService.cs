@@ -110,16 +110,55 @@ internal sealed class IdentityAuthenticationService(
             return null;
         }
 
+        IReadOnlyList<string> roles = await ReadRolesAsync(user).ConfigureAwait(false);
+
         AccessToken token = _tokenIssuer.Issue(
-            user.Id.ToString(),
+            user.Id,
             user.Email ?? email,
-            user.DisplayName ?? email);
+            user.DisplayName ?? email,
+            roles);
 
         _logger.LogInformation("Sign-in succeeded for {UserId}.", user.Id);
 
         await AuditAsync(user.Id, AuditAction.LoginSucceeded, cancellationToken).ConfigureAwait(false);
 
-        return new LoginResult(token.Value, token.ExpiresAt, user.DisplayName ?? email);
+        return new LoginResult(token.Value, token.ExpiresAt, user.DisplayName ?? email)
+        {
+            Roles = roles,
+        };
+    }
+
+    /// <summary>
+    /// Reads the application roles an account currently holds.
+    /// </summary>
+    /// <param name="user">The account that just authenticated.</param>
+    /// <returns>Its roles, in the canonical order, with anything unrecognised dropped.</returns>
+    /// <remarks>
+    /// <para>
+    /// Read once, at sign-in, and then carried in the token. Asking the database
+    /// on every request would make every authorised call a round trip; the price
+    /// of not doing so is that a role granted or withdrawn now takes effect when
+    /// the token expires, which is the accepted trade.
+    /// </para>
+    /// <para>
+    /// Filtered against <see cref="RoleNames.All"/>. A role row created by hand
+    /// in the database is not a CloudFilm role and must not become one by
+    /// appearing in a token - the set of things authorisation can be asked about
+    /// is defined in code, not by whoever last ran an INSERT.
+    /// </para>
+    /// <para>
+    /// This reads assignments; it never creates one. Granting a role is the
+    /// seeder's job at start-up, and nothing in the sign-in path may quietly
+    /// promote an account.
+    /// </para>
+    /// </remarks>
+    private async Task<IReadOnlyList<string>> ReadRolesAsync(ApplicationUser user)
+    {
+        IList<string> assigned = await _userManager.GetRolesAsync(user).ConfigureAwait(false);
+
+        return RoleNames.All
+            .Where(role => assigned.Contains(role, StringComparer.Ordinal))
+            .ToList();
     }
 
     /// <summary>

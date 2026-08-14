@@ -1,8 +1,11 @@
 'use client';
 
+import { useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import type { Study } from '@cloudfilm/shared';
 import { cn } from '@cloudfilm/ui';
 import { useTranslations } from '@/components/locale-provider';
+import { setStudyReadState } from '@/app/read-state-actions';
 
 /**
  * Workstation status strip.
@@ -19,8 +22,30 @@ import { useTranslations } from '@/components/locale-provider';
  * bar that contradicts the image beside it is worse than a shorter one, so the
  * three unknowable fields are gone until the viewer can report them for real.
  */
-export function WorkspaceStatusBar({ study }: { readonly study: Study }) {
+export function WorkspaceStatusBar({
+  study,
+  isRead,
+}: {
+  readonly study: Study;
+  readonly isRead: boolean;
+}) {
   const t = useTranslations();
+  const router = useRouter();
+  const [isSaving, startSaving] = useTransition();
+
+  function toggleRead() {
+    startSaving(async () => {
+      await setStudyReadState(study.studyInstanceUid, !isRead);
+
+      // Re-read the state from the server rather than assuming the request
+      // produced the value asked for. The mark is per user and lives in
+      // CloudFilm's own table, so the authoritative answer is one round trip
+      // away and there is no reason to display a guess instead.
+      router.refresh();
+    });
+  }
+
+  const stateLabel = isRead ? t('workspace.read') : t('workspace.unread');
 
   return (
     <footer
@@ -29,6 +54,41 @@ export function WorkspaceStatusBar({ study }: { readonly study: Study }) {
     >
       <StatusField label={t('study.studyUid')} value={study.studyInstanceUid} mono truncate />
       <StatusField label={t('study.images')} value={String(study.instanceCount)} mono />
+
+      {/*
+        A toggle, not a link: it changes CloudFilm's own state rather than the
+        address. aria-pressed carries the current value, so the control announces
+        itself as pressed or not rather than relying on colour, and the title
+        says what pressing it will do.
+
+        The label is the state, never an optimistic guess at it. This row is what
+        a clinician will trust when deciding whether they have already reported a
+        study, so it shows what the server last said and nothing else - it goes
+        quiet while saving instead of asserting a value that may not have been
+        stored.
+      */}
+      <button
+        type="button"
+        onClick={toggleRead}
+        disabled={isSaving}
+        aria-pressed={isRead}
+        aria-busy={isSaving}
+        title={isRead ? t('workspace.markUnread') : t('workspace.markRead')}
+        className={cn(
+          'inline-flex min-h-6 items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-medium',
+          'ring-1 transition-colors ring-inset',
+          'focus-visible:outline-accent focus-visible:outline-2 focus-visible:outline-offset-2',
+          'disabled:pointer-events-none disabled:opacity-60',
+          isRead
+            ? 'bg-emerald-500/10 text-emerald-600 ring-emerald-500/30 dark:text-emerald-400'
+            : 'ring-border hover:bg-surface-overlay hover:text-foreground',
+        )}
+      >
+        <span aria-hidden="true" className="font-mono">
+          {isRead ? '\u2713' : '\u25cb'}
+        </span>
+        {isSaving ? t('workspace.readStateSaving') : stateLabel}
+      </button>
 
       {/* Discoverability: a shortcut nobody is told about is a shortcut nobody uses. */}
       <span className="ml-auto hidden lg:inline">

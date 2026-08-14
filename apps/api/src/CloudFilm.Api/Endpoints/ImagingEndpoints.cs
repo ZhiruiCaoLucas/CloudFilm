@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using CloudFilm.Application.Abstractions;
 using CloudFilm.Application.Auditing;
+using CloudFilm.Application.Auth;
 using CloudFilm.Application.Imaging;
 using Microsoft.IdentityModel.JsonWebTokens;
 
@@ -37,8 +38,10 @@ internal static class ImagingEndpoints
         patients.MapGet("/", async (IImagingCatalog catalog, CancellationToken cancellationToken) =>
                 Results.Ok(await catalog.ListPatientsAsync(cancellationToken).ConfigureAwait(false)))
             .WithName("ListPatients")
-            .WithSummary("Lists the patients this deployment can serve.")
-            .Produces<IReadOnlyList<PatientSummary>>();
+            .RequireAuthorization(AuthorizationPolicies.RequiresApplicationRole)
+            .Produces<IReadOnlyList<PatientSummary>>()
+            .Produces(StatusCodes.Status401Unauthorized)
+            .Produces(StatusCodes.Status403Forbidden);
 
         patients.MapGet("/{medicalRecordNumber}", async (
                     string medicalRecordNumber,
@@ -74,7 +77,15 @@ internal static class ImagingEndpoints
             })
             .WithName("GetPatient")
             .WithSummary("Returns a patient and their imaging studies.")
+
+            // Authentication alone is no longer enough to read a patient: the
+            // account must hold an application role. Declared here as metadata
+            // rather than checked in the handler, so the rule is visible where
+            // the route is and cannot be forgotten inside a branch.
+            .RequireAuthorization(AuthorizationPolicies.RequiresApplicationRole)
             .Produces<PatientRecord>()
+            .Produces(StatusCodes.Status401Unauthorized)
+            .Produces(StatusCodes.Status403Forbidden)
             .Produces(StatusCodes.Status404NotFound);
 
         RouteGroupBuilder studies = app
@@ -111,7 +122,10 @@ internal static class ImagingEndpoints
             })
             .WithName("GetStudy")
             .WithSummary("Returns a study together with its patient and sibling studies.")
+            .RequireAuthorization(AuthorizationPolicies.RequiresApplicationRole)
             .Produces<StudyContext>()
+            .Produces(StatusCodes.Status401Unauthorized)
+            .Produces(StatusCodes.Status403Forbidden)
             .Produces(StatusCodes.Status404NotFound);
 
         return app;

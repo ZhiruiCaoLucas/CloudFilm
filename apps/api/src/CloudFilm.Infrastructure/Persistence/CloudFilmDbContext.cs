@@ -1,6 +1,7 @@
 using CloudFilm.Application.Abstractions;
 using CloudFilm.Infrastructure.Auditing;
 using CloudFilm.Infrastructure.Identity;
+using CloudFilm.Infrastructure.ReadState;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -31,6 +32,16 @@ public sealed class CloudFilmDbContext(DbContextOptions<CloudFilmDbContext> opti
     /// is a known limitation rather than an oversight.
     /// </remarks>
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+
+    /// <summary>
+    /// Which studies each user has marked as read.
+    /// </summary>
+    /// <remarks>
+    /// CloudFilm's own workflow state, owned by no imaging system. A row means
+    /// the user has read that study; its absence means they have not. Rows are
+    /// inserted and deleted, never updated.
+    /// </remarks>
+    public DbSet<StudyReadState> StudyReadStates => Set<StudyReadState>();
 
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder builder)

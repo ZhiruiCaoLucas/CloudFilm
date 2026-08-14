@@ -51,8 +51,40 @@ export const en = {
     errorFormat: 'A patient ID may contain letters, numbers and hyphens only.',
     recentTitle: 'Recent searches',
     recentEmptyTitle: 'No recent searches',
-    recentEmptyBody:
-      'Patients you open will be listed here once sign-in and access auditing are in place.',
+    recentEmptyBody: 'Patients you open will be listed here.',
+    advancedSearch: 'Search by name, accession number or date',
+  },
+
+  search: {
+    pageTitle: 'Study search · CloudFilm',
+    title: 'Search studies',
+    subtitle: 'Find studies by patient name, accession number or date.',
+    breadcrumb: '← Patient search',
+    patientName: 'Patient name',
+    patientNameHint: 'Matches the start of the name as the hospital recorded it.',
+    accessionNumber: 'Accession number',
+    dateFrom: 'Study date from',
+    dateTo: 'Study date to',
+    submit: 'Search',
+    submitting: 'Searching…',
+    clear: 'Clear',
+    errorEmpty: 'Enter at least one search criterion.',
+    errorDateOrder: 'The start date must not be later than the end date.',
+    promptTitle: 'No search yet',
+    promptBody: 'Fill in at least one field above to search for studies.',
+    resultsHeading: 'Results',
+    resultCountOne: '{count} study on this page',
+    resultCountOther: '{count} studies on this page',
+    moreAvailable: 'More studies match. Narrow the search, or continue to the next page.',
+    noResultsTitle: 'No matching studies',
+    noResultsBody: 'Nothing matched those criteria. Check the spelling, or widen the date range.',
+    invalidTitle: 'That search could not be run',
+    invalidBody: 'Check the dates and try again. Enter at least one criterion.',
+    patient: 'Patient',
+    previous: 'Previous',
+    next: 'Next',
+    pagePosition: 'Page {page}',
+    tableCaption: 'Studies matching the search criteria',
   },
 
   patient: {
@@ -123,6 +155,11 @@ export const en = {
     hide: 'Hide',
     info: 'Info',
     statusLabel: 'Workspace status',
+    read: 'Read',
+    unread: 'Unread',
+    markRead: 'Mark this study as read',
+    markUnread: 'Mark this study as unread',
+    readStateSaving: 'Saving…',
     shortcutHint: 'previous / next study',
     loading: 'Loading study…',
     notFoundTitle: 'Study not found',
@@ -142,6 +179,15 @@ export const en = {
       'This is a placeholder study. Its identifier is synthetic, so no archive holds pixel data for it.',
     noDataHint:
       'Import a study into the local Orthanc with {command}, then restart the portal and search the record number it prints.',
+  },
+
+  noRole: {
+    pageTitle: 'Access not enabled · CloudFilm',
+    title: 'No application role',
+    body: 'Your account is authenticated, but it has not been assigned an application role. Please contact an administrator to request access.',
+    detail:
+      'Roles are assigned by an administrator. CloudFilm has no self-service way to request or grant one.',
+    home: 'Return to the start page',
   },
 
   auth: {

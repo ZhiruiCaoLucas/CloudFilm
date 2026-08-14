@@ -29,6 +29,43 @@ public static class AuditAction
 
     /// <summary>A study was successfully returned to a caller.</summary>
     public const string ViewStudy = "VIEW_STUDY";
+
+    /// <summary>
+    /// A user marked a study as read.
+    /// </summary>
+    /// <remarks>
+    /// Recorded only when the state actually changed. A user who marks an
+    /// already-read study read again has performed no state transition, and a
+    /// trail that says otherwise is describing HTTP requests rather than
+    /// clinical activity.
+    /// </remarks>
+    public const string MarkStudyRead = "MARK_STUDY_READ";
+
+    /// <summary>
+    /// A user marked a study as unread.
+    /// </summary>
+    /// <remarks>Recorded on transition only, like <see cref="MarkStudyRead"/>.</remarks>
+    public const string MarkStudyUnread = "MARK_STUDY_UNREAD";
+
+    /// <summary>
+    /// A user searched the imaging catalogue and was shown the results.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// One record per search, never one per result. A search that matched forty
+    /// studies is one act by one person; forty <c>VIEW_PATIENT</c> rows would
+    /// claim forty records were opened, which is false, and would bury the
+    /// accesses that really happened.
+    /// </para>
+    /// <para>
+    /// Recorded with no resource id. The terms someone searched for are
+    /// themselves identifying - a name, an accession number - and this table has
+    /// exactly one column that could hold them, documented as holding an MRN or
+    /// a Study Instance UID. Writing a query string there would quietly turn the
+    /// audit trail into a second store of the data it exists to protect.
+    /// </para>
+    /// </remarks>
+    public const string SearchStudies = "SEARCH_STUDIES";
 }
 
 /// <summary>

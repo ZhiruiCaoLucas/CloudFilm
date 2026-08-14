@@ -69,7 +69,10 @@ app.MapHealthChecks("/health/ready", new HealthCheckOptions
 
 app.MapSystemEndpoints();
 app.MapAuthEndpoints();
+app.MapAccessEndpoints();
 app.MapImagingEndpoints();
+app.MapReadStateEndpoints();
+app.MapSearchEndpoints();
 
 try
 {

@@ -61,6 +61,8 @@ services:
       timeout: 5s
       retries: 10
     networks: [internal]
+    ports:
+      - '127.0.0.1:6379:6379'
 
   orthanc:
     <<: *restart

@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Globalization;
 using System.Text.Json;
 using CloudFilm.Retrieve.Hospital;
 
@@ -22,7 +23,7 @@ namespace CloudFilm.Retrieve.Orthanc;
 /// </remarks>
 internal sealed class OrthancDicomWebAdapter(
     IHttpClientFactory httpClientFactory,
-    ILogger<OrthancDicomWebAdapter> logger) : IHospitalAdapter
+    ILogger<OrthancDicomWebAdapter> logger) : IHospitalAdapter, IStudySearchSource
 {
     /// <summary>The named client carrying the Orthanc base address.</summary>
     public const string HttpClientName = "orthanc-dicomweb";
@@ -196,6 +197,142 @@ internal sealed class OrthancDicomWebAdapter(
 
         return new StudyContext(patient, siblings, selected, series);
     }
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// <para>
+    /// One request, whatever the page holds. Every attribute a result row needs
+    /// - the patient's identifier, name, birth date and sex as well as the
+    /// study's own fields - is present on each QIDO-RS study result, which is
+    /// how <see cref="FindPatientAsync"/> has always built a patient from a
+    /// study query. So a hundred hits cost one HTTP call, not a hundred and one.
+    /// </para>
+    /// <para>
+    /// Paging is done by asking for one result more than the page holds. QIDO-RS
+    /// reports no total - the deployment's responses carry no
+    /// <c>X-Total-Count</c>, no <c>Content-Range</c> and no <c>Link</c> header,
+    /// which was measured rather than assumed - so the extra result is the only
+    /// evidence available that another page exists. It is counted and then
+    /// dropped, never returned.
+    /// </para>
+    /// <para>
+    /// Results are returned in the order the archive gave them. Sorting one page
+    /// of an offset-paged query would order each page against itself and still
+    /// leave the sequence across pages arbitrary, which reads as data going
+    /// missing.
+    /// </para>
+    /// </remarks>
+    public async Task<StudySearchResult> SearchStudiesAsync(
+        StudySearchQuery query,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(query);
+
+        // Clamped, not trusted. The API validates these bounds, but this service
+        // has its own HTTP surface and a ceiling only one side enforces is not a
+        // ceiling. Long arithmetic because a large page number multiplied by a
+        // page size overflows int, and an overflowed offset silently returns the
+        // wrong page.
+        int pageSize = Math.Clamp(
+            query.PageSize,
+            StudySearchLimits.MinPageSize,
+            StudySearchLimits.MaxPageSize);
+        long page = Math.Max(query.Page, 0);
+        long offset = page * pageSize;
+
+        List<string> parameters = [];
+
+        AddPrefixMatch(parameters, "PatientName", query.PatientName);
+        AddPrefixMatch(parameters, "AccessionNumber", query.AccessionNumber);
+
+        string? studyDate = DicomDateRange(query.StudyDateFrom, query.StudyDateTo);
+        if (studyDate is not null)
+        {
+            parameters.Add("StudyDate=" + Uri.EscapeDataString(studyDate));
+        }
+
+        // Multiple parameters are AND, which is what QIDO-RS specifies and what
+        // was confirmed against this deployment.
+        //
+        // fuzzymatching is deliberately absent. It answered 200 here but matched
+        // nothing for the sample data, so shipping it would ship a switch nobody
+        // has seen work.
+        parameters.Add("limit=" + (pageSize + 1).ToString(CultureInfo.InvariantCulture));
+        parameters.Add("offset=" + offset.ToString(CultureInfo.InvariantCulture));
+
+        IReadOnlyList<JsonElement> matches = await QueryStudiesAsync(
+                "studies?" + string.Join('&', parameters),
+                cancellationToken)
+            .ConfigureAwait(false);
+
+        bool hasMore = matches.Count > pageSize;
+
+        List<StudySearchItem> items = matches
+            .Take(pageSize)
+            .Select(study => new StudySearchItem(ToPatient(study), ToStudy(study)))
+
+            // A result with no Study Instance UID cannot be opened, so it is not
+            // a result. Same rule the study list has always applied.
+            .Where(item => item.Study.StudyInstanceUid.Length > 0)
+            .ToList();
+
+        return new StudySearchResult(items, hasMore, (int)page, pageSize);
+    }
+
+    /// <summary>
+    /// Adds one prefix-match condition, or nothing when there is nothing to match.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Prefix rather than contains. Both were confirmed to work against this
+    /// deployment, and a leading wildcard prevents an archive from using an
+    /// index on the attribute - which on a hospital-sized PACS is the difference
+    /// between a search and a table scan.
+    /// </para>
+    /// <para>
+    /// The user's own <c>*</c> and <c>?</c> are removed before the trailing
+    /// <c>*</c> is appended. DICOM matching has no escape sequence, so a
+    /// wildcard a person typed cannot be made literal; removing it keeps a
+    /// search term a search term and stops a stray character from widening a
+    /// query to everything. The caret is left alone: it separates the components
+    /// of a person name, so a reader who types one means it.
+    /// </para>
+    /// </remarks>
+    private static void AddPrefixMatch(List<string> parameters, string tag, string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return;
+        }
+
+        string literal = new string(value.Where(character => character is not ('*' or '?')).ToArray())
+            .Trim();
+
+        if (literal.Length == 0)
+        {
+            return;
+        }
+
+        parameters.Add(tag + "=" + Uri.EscapeDataString(literal + "*"));
+    }
+
+    /// <summary>
+    /// Renders a date range the way DICOM writes one.
+    /// </summary>
+    /// <remarks>
+    /// All four forms were confirmed against this deployment: a closed range, an
+    /// open start, an open end, and no range at all. Both bounds are inclusive.
+    /// </remarks>
+    private static string? DicomDateRange(DateOnly? from, DateOnly? to) => (from, to) switch
+    {
+        (null, null) => null,
+        (not null, null) => DicomDate(from.Value) + "-",
+        (null, not null) => "-" + DicomDate(to.Value),
+        _ => DicomDate(from.Value) + "-" + DicomDate(to.Value),
+    };
+
+    private static string DicomDate(DateOnly date) =>
+        date.ToString("yyyyMMdd", CultureInfo.InvariantCulture);
 
     private async Task<IReadOnlyList<JsonElement>> QueryStudiesAsync(
         string requestUri,

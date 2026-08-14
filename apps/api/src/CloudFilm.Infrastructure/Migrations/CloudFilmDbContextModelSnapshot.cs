@@ -161,6 +161,23 @@ namespace CloudFilm.Infrastructure.Migrations
                     b.ToTable("AspNetUsers", "cloudfilm");
                 });
 
+            modelBuilder.Entity("CloudFilm.Infrastructure.ReadState.StudyReadState", b =>
+                {
+                    b.Property<Guid>("ActorUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("StudyInstanceUid")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<DateTimeOffset>("MarkedReadAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("ActorUserId", "StudyInstanceUid");
+
+                    b.ToTable("StudyReadStates", "cloudfilm");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
                 {
                     b.Property<int>("Id")
@@ -262,6 +279,15 @@ namespace CloudFilm.Infrastructure.Migrations
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("AspNetUserTokens", "cloudfilm");
+                });
+
+            modelBuilder.Entity("CloudFilm.Infrastructure.ReadState.StudyReadState", b =>
+                {
+                    b.HasOne("CloudFilm.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("ActorUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>

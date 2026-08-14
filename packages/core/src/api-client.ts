@@ -1,13 +1,18 @@
 import {
   API_ROUTES,
   isProblemDetails,
+  STUDY_SEARCH,
   type CurrentUser,
   type LoginRequest,
   type LoginResponse,
   type Patient,
   type PatientRecord,
   type ProblemDetails,
+  type RecentPatient,
   type StudyContext,
+  type StudyReadState,
+  type StudySearchQuery,
+  type StudySearchResult,
   type SystemInfo,
 } from '@cloudfilm/shared';
 
@@ -82,6 +87,52 @@ export interface ApiClient {
    * caller asks who this is and gets either an answer or nobody.
    */
   getCurrentUser(signal?: AbortSignal): Promise<CurrentUser | null>;
+
+  /**
+   * Lists the patients the signed-in user opened most recently.
+   *
+   * Scoped to the caller by the API, from the bearer token. There is no
+   * parameter for whose history to read, because there is no such request.
+   */
+  getRecentPatients(signal?: AbortSignal): Promise<readonly RecentPatient[]>;
+
+  /**
+   * Reports whether the signed-in user has marked a study read.
+   *
+   * Scoped to the caller by the API, from the bearer token. A study nobody has
+   * marked answers `{ read: false }` rather than failing, so there is no
+   * "unknown" case for a caller to handle.
+   */
+  getStudyReadState(studyInstanceUid: string, signal?: AbortSignal): Promise<StudyReadState>;
+
+  /**
+   * Marks a study read for the signed-in user.
+   *
+   * Idempotent: marking an already-read study succeeds and changes nothing. The
+   * API records an audit event only when the state actually changes.
+   */
+  markStudyRead(studyInstanceUid: string, signal?: AbortSignal): Promise<StudyReadState>;
+
+  /**
+   * Marks a study unread for the signed-in user.
+   *
+   * Idempotent, for the same reason as {@link ApiClient.markStudyRead}.
+   */
+  markStudyUnread(studyInstanceUid: string, signal?: AbortSignal): Promise<StudyReadState>;
+
+  /**
+   * Finds studies by patient name, accession number or study date.
+   *
+   * Rejects a query with no criteria at all: the API answers 400 rather than
+   * paging through the whole archive, and this client does not paper over that.
+   * An invalid page, page size or date is refused the same way, so a caller
+   * should be ready for an {@link ApiError} with status 400 and show its
+   * message.
+   *
+   * The archive's own vocabulary - wildcards, limits, offsets - is not part of
+   * this call and cannot be smuggled through it.
+   */
+  searchStudies(query: StudySearchQuery, signal?: AbortSignal): Promise<StudySearchResult>;
 }
 
 /**
@@ -94,7 +145,20 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
   const baseUrl = options.baseUrl.replace(/\/+$/, '');
   const fetchImpl = options.fetch ?? globalThis.fetch;
 
-  async function request<T>(path: string, signal?: AbortSignal, body?: unknown): Promise<T> {
+  /**
+   * Sends one request.
+   *
+   * `method` exists for the routes that change something without sending
+   * anything - a read mark is stated by the verb and the path alone. When it is
+   * omitted the original rule still holds: a body means POST, and no body means
+   * GET.
+   */
+  async function request<T>(
+    path: string,
+    signal?: AbortSignal,
+    body?: unknown,
+    method?: string,
+  ): Promise<T> {
     const token = options.getAccessToken?.();
     const headers: Record<string, string> = { Accept: 'application/json' };
 
@@ -106,10 +170,13 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
       headers['Content-Type'] = 'application/json';
     }
 
+    const verb = method ?? (body === undefined ? undefined : 'POST');
+
     const response = await fetchImpl(`${baseUrl}${path}`, {
       headers,
       cache: 'no-store',
-      ...(body === undefined ? {} : { method: 'POST', body: JSON.stringify(body) }),
+      ...(verb === undefined ? {} : { method: verb }),
+      ...(body === undefined ? {} : { body: JSON.stringify(body) }),
       ...(signal ? { signal } : {}),
     });
 
@@ -153,7 +220,60 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
     login: (request_, signal) =>
       requestOptional<LoginResponse>(API_ROUTES.auth.login, [401], signal, request_),
     getCurrentUser: (signal) => requestOptional<CurrentUser>(API_ROUTES.auth.me, [401], signal),
+    getRecentPatients: (signal) =>
+      request<readonly RecentPatient[]>(API_ROUTES.access.recentPatients, signal),
+    getStudyReadState: (studyInstanceUid, signal) =>
+      request<StudyReadState>(API_ROUTES.studyReadState(studyInstanceUid), signal),
+    markStudyRead: (studyInstanceUid, signal) =>
+      request<StudyReadState>(
+        API_ROUTES.studyReadState(studyInstanceUid),
+        signal,
+        undefined,
+        'PUT',
+      ),
+    markStudyUnread: (studyInstanceUid, signal) =>
+      request<StudyReadState>(
+        API_ROUTES.studyReadState(studyInstanceUid),
+        signal,
+        undefined,
+        'DELETE',
+      ),
+    searchStudies: (query, signal) =>
+      request<StudySearchResult>(`${API_ROUTES.studySearch}?${searchParameters(query)}`, signal),
   };
+}
+
+/**
+ * Renders a search query as a query string.
+ *
+ * Blank criteria are omitted rather than sent empty, so a form field the user
+ * cleared does not become a condition that matches nothing. Paging is always
+ * sent: a request that omits it silently gets the server's defaults, and a
+ * result page that does not know which page it is cannot be paged from.
+ *
+ * `URLSearchParams` does the encoding, so a name containing a space, an
+ * ampersand or a caret survives the trip intact.
+ */
+function searchParameters(query: StudySearchQuery): URLSearchParams {
+  const parameters = new URLSearchParams();
+
+  const criteria: readonly (readonly [string, string | undefined])[] = [
+    ['patientName', query.patientName],
+    ['accessionNumber', query.accessionNumber],
+    ['studyDateFrom', query.studyDateFrom],
+    ['studyDateTo', query.studyDateTo],
+  ];
+
+  for (const [name, value] of criteria) {
+    if (value !== undefined && value.trim().length > 0) {
+      parameters.set(name, value.trim());
+    }
+  }
+
+  parameters.set('page', String(query.page ?? 0));
+  parameters.set('pageSize', String(query.pageSize ?? STUDY_SEARCH.defaultPageSize));
+
+  return parameters;
 }
 
 async function toApiError(response: Response): Promise<ApiError> {

@@ -63,7 +63,20 @@ internal static class AuthEndpoints
                 CurrentUser user = new(
                     principal.FindFirstValue(JwtRegisteredClaimNames.Sub) ?? string.Empty,
                     principal.FindFirstValue(JwtRegisteredClaimNames.Email) ?? string.Empty,
-                    principal.FindFirstValue(JwtRegisteredClaimNames.Name) ?? string.Empty);
+                    principal.FindFirstValue(JwtRegisteredClaimNames.Name) ?? string.Empty)
+                {
+                    // Also from the token, so this stays a claims read with no
+                    // database round trip. ClaimTypes.Role is the type the token
+                    // was issued with and the type the bearer handler treats as a
+                    // role, so this is the same set IsInRole answers from.
+                    //
+                    // For display. A portal may hide a control these do not
+                    // cover; the endpoint behind it enforces the rule again, and
+                    // that is the one that counts.
+                    Roles = principal.FindAll(ClaimTypes.Role)
+                        .Select(claim => claim.Value)
+                        .ToArray(),
+                };
 
                 return Results.Ok(user);
             })

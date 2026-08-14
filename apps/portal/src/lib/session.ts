@@ -17,6 +17,16 @@ export const SESSION_COOKIE = 'cloudfilm_session';
 export const SIGN_IN_PATH = '/signin';
 
 /**
+ * Where a caller is sent when the API refuses them for want of a role.
+ *
+ * Deliberately not the sign-in page. Signing in again would achieve nothing -
+ * the account is already authenticated, and what it lacks is something only an
+ * administrator can give it. Sending them round the sign-in loop would suggest
+ * their password was the problem.
+ */
+export const NO_ROLE_PATH = '/no-role';
+
+/**
  * Reads the access token, if the browser sent one.
  *
  * @returns The token, or `undefined` when there is no session.

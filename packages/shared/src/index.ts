@@ -7,6 +7,10 @@ export type { Patient, PatientGender } from './patient';
 export type { Study, StudyStatus } from './study';
 export type { Series } from './series';
 export type { LoginRequest, LoginResponse, CurrentUser } from './auth';
+export type { RecentPatient } from './access';
+export type { StudyReadState } from './read-state';
+export type { StudySearchQuery, StudySearchItem, StudySearchResult } from './search';
+export { STUDY_SEARCH } from './search';
 export {
   DEFAULT_LOCALE,
   LOCALES,

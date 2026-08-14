@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { PatientSearchForm } from '@/components/patient-search-form';
 import { RecentSearches } from '@/components/recent-searches';
 import { PortalShell } from '@/components/portal-shell';
@@ -25,8 +26,20 @@ export default async function HomePage() {
             <p className="text-muted text-base">{t('home.subtitle')}</p>
           </div>
 
-          <div className="w-full max-w-xl text-left">
+          <div className="flex w-full max-w-xl flex-col gap-3 text-left">
             <PatientSearchForm />
+
+            {/*
+              The identifier search stays the primary path - a clinician who has
+              an MRN wants one keystroke, not a form. This is the way out for
+              everyone who does not have one.
+            */}
+            <Link
+              href="/search"
+              className="text-muted hover:text-foreground focus-visible:outline-accent self-start rounded-md text-sm focus-visible:outline-2 focus-visible:outline-offset-4"
+            >
+              {t('home.advancedSearch')}
+            </Link>
           </div>
         </section>
 

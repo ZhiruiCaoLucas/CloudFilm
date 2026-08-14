@@ -81,6 +81,7 @@ app.MapHealthChecks("/health/ready", new HealthCheckOptions
 
 app.MapHospitalEndpoints();
 app.MapImagingEndpoints();
+app.MapSearchEndpoints();
 
 try
 {
