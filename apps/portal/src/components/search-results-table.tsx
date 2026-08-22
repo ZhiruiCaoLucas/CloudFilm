@@ -24,10 +24,10 @@ export async function SearchResultsTable({
   const t = await serverTranslations();
 
   return (
-    <div className="border-border overflow-x-auto rounded-lg border">
+    <div className="border-border cf-lift overflow-x-auto rounded-lg border">
       <table className="w-full min-w-[56rem] border-collapse text-left text-sm">
         <caption className="sr-only">{t('search.tableCaption')}</caption>
-        <thead className="bg-surface-overlay text-muted text-[0.625rem] tracking-[0.08em] uppercase">
+        <thead className="bg-surface-overlay text-muted text-[0.625rem] tracking-[0.08em] uppercase shadow-[inset_0_-1px_0_0_var(--color-border)]">
           <tr>
             <th scope="col" className="px-4 py-2.5 font-medium">
               {t('search.patient')}
@@ -77,7 +77,7 @@ function ResultRow({ item, t }: { readonly item: StudySearchItem; readonly t: Tr
   const { patient, study } = item;
 
   return (
-    <tr className="border-border hover:bg-surface-overlay/40 border-t align-middle transition-colors">
+    <tr className="border-border hover:bg-surface-overlay/50 border-t align-middle transition-colors duration-200">
       {/*
         The patient carries the row. Name at full weight, medical record number
         beside it in the next column at a smaller size and in mono - close

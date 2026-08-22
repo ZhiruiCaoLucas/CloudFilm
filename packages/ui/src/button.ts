@@ -10,13 +10,21 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   readonly children?: ReactNode;
 }
 
+/**
+ * Per-variant surface.
+ *
+ * The surfaces themselves are `cf-control-*` classes in the portal's stylesheet
+ * rather than utility strings here. A translucent gradient that slides under the
+ * pointer, an inset hairline of light along the top edge and a press state are
+ * four coordinated declarations, not four independent ones - keeping them in one
+ * rule is what stops a button drifting out of agreement with the field beside
+ * it. Only the text colour and the focus ring stay as utilities, because those
+ * are the two things a call site legitimately overrides.
+ */
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
-  primary:
-    'bg-accent text-accent-foreground hover:bg-accent/90 active:bg-accent/95 focus-visible:outline-accent',
-  secondary:
-    'bg-surface-raised text-foreground ring-1 ring-inset ring-border hover:bg-surface-overlay hover:ring-border-strong active:bg-surface-sunken focus-visible:outline-accent',
-  ghost:
-    'text-muted hover:bg-surface-overlay hover:text-foreground active:bg-surface-sunken focus-visible:outline-accent',
+  primary: 'cf-control-primary text-accent-foreground focus-visible:outline-accent',
+  secondary: 'cf-control-secondary text-foreground focus-visible:outline-accent',
+  ghost: 'cf-control-ghost text-muted hover:text-foreground focus-visible:outline-accent',
 };
 
 /**
@@ -34,8 +42,11 @@ export function buttonClasses(variant: ButtonVariant = 'primary', className?: st
     // read as instruments rather than as a phone's buttons - and every dense
     // surface in the portal was already overriding the taller default.
     'inline-flex min-h-10 items-center justify-center gap-2 rounded-md px-3.5 text-sm font-medium',
-    'whitespace-nowrap transition-colors focus-visible:outline-2 focus-visible:outline-offset-2',
+    'whitespace-nowrap focus-visible:outline-2 focus-visible:outline-offset-2',
     'disabled:pointer-events-none disabled:opacity-45',
+    // Carries the motion: the highlight slide, the one-pixel lift and the press.
+    // Removed entirely under prefers-reduced-motion.
+    'cf-control',
     VARIANT_CLASSES[variant],
     className,
   );

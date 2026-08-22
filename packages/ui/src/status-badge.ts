@@ -11,11 +11,23 @@ export interface StatusBadgeProps {
   readonly className?: string;
 }
 
+/**
+ * Per-tone surface.
+ *
+ * A tint, a ring and a text colour, exactly as before. What is new is the
+ * gradient: the tint is slightly stronger at the top edge than the bottom, which
+ * is enough to make the token read as a small physical chip beside the
+ * fixed-width values it sits with - and not enough to be seen as colour.
+ */
 const TONE_CLASSES: Record<StatusTone, string> = {
-  healthy: 'bg-emerald-500/10 text-emerald-600 ring-emerald-500/30 dark:text-emerald-400',
-  degraded: 'bg-amber-500/10 text-amber-600 ring-amber-500/30 dark:text-amber-400',
-  unhealthy: 'bg-red-500/10 text-red-600 ring-red-500/30 dark:text-red-400',
-  unknown: 'bg-slate-500/10 text-slate-600 ring-slate-500/30 dark:text-slate-400',
+  healthy:
+    'bg-linear-to-b from-emerald-500/15 to-emerald-500/8 text-emerald-700 ring-emerald-500/30 dark:text-emerald-400',
+  degraded:
+    'bg-linear-to-b from-amber-500/15 to-amber-500/8 text-amber-700 ring-amber-500/30 dark:text-amber-400',
+  unhealthy:
+    'bg-linear-to-b from-red-500/15 to-red-500/8 text-red-700 ring-red-500/30 dark:text-red-400',
+  unknown:
+    'bg-linear-to-b from-slate-500/12 to-slate-500/6 text-slate-600 ring-slate-500/25 dark:text-slate-400',
 };
 
 /**

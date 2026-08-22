@@ -28,6 +28,9 @@ export function EmptyState({ title, description, children, className }: EmptySta
         // unfinished region; this area is neither, it simply has nothing in it
         // yet, and it says so in words.
         'border-border bg-surface-raised flex flex-col items-center gap-1.5 rounded-lg border px-6 py-12 text-center',
+        // A pool of light under the message rather than a flat panel. It is the
+        // same radial the sign-in page uses, at a fraction of the strength.
+        'bg-radial-[at_50%_0%] from-accent-soft to-transparent to-70%',
         className,
       ),
     },

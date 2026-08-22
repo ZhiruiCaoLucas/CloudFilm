@@ -76,11 +76,11 @@ export function WorkspaceStatusBar({
         title={isRead ? t('workspace.markUnread') : t('workspace.markRead')}
         className={cn(
           'inline-flex min-h-6 items-center gap-1.5 rounded px-2 py-0.5 text-[0.6875rem] font-medium',
-          'ring-1 transition-colors ring-inset',
+          'ring-1 transition-[color,background-color,box-shadow] duration-200 ring-inset',
           'focus-visible:outline-accent focus-visible:outline-2 focus-visible:outline-offset-2',
           'disabled:pointer-events-none disabled:opacity-60',
           isRead
-            ? 'bg-emerald-500/10 text-emerald-600 ring-emerald-500/30 dark:text-emerald-400'
+            ? 'bg-linear-to-b from-emerald-500/16 to-emerald-500/8 text-emerald-700 ring-emerald-500/30 dark:text-emerald-400'
             : 'ring-border hover:bg-surface-overlay hover:ring-border-strong hover:text-foreground',
         )}
       >

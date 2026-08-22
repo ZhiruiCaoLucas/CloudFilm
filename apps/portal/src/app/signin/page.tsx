@@ -59,9 +59,13 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
       <div className="relative flex flex-1 items-center justify-center px-6 py-14">
         <div className="w-full max-w-[23rem]">
           {/* Identity, at the size a workstation states it: enough to know
-              which system you are entering, not a masthead. */}
+              which system you are entering, not a masthead. The mark sits on its
+              own small glass tile so it reads as an emblem rather than as an
+              icon that happens to be beside some text. */}
           <div className="mb-9 flex items-center gap-3">
-            <CloudFilmLogo className="h-8 w-8 shrink-0" />
+            <span className="border-border bg-surface-raised/70 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border shadow-[inset_0_1px_0_0_var(--glass-highlight)]">
+              <CloudFilmLogo className="h-7 w-7" />
+            </span>
             <span className="flex min-w-0 flex-col leading-tight">
               <span className="text-foreground text-[0.9375rem] font-semibold tracking-tight">
                 {t('common.appName')}
@@ -72,7 +76,10 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
             </span>
           </div>
 
-          <section className="border-border bg-surface-raised rounded-lg border p-7 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-16px_rgba(15,23,42,0.18)] dark:shadow-[0_1px_2px_rgba(0,0,0,0.4),0_8px_24px_-16px_rgba(0,0,0,0.7)]">
+          {/* A floating instrument surface: translucent, refracting the
+              atmosphere behind it, closed at the top by a one-pixel line of
+              accent light. */}
+          <section className="cf-glass-panel relative rounded-xl p-7">
             <h1 className="text-foreground text-base font-semibold tracking-tight">
               {t('auth.title')}
             </h1>

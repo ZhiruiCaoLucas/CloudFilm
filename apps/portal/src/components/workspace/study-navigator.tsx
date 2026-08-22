@@ -88,15 +88,15 @@ function StudyNavigatorItem({
       aria-current={isSelected ? 'page' : undefined}
       className={cn(
         'focus-visible:outline-accent flex w-full items-start gap-3 rounded-md py-2 pr-2 pl-2 text-left',
-        'border-l-2 transition-colors',
+        'border-l-2 transition-[background-color,border-color] duration-200',
         'focus-visible:outline-2 focus-visible:-outline-offset-2',
         // A rule in the accent colour rather than a tinted, ringed tile. The
         // selected study is one item in a short list the reader is stepping
         // through with the keyboard, and it needs to be unmistakable without
         // becoming the brightest object beside the image.
         isSelected
-          ? 'border-accent bg-surface-overlay'
-          : 'hover:bg-surface-overlay/60 border-transparent',
+          ? 'border-accent bg-accent-soft shadow-[inset_0_1px_0_0_var(--glass-edge)]'
+          : 'hover:bg-surface-overlay/70 border-transparent',
       )}
     >
       <StudyThumbnail modality={study.modality} />

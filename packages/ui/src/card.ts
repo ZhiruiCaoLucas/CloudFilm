@@ -17,7 +17,14 @@ export interface CardProps extends HTMLAttributes<HTMLDivElement> {
 export function Card({ className, ...rest }: CardProps) {
   return createElement('div', {
     ...rest,
-    className: cn('border-border bg-surface-raised rounded-lg border', className),
+    className: cn(
+      'border-border bg-surface-raised rounded-lg border',
+      // Brightens its own edge under the pointer and does nothing else. A panel
+      // that is read rather than pressed should acknowledge the cursor without
+      // moving out from under it.
+      'cf-lift',
+      className,
+    ),
   });
 }
 

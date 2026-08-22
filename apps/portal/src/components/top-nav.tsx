@@ -26,7 +26,7 @@ export function TopNav({ user }: { readonly user?: CurrentUser | null | undefine
   const t = useTranslations();
 
   return (
-    <header className="border-border bg-surface-raised border-b">
+    <header className="border-border bg-surface-raised sticky top-0 z-30 border-b bg-linear-to-b from-white/70 to-transparent shadow-[inset_0_-1px_0_0_var(--glass-edge)] dark:from-white/[0.03]">
       <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between gap-4 px-6">
         <Link
           href="/"

@@ -20,7 +20,7 @@ export async function WorkspaceHeader({
   const t = await serverTranslations();
 
   return (
-    <header className="border-border bg-surface-raised flex h-12 shrink-0 items-center gap-5 border-b px-4">
+    <header className="border-border bg-surface-raised flex h-12 shrink-0 items-center gap-5 border-b px-4 shadow-[inset_0_-1px_0_0_var(--glass-edge)]">
       <Link
         href="/"
         className="focus-visible:outline-accent flex shrink-0 items-center gap-2 rounded-md focus-visible:outline-2 focus-visible:outline-offset-4"

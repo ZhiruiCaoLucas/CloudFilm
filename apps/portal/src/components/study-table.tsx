@@ -33,10 +33,10 @@ export async function StudyTable({ studies }: { readonly studies: readonly Study
   const t = await serverTranslations();
 
   return (
-    <div className="border-border overflow-x-auto rounded-lg border">
+    <div className="border-border cf-lift overflow-x-auto rounded-lg border">
       <table className="w-full min-w-[42rem] border-collapse text-left text-sm">
         <caption className="sr-only">{t('study.tableCaption')}</caption>
-        <thead className="bg-surface-overlay text-muted text-[0.625rem] tracking-[0.08em] uppercase">
+        <thead className="bg-surface-overlay text-muted text-[0.625rem] tracking-[0.08em] uppercase shadow-[inset_0_-1px_0_0_var(--color-border)]">
           <tr>
             <th scope="col" className="px-4 py-2.5 font-medium">
               {t('study.modality')}
@@ -70,7 +70,7 @@ export async function StudyTable({ studies }: { readonly studies: readonly Study
 
 function StudyRow({ study, t }: { readonly study: Study; readonly t: Translator }) {
   return (
-    <tr className="border-border hover:bg-surface-overlay/40 border-t align-middle transition-colors">
+    <tr className="border-border hover:bg-surface-overlay/50 border-t align-middle transition-colors duration-200">
       <th scope="row" className="text-foreground px-4 py-3 font-medium">
         {formatModality(study.modality)}
       </th>

@@ -72,7 +72,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           </Link>
         </nav>
 
-        <div className="flex flex-col gap-1">
+        {/* A two-pixel accent rule to the left of the title. It is the only
+            colour above the fold, and it is what tells the eye where the page
+            starts without a heading large enough to do the same job. */}
+        <div className="border-accent flex flex-col gap-1 border-l-2 pl-4">
           <h1 className="text-foreground text-lg font-semibold tracking-tight">
             {t('search.title')}
           </h1>
@@ -84,7 +87,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           the question, then the answer - rather than one long column in which
           the criteria and the results run together.
         */}
-        <div className="border-border bg-surface-raised rounded-lg border px-5 py-5">
+        <div className="border-border bg-surface-raised cf-lift rounded-lg border bg-linear-to-b from-white/60 to-transparent px-5 py-5 shadow-[inset_0_1px_0_0_var(--glass-edge)] dark:from-white/[0.02]">
           <StudySearchForm initial={fields} />
         </div>
 

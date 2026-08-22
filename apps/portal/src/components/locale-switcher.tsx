@@ -27,7 +27,7 @@ export function LocaleSwitcher() {
     <div
       role="group"
       aria-label={t('locale.label')}
-      className="border-border flex items-center overflow-hidden rounded-md border"
+      className="border-border bg-surface-raised flex items-center overflow-hidden rounded-md border shadow-[inset_0_1px_0_0_var(--glass-edge)]"
     >
       {LOCALES.map((locale) => (
         <button
@@ -38,12 +38,16 @@ export function LocaleSwitcher() {
           disabled={isPending || locale === active}
           onClick={() => startTransition(() => setLocale(locale))}
           className={cn(
-            'focus-visible:outline-accent min-h-9 px-2.5 text-xs transition-colors',
+            'focus-visible:outline-accent min-h-9 px-2.5 text-xs',
+            'transition-[color,background-color,box-shadow] duration-200',
             'focus-visible:outline-2 focus-visible:-outline-offset-2',
             'disabled:pointer-events-none',
+            // The selected segment is lit from inside rather than merely filled:
+            // a tint of the accent plus a hairline under the top edge, so the
+            // pair reads as one machined control with one position pressed.
             locale === active
-              ? 'bg-surface-overlay text-foreground font-medium'
-              : 'text-muted hover:bg-surface-raised hover:text-foreground',
+              ? 'bg-accent-soft text-foreground font-medium shadow-[inset_0_1px_0_0_var(--glass-highlight)]'
+              : 'text-muted hover:bg-surface-overlay hover:text-foreground',
           )}
         >
           {t(localeLabelKey(locale))}
