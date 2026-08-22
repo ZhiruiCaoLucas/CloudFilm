@@ -1,6 +1,9 @@
 using CloudFilm.Application.Abstractions;
+using CloudFilm.Infrastructure.Analysis;
 using CloudFilm.Infrastructure.Auditing;
+using CloudFilm.Infrastructure.Grants;
 using CloudFilm.Infrastructure.Identity;
+using CloudFilm.Infrastructure.Sharing;
 using CloudFilm.Infrastructure.ReadState;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -42,6 +45,37 @@ public sealed class CloudFilmDbContext(DbContextOptions<CloudFilmDbContext> opti
     /// inserted and deleted, never updated.
     /// </remarks>
     public DbSet<StudyReadState> StudyReadStates => Set<StudyReadState>();
+
+    /// <summary>
+    /// Who may reach which study.
+    /// </summary>
+    /// <remarks>
+    /// Append-only in practice: a grant is stamped revoked rather than deleted,
+    /// and its permission is never rewritten, so the table reads as the history
+    /// of who was given access to a patient's imaging and by whom.
+    /// </remarks>
+    public DbSet<AccessGrant> AccessGrants => Set<AccessGrant>();
+
+    /// <summary>
+    /// Bearer links that lead to one study each.
+    /// </summary>
+    /// <remarks>
+    /// Holds digests, never tokens. Rows are stamped revoked rather than
+    /// deleted, so the table reads as the history of which studies were shared
+    /// by URL, by whom, and until when.
+    /// </remarks>
+    public DbSet<ShareLink> ShareLinks => Set<ShareLink>();
+
+    /// <summary>
+    /// The current automated characterisation of each analysed study.
+    /// </summary>
+    /// <remarks>
+    /// One row per study, replaced when the study is analysed again. Unlike the
+    /// tables above it holds no record of who was given access to anything, so
+    /// nothing is lost by superseding a row - and the audit trail already writes
+    /// one append-only entry per run.
+    /// </remarks>
+    public DbSet<StudyAnalysisResult> StudyAnalysisResults => Set<StudyAnalysisResult>();
 
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder builder)

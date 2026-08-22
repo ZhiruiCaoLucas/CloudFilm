@@ -36,24 +36,24 @@ export async function StudyTable({ studies }: { readonly studies: readonly Study
     <div className="border-border overflow-x-auto rounded-lg border">
       <table className="w-full min-w-[42rem] border-collapse text-left text-sm">
         <caption className="sr-only">{t('study.tableCaption')}</caption>
-        <thead className="bg-surface-overlay text-muted text-xs tracking-wide uppercase">
+        <thead className="bg-surface-overlay text-muted text-[0.625rem] tracking-[0.08em] uppercase">
           <tr>
-            <th scope="col" className="px-5 py-3 font-medium">
+            <th scope="col" className="px-4 py-2.5 font-medium">
               {t('study.modality')}
             </th>
-            <th scope="col" className="px-5 py-3 font-medium">
+            <th scope="col" className="px-4 py-2.5 font-medium">
               {t('study.description')}
             </th>
-            <th scope="col" className="px-5 py-3 font-medium">
+            <th scope="col" className="px-4 py-2.5 font-medium">
               {t('study.date')}
             </th>
-            <th scope="col" className="px-5 py-3 font-medium">
+            <th scope="col" className="px-4 py-2.5 font-medium">
               {t('study.series')}
             </th>
-            <th scope="col" className="px-5 py-3 font-medium">
+            <th scope="col" className="px-4 py-2.5 font-medium">
               {t('study.status')}
             </th>
-            <th scope="col" className="px-5 py-3 text-right font-medium">
+            <th scope="col" className="px-4 py-2.5 text-right font-medium">
               <span className="sr-only">{t('study.actions')}</span>
             </th>
           </tr>
@@ -70,23 +70,23 @@ export async function StudyTable({ studies }: { readonly studies: readonly Study
 
 function StudyRow({ study, t }: { readonly study: Study; readonly t: Translator }) {
   return (
-    <tr className="border-border border-t align-middle">
-      <th scope="row" className="text-foreground px-5 py-4 font-medium">
+    <tr className="border-border hover:bg-surface-overlay/40 border-t align-middle transition-colors">
+      <th scope="row" className="text-foreground px-4 py-3 font-medium">
         {formatModality(study.modality)}
       </th>
-      <td className="text-muted px-5 py-4">{study.description}</td>
-      <td className="text-foreground px-5 py-4 font-mono text-xs">{study.performedOn}</td>
-      <td className="text-muted px-5 py-4 tabular-nums">{study.seriesCount}</td>
-      <td className="px-5 py-4">
+      <td className="text-muted px-4 py-3">{study.description}</td>
+      <td className="text-foreground px-4 py-3 font-mono text-xs">{study.performedOn}</td>
+      <td className="text-muted px-4 py-3 tabular-nums">{study.seriesCount}</td>
+      <td className="px-4 py-3">
         <StatusBadge tone={STATUS_TONES[study.status]}>
           {t(STUDY_STATUS_MESSAGE_KEYS[study.status])}
         </StatusBadge>
       </td>
-      <td className="px-5 py-4">
+      <td className="px-4 py-3">
         <div className="flex justify-end">
           <Link
             href={`/workspace/${encodeURIComponent(study.studyInstanceUid)}`}
-            className={buttonClasses('secondary')}
+            className={buttonClasses('secondary', 'min-h-9 px-3 whitespace-nowrap')}
           >
             {t('study.open')}
             <span className="sr-only">

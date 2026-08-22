@@ -15,7 +15,7 @@ namespace CloudFilm.Infrastructure.Persistence;
 public sealed class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<CloudFilmDbContext>
 {
     private const string _defaultConnectionString =
-        "Host=localhost;Port=5432;Database=cloudfilm;Username=cloudfilm;Password=cloudfilm";
+        "Host=localhost;Port=5432;Database=cloudfilm;Username=cloudfilm;Password=HgwrQ18JtxKqKi38KjAPiFAlTpIVnzsyvBOjE5zk";
 
     /// <inheritdoc />
     public CloudFilmDbContext CreateDbContext(string[] args)

@@ -23,6 +23,15 @@ next-env.d.ts
 *.tsbuildinfo
 .turbo/
 
+# ---------- Python ----------
+# The analysis service. Interpreter artefacts and test caches only - the service
+# itself is source, like every other app in this repository.
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+apps/analysis/.venv/
+
 # ---------- Env & secrets ----------
 .env
 .env.*

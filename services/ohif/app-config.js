@@ -35,7 +35,13 @@ window.config = {
    * user in a browsable viewer rather than on a blank screen. The workspace
    * still opens studies by URL; this is only a fallback.
    */
-  showStudyList: true,
+  // Off. The study list is an unfiltered QIDO query for every study in the
+  // archive, which is exactly what a viewer session is not allowed to make: the
+  // gateway refuses a search that does not name the session's study, so leaving
+  // this on would greet every visitor with an error where a list used to be.
+  // The viewer is entered with a study already chosen, by the portal or by a
+  // share link, and needs no index.
+  showStudyList: false,
 
   /**
    * Studies are requested through this service's own nginx, which proxies

@@ -7,6 +7,12 @@ server {
   listen [::]:${PORT} default_server;
 
   location /dicom-web/ {
+    # Every DICOMweb request is authorised first. nginx issues a subrequest to
+    # the API, passes it this request's URI and cookies, and proxies to Orthanc
+    # only on a 2xx. Orthanc has no notion of who is asking - it answers whoever
+    # reaches it - so this is the only place a viewer's reach can be limited.
+    auth_request /internal-dicom-web-authorize;
+
     proxy_pass http://orthanc:8042/dicom-web/;
 
     # $http_host, not $host: nginx's $host drops the port, so Orthanc saw
@@ -24,7 +30,43 @@ server {
     # Basic Auth. Substituted from the environment by the image's entrypoint, so
     # the credential lives in .env with every other secret and never in a tracked
     # file. Attached here, server side, so it never reaches the browser.
-    proxy_set_header Authorization "Basic ${ORTHANC_BASIC_AUTH}";}
+    proxy_set_header Authorization "Basic ${ORTHANC_BASIC_AUTH}";
+
+    # A refused subrequest surfaces as 401 or 403. Both are rewritten to the
+    # same empty 404 the rest of the sharing surface returns, so a caller cannot
+    # tell "this study exists but not for you" from "no such study".
+    error_page 401 403 = @denied;
+  }
+
+  # Not reachable from outside: `internal` means nginx will only enter this
+  # location for a subrequest of its own.
+  location = /internal-dicom-web-authorize {
+    internal;
+
+    # Docker's embedded DNS, and the upstream held in a variable. With a
+    # literal hostname nginx resolves it once, at startup: the viewer would
+    # refuse to boot unless the API were already up, and would keep talking to a
+    # stale address after the API container was recreated. A variable defers
+    # resolution to each request, at the cost of having to spell out the path.
+    resolver 127.0.0.11 valid=10s ipv6=off;
+    set $cloudfilm_api http://api:8080;
+
+    proxy_pass $cloudfilm_api/api/v1/share/dicom-web/authorize;
+
+    # The subrequest carries no body, and forwarding one would be sent to the
+    # authoriser rather than to Orthanc.
+    proxy_pass_request_body off;
+    proxy_set_header Content-Length "";
+
+    # The decision is made about the original request, not about this one. The
+    # API sees only this header and the viewer session cookie, and refuses
+    # anything it does not positively recognise.
+    proxy_set_header X-Original-URI $request_uri;
+  }
+
+  location @denied {
+    return 404;
+  }
 
   location / {
     root /usr/share/nginx/html;

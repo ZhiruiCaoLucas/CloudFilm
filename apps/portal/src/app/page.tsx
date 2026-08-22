@@ -17,13 +17,17 @@ export default async function HomePage() {
 
   return (
     <PortalShell user={user}>
-      <div className="flex flex-col gap-16">
-        <section className="flex flex-col items-center gap-8 pt-8 text-center sm:pt-16">
+      <div className="flex flex-col gap-14">
+        <section className="flex flex-col items-center gap-8 pt-10 text-center sm:pt-20">
           <div className="flex flex-col gap-3">
-            <h1 className="text-foreground text-3xl font-semibold tracking-tight sm:text-4xl">
+            {/* Set at reading size, not at poster size. The page's job is to get
+                a clinician to a patient in one keystroke; a headline large enough
+                to be a masthead only pushes the field they came here to use
+                further down the screen. */}
+            <h1 className="text-foreground text-xl font-semibold tracking-tight sm:text-2xl">
               {t('home.title')}
             </h1>
-            <p className="text-muted text-base">{t('home.subtitle')}</p>
+            <p className="text-muted text-[0.875rem]">{t('home.subtitle')}</p>
           </div>
 
           <div className="flex w-full max-w-xl flex-col gap-3 text-left">

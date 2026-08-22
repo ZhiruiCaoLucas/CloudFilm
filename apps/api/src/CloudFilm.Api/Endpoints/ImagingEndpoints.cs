@@ -2,6 +2,7 @@ using System.Security.Claims;
 using CloudFilm.Application.Abstractions;
 using CloudFilm.Application.Auditing;
 using CloudFilm.Application.Auth;
+using CloudFilm.Application.Grants;
 using CloudFilm.Application.Imaging;
 using Microsoft.IdentityModel.JsonWebTokens;
 
@@ -95,10 +96,28 @@ internal static class ImagingEndpoints
         studies.MapGet("/{studyInstanceUid}", async (
                     string studyInstanceUid,
                     ClaimsPrincipal principal,
+                    IStudyAccessPolicy accessPolicy,
                     IImagingCatalog catalog,
                     IAuditLogService auditLog,
                     CancellationToken cancellationToken) =>
             {
+                // Before the archive is asked anything. A caller who may not see
+                // this study must not cause a query about it: the round trip
+                // would be measurable, and it would spend a hospital's imaging
+                // system on a request that was never going to be answered.
+                StudyAccessScope scope = await accessPolicy
+                    .AuthoriseAsync(principal, studyInstanceUid, GrantPermissions.View, cancellationToken)
+                    .ConfigureAwait(false);
+
+                // The same answer a study that does not exist gets, deliberately.
+                // A distinct status here would say "this study exists, but not
+                // for you" - and a Study Instance UID is all it takes to open a
+                // study in the viewer.
+                if (scope == StudyAccessScope.Denied)
+                {
+                    return Results.NotFound();
+                }
+
                 StudyContext? context = await catalog
                     .FindStudyAsync(studyInstanceUid, cancellationToken)
                     .ConfigureAwait(false);
@@ -106,6 +125,18 @@ internal static class ImagingEndpoints
                 if (context is null)
                 {
                     return Results.NotFound();
+                }
+
+                // A caller admitted by a grant was granted one study, not the
+                // patient's imaging history. The siblings are removed rather than
+                // hidden in the client: their identifiers are the whole of what
+                // is needed to open them.
+                //
+                // Roles are unaffected - FullCatalog leaves the response exactly
+                // as it has always been.
+                if (scope == StudyAccessScope.GrantedStudyOnly)
+                {
+                    context = context with { Studies = [context.SelectedStudy] };
                 }
 
                 await auditLog

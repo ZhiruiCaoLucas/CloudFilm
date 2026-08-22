@@ -100,4 +100,24 @@ public static class AuthorizationPolicies
     /// </para>
     /// </remarks>
     public const string RequiresApplicationRole = "RequiresApplicationRole";
+
+    /// <summary>
+    /// Requires the caller to hold <see cref="RoleNames.Administrator"/>.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The first distinction CloudFilm draws between its two roles, and it is
+    /// deliberately not about reading patient data - both roles still read
+    /// exactly the same studies. It is about deciding who else may: opening one
+    /// patient's imaging to another account is an administrative act, and a
+    /// clinician doing clinical work has no reason to perform one.
+    /// </para>
+    /// <para>
+    /// A Clinician fails this and receives 403. That is a different answer from
+    /// the one <see cref="RequiresApplicationRole"/> gives an account with no
+    /// role at all, and only in the message: both are refusals of an
+    /// authenticated caller, which is what 403 means.
+    /// </para>
+    /// </remarks>
+    public const string RequiresAdministrator = "RequiresAdministrator";
 }

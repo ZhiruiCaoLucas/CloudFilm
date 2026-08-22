@@ -73,6 +73,11 @@ app.MapAccessEndpoints();
 app.MapImagingEndpoints();
 app.MapReadStateEndpoints();
 app.MapSearchEndpoints();
+app.MapAccessGrantEndpoints();
+app.MapShareLinkEndpoints();
+app.MapShareAccessEndpoints();
+app.MapShareViewEndpoints();
+app.MapAnalysisEndpoints();
 
 try
 {

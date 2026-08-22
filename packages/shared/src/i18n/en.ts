@@ -190,6 +190,22 @@ export const en = {
     home: 'Return to the start page',
   },
 
+  analysis: {
+    title: 'Image characteristics',
+    run: 'Run analysis',
+    running: 'Analysing…',
+    disclosure: 'Sends this study to the analysis service.',
+    disclaimer:
+      'Automated image characterisation. This is not a diagnosis, not a medical device, and not a substitute for clinical review.',
+    model: 'Model',
+    version: 'Version',
+    completed: 'Completed',
+    observations: 'Observations',
+    noObservations: 'No observations were reported.',
+    notConfigured: 'Automated analysis is not available in this deployment.',
+    unavailable: 'There is nothing to analyse for this study.',
+    failed: 'The analysis could not be completed.',
+  },
   auth: {
     pageTitle: 'Sign in · CloudFilm',
     title: 'Sign in to CloudFilm',

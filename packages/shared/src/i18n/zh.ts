@@ -185,6 +185,21 @@ export const zh: Messages = {
     home: '返回首页',
   },
 
+  analysis: {
+    title: '图像特征',
+    run: '运行分析',
+    running: '分析中…',
+    disclosure: '将该检查发送至分析服务。',
+    disclaimer: '自动图像特征提取。这不是诊断，不是医疗器械，也不能替代临床判读。',
+    model: '模型',
+    version: '版本',
+    completed: '完成时间',
+    observations: '观测项',
+    noObservations: '未返回任何观测项。',
+    notConfigured: '本部署未启用自动分析。',
+    unavailable: '该检查没有可分析的内容。',
+    failed: '分析未能完成。',
+  },
   auth: {
     pageTitle: '登录 · CloudFilm',
     title: '登录 CloudFilm',

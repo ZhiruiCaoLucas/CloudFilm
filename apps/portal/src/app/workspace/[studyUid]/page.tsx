@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { serverApiClient } from '@/lib/api';
 import { serverTranslations } from '@/lib/locale';
-import { env } from '@/lib/env';
 import { StudyNavigator } from '@/components/workspace/study-navigator';
 import { ViewerWorkspace } from '@/components/workspace/viewer-workspace';
 import { WorkspaceHeader } from '@/components/workspace/workspace-header';
@@ -58,13 +57,19 @@ export default async function WorkspacePage({ params }: WorkspacePageProps) {
   const studyInstanceUid = decodeURIComponent(studyUid);
   const client = await serverApiClient();
 
-  // Two requests, issued together rather than one after the other. The read
-  // state is CloudFilm's own row and does not depend on what the archive
-  // returns, so waiting for the study first would add a round trip to every
-  // workspace load for nothing.
-  const [context, readState] = await Promise.all([
+  // Three requests, issued together rather than one after the other. The read
+  // state and the stored analysis are CloudFilm's own rows and do not depend on
+  // what the archive returns, so waiting for the study first would add two round
+  // trips to every workspace load for nothing.
+  //
+  // The analysis is read here rather than in the panel that shows it, and that
+  // is what makes it survive a refresh: it arrives with the server render, so
+  // the reader sees the result their last run produced without a second request
+  // and without the study being sent anywhere again.
+  const [context, readState, analysis] = await Promise.all([
     client.getStudy(studyInstanceUid),
     client.getStudyReadState(studyInstanceUid),
+    client.getStudyAnalysis(studyInstanceUid),
   ]);
 
   if (context === null) {
@@ -86,9 +91,9 @@ export default async function WorkspacePage({ params }: WorkspacePageProps) {
         study={context.selectedStudy}
         studies={context.studies}
         series={context.series}
-        viewerBaseUrl={env.viewerUrl}
         isStudyImported={context.selectedStudy.instanceCount > 0}
         isRead={readState.read}
+        analysis={analysis}
       >
         <StudyNavigator
           patient={context.patient}

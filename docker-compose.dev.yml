@@ -12,12 +12,29 @@
 # ---------------------------------------------------------------------------
 
 services:
+  # `!override` on both, and it is load-bearing. Compose merges a `ports` list by
+  # appending, and it only drops an entry when it is identical to one already
+  # there. The base file publishes '127.0.0.1:5432:5432'; this file publishes
+  # '5432:5432'. Those are two different entries, so a plain overlay produced
+  # BOTH - 127.0.0.1:5432 and 0.0.0.0:5432 - and the daemon was asked to bind the
+  # same host port twice. The second bind fails with "address already in use",
+  # which takes the container's start with it: a container whose port
+  # programming fails can be left running with no network sandbox attached, which
+  # is why `docker inspect` reported `NetworkSettings.Networks = {}` and why
+  # Orthanc could not resolve the name `postgres`.
+  #
+  # `!override` replaces the base list instead of extending it, so exactly one
+  # binding is programmed and the published address stays what the deployment
+  # documentation says it is: every interface, in development only.
+  #
+  # Requires Compose v2.24 or newer. On anything older the tag is an error at
+  # `docker compose config` time rather than a silent change in behaviour.
   postgres:
-    ports:
+    ports: !override
       - '5432:5432'
 
   redis:
-    ports:
+    ports: !override
       - '6379:6379'
 
   orthanc:
@@ -27,8 +44,15 @@ services:
       - ./services/orthanc/orthanc.json:/etc/orthanc/orthanc.json:ro
       - ./services/orthanc/zz-dev.json:/etc/orthanc/zz-dev.json:ro
       - orthanc-storage:/var/lib/orthanc/db
-    ports:
-      - '8042:8042'
+    # No host port. Orthanc holds the images and authenticates with a single
+    # shared credential, so anything that can reach it can read every study of
+    # every patient. Reachable only from the internal network, which means only
+    # the retrieve service and the viewer's proxy - and the proxy now authorises
+    # each request. Publishing 8042 would restore a way past all of it.
+    #
+    # To reach Orthanc from the host - seeding, or scripts/verify-imaging.mjs -
+    # publish it deliberately and temporarily with a local override file that is
+    # not tracked. See docs/local-imaging.md.
 
   # These previously downgraded to service_started, to work around an Orthanc
   # health check that could never pass. That workaround is removed: masking a
@@ -39,8 +63,19 @@ services:
   retrieve:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
+    # Loopback only, like PostgreSQL and Redis in the base file. The Retrieve
+    # Service authenticates nobody: it answers whoever reaches it, with patients,
+    # studies, searches and whole DICOM studies, and it is the one component
+    # holding Orthanc's credential. Published on every interface it put a
+    # developer's laptop one network hop from every study in the local archive,
+    # past the API's authorisation, the share links and the DICOMweb gate alike.
+    #
+    # 127.0.0.1 keeps http://localhost:8082 working - which is what the API's
+    # Development configuration and the service's own launchSettings.json both
+    # expect - and stops there. Nothing in the repository needs it from another
+    # machine.
     ports:
-      - '8082:8080'
+      - '127.0.0.1:8082:8080'
 
   api:
     environment:

@@ -50,7 +50,7 @@ export function WorkspaceStatusBar({
   return (
     <footer
       aria-label={t('workspace.statusLabel')}
-      className="border-border bg-surface-raised text-muted flex shrink-0 flex-wrap items-center gap-x-6 gap-y-1 border-t px-4 py-2 text-xs"
+      className="border-border bg-surface-raised text-muted flex min-h-9 shrink-0 flex-wrap items-center gap-x-7 gap-y-1 border-t px-4 py-1.5 text-[0.6875rem]"
     >
       <StatusField label={t('study.studyUid')} value={study.studyInstanceUid} mono truncate />
       <StatusField label={t('study.images')} value={String(study.instanceCount)} mono />
@@ -75,13 +75,13 @@ export function WorkspaceStatusBar({
         aria-busy={isSaving}
         title={isRead ? t('workspace.markUnread') : t('workspace.markRead')}
         className={cn(
-          'inline-flex min-h-6 items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-medium',
+          'inline-flex min-h-6 items-center gap-1.5 rounded px-2 py-0.5 text-[0.6875rem] font-medium',
           'ring-1 transition-colors ring-inset',
           'focus-visible:outline-accent focus-visible:outline-2 focus-visible:outline-offset-2',
           'disabled:pointer-events-none disabled:opacity-60',
           isRead
             ? 'bg-emerald-500/10 text-emerald-600 ring-emerald-500/30 dark:text-emerald-400'
-            : 'ring-border hover:bg-surface-overlay hover:text-foreground',
+            : 'ring-border hover:bg-surface-overlay hover:ring-border-strong hover:text-foreground',
         )}
       >
         <span aria-hidden="true" className="font-mono">
@@ -92,9 +92,13 @@ export function WorkspaceStatusBar({
 
       {/* Discoverability: a shortcut nobody is told about is a shortcut nobody uses. */}
       <span className="ml-auto hidden lg:inline">
-        <kbd className="bg-surface-overlay text-foreground rounded px-1 font-mono">[</kbd>
+        <kbd className="border-border bg-surface-overlay text-foreground rounded border px-1.5 py-px font-mono">
+          [
+        </kbd>
         {' / '}
-        <kbd className="bg-surface-overlay text-foreground rounded px-1 font-mono">]</kbd>{' '}
+        <kbd className="border-border bg-surface-overlay text-foreground rounded border px-1.5 py-px font-mono">
+          ]
+        </kbd>{' '}
         {t('workspace.shortcutHint')}
       </span>
     </footer>
@@ -122,8 +126,8 @@ function StatusField({
   readonly truncate?: boolean;
 }) {
   return (
-    <div className={cn('flex items-center gap-2', truncate && 'min-w-0')}>
-      <span>{label}</span>
+    <div className={cn('flex items-baseline gap-2', truncate && 'min-w-0')}>
+      <span className="tracking-[0.06em] uppercase">{label}</span>
       <span
         className={cn('text-foreground font-medium', mono && 'font-mono', truncate && 'truncate')}
       >

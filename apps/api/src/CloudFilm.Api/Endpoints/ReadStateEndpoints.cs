@@ -2,6 +2,7 @@ using System.Security.Claims;
 using CloudFilm.Application.Abstractions;
 using CloudFilm.Application.Auditing;
 using CloudFilm.Application.Auth;
+using CloudFilm.Application.Grants;
 using CloudFilm.Application.ReadState;
 using Microsoft.IdentityModel.JsonWebTokens;
 
@@ -68,6 +69,7 @@ internal static class ReadStateEndpoints
         studies.MapGet("/{studyInstanceUid}/read-state", async Task<IResult> (
                     string studyInstanceUid,
                     ClaimsPrincipal principal,
+                    IStudyAccessPolicy accessPolicy,
                     IStudyReadStateStore readState,
                     CancellationToken cancellationToken) =>
             {
@@ -76,6 +78,20 @@ internal static class ReadStateEndpoints
                 if (failure is not null)
                 {
                     return failure;
+                }
+
+                // Before the store is touched, and before anything is reported
+                // about this study. A caller who may not see it is answered
+                // exactly as they would be for a study that does not exist, so
+                // the read mark cannot be used to discover which studies are
+                // there. Callers holding a clinical role are admitted by the
+                // policy without a query, so nothing about existing behaviour
+                // changes.
+                if (await accessPolicy
+                        .AuthoriseAsync(principal, uid, GrantPermissions.View, cancellationToken)
+                        .ConfigureAwait(false) == StudyAccessScope.Denied)
+                {
+                    return Results.NotFound();
                 }
 
                 bool read = await readState
@@ -98,6 +114,7 @@ internal static class ReadStateEndpoints
         studies.MapPut("/{studyInstanceUid}/read-state", async Task<IResult> (
                     string studyInstanceUid,
                     ClaimsPrincipal principal,
+                    IStudyAccessPolicy accessPolicy,
                     IStudyReadStateStore readState,
                     IAuditLogService auditLog,
                     IUnitOfWork unitOfWork,
@@ -108,6 +125,20 @@ internal static class ReadStateEndpoints
                 if (failure is not null)
                 {
                     return failure;
+                }
+
+                // Before the store is touched, and before anything is reported
+                // about this study. A caller who may not see it is answered
+                // exactly as they would be for a study that does not exist, so
+                // the read mark cannot be used to discover which studies are
+                // there. Callers holding a clinical role are admitted by the
+                // policy without a query, so nothing about existing behaviour
+                // changes.
+                if (await accessPolicy
+                        .AuthoriseAsync(principal, uid, GrantPermissions.View, cancellationToken)
+                        .ConfigureAwait(false) == StudyAccessScope.Denied)
+                {
+                    return Results.NotFound();
                 }
 
                 StudyReadState state = await unitOfWork
@@ -154,6 +185,7 @@ internal static class ReadStateEndpoints
         studies.MapDelete("/{studyInstanceUid}/read-state", async Task<IResult> (
                     string studyInstanceUid,
                     ClaimsPrincipal principal,
+                    IStudyAccessPolicy accessPolicy,
                     IStudyReadStateStore readState,
                     IAuditLogService auditLog,
                     IUnitOfWork unitOfWork,
@@ -164,6 +196,20 @@ internal static class ReadStateEndpoints
                 if (failure is not null)
                 {
                     return failure;
+                }
+
+                // Before the store is touched, and before anything is reported
+                // about this study. A caller who may not see it is answered
+                // exactly as they would be for a study that does not exist, so
+                // the read mark cannot be used to discover which studies are
+                // there. Callers holding a clinical role are admitted by the
+                // policy without a query, so nothing about existing behaviour
+                // changes.
+                if (await accessPolicy
+                        .AuthoriseAsync(principal, uid, GrantPermissions.View, cancellationToken)
+                        .ConfigureAwait(false) == StudyAccessScope.Denied)
+                {
+                    return Results.NotFound();
                 }
 
                 StudyReadState state = await unitOfWork

@@ -20,20 +20,20 @@ export async function WorkspaceHeader({
   const t = await serverTranslations();
 
   return (
-    <header className="border-border bg-surface-raised flex shrink-0 items-center gap-6 border-b px-4 py-2.5">
+    <header className="border-border bg-surface-raised flex h-12 shrink-0 items-center gap-5 border-b px-4">
       <Link
         href="/"
         className="focus-visible:outline-accent flex shrink-0 items-center gap-2 rounded-md focus-visible:outline-2 focus-visible:outline-offset-4"
       >
-        <CloudFilmLogo className="h-6 w-6" />
-        <span className="text-foreground text-sm font-semibold tracking-tight">
+        <CloudFilmLogo className="h-[1.375rem] w-[1.375rem]" />
+        <span className="text-foreground text-[0.8125rem] font-semibold tracking-tight">
           {t('common.appName')}
         </span>
       </Link>
 
-      <div className="border-border h-6 w-px shrink-0 border-l" />
+      <div className="bg-border h-5 w-px shrink-0" />
 
-      <dl className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-6 gap-y-1 text-sm">
+      <dl className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-7 gap-y-0.5 text-[0.8125rem]">
         <HeaderField label={t('workspace.patient')}>
           <Link
             href={`/patient/${encodeURIComponent(patient.medicalRecordNumber)}`}
@@ -67,7 +67,12 @@ function HeaderField({
 }) {
   return (
     <div className="flex min-w-0 items-baseline gap-2">
-      <dt className="text-muted shrink-0 text-xs tracking-wide uppercase">{label}</dt>
+      {/*
+        Labels are set small, wide and grey; values are set at reading size in
+        the foreground colour. The contrast between the two is what lets a
+        radiologist find the patient name in this bar without reading the bar.
+      */}
+      <dt className="text-muted shrink-0 text-[0.625rem] tracking-[0.08em] uppercase">{label}</dt>
       <dd className={`text-foreground truncate font-medium ${mono ? 'font-mono text-xs' : ''}`}>
         {children}
       </dd>

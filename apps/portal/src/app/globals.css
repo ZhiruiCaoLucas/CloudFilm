@@ -11,37 +11,117 @@
   --color-surface: var(--surface);
   --color-surface-raised: var(--surface-raised);
   --color-surface-overlay: var(--surface-overlay);
+  --color-surface-sunken: var(--surface-sunken);
   --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-accent-soft: var(--accent-soft);
 
   --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
 }
 
+/*
+  One accent, four surfaces, two text weights.
+
+  The palette is deliberately narrow and close to neutral. Colour in this product
+  has to mean something - a status, an action, a value out of range - so the
+  chrome is kept grey enough that anything coloured reads as deliberate. The greys
+  are near-neutral rather than blue-tinted, because a blue cast in the chrome
+  competes with the greyscale image the reader is actually looking at.
+
+  The accent is stated three times - a light, a base and a deep - so that a
+  control can be given a gradient without inventing colours at the call site. The
+  two atmospheric tones exist only for translucent light: they never colour a
+  surface, a label or a border, and they appear at single-digit alpha or not at
+  all.
+*/
 :root {
-  --surface: #f8fafc;
+  --surface: #fbfbfc;
   --surface-raised: #ffffff;
-  --surface-overlay: #f1f5f9;
-  --border: #e2e8f0;
-  --foreground: #0f172a;
-  --muted: #64748b;
-  --accent: #0369a1;
+  --surface-overlay: #f3f4f6;
+  --surface-sunken: #eeeff2;
+  --border: #e4e6ea;
+  --border-strong: #d0d4da;
+  --foreground: #14161a;
+  --muted: #666d78;
+
+  --accent: #0f6f8c;
+  --accent-high: #1a8cad;
+  --accent-deep: #0a5a73;
   --accent-foreground: #ffffff;
+  --accent-soft: #0f6f8c14;
+  --accent-ring: #0f6f8c33;
+  --accent-glow: #0f6f8c3d;
+
+  /* Atmospheric only. Never a surface, never a border, never type. */
+  --atmos-cyan: #1f9cc4;
+  --atmos-violet: #6172c9;
+
+  --selection: #0f6f8c2e;
+
+  /* Glass. One highlight, one tint, so every translucent control agrees. */
+  --glass-highlight: #ffffffcc;
+  --glass-edge: #ffffff59;
+  --glass-tint: #ffffffa6;
+  --glass-tint-hover: #ffffffd9;
+
+  --shadow-low: 0 1px 2px #0f172a0f;
+  --shadow-lift: 0 1px 2px #0f172a12, 0 6px 16px -12px #0f172a2e;
+
+  --motion-fast: 120ms;
+  --motion-base: 200ms;
+  --motion-slow: 320ms;
+  --ease-out: cubic-bezier(0.22, 0.61, 0.28, 1);
+
   --font-sans:
     ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono:
+    ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
 }
 
+/*
+  Graphite rather than navy. The workspace puts this chrome directly beside a
+  black viewport holding a greyscale image, and a blue-black surround shifts the
+  apparent tone of everything in it.
+
+  Glass inverts in the dark: the highlight becomes a faint white edge rather than
+  a wash, and the tint becomes a lift of the surface underneath rather than a
+  veil over it.
+*/
 .dark {
-  --surface: #020617;
-  --surface-raised: #0f172a;
-  --surface-overlay: #1e293b;
-  --border: #1e293b;
-  --foreground: #e2e8f0;
-  --muted: #94a3b8;
-  --accent: #38bdf8;
-  --accent-foreground: #04141f;
+  --surface: #0b0d10;
+  --surface-raised: #14171b;
+  --surface-overlay: #1c2026;
+  --surface-sunken: #08090b;
+  --border: #232830;
+  --border-strong: #343b45;
+  --foreground: #e6e8ec;
+  --muted: #98a0ab;
+
+  --accent: #4fb3cf;
+  --accent-high: #74cbe4;
+  --accent-deep: #2f8ea9;
+  --accent-foreground: #06212b;
+  --accent-soft: #4fb3cf1f;
+  --accent-ring: #4fb3cf40;
+  --accent-glow: #4fb3cf47;
+
+  --atmos-cyan: #3fb6da;
+  --atmos-violet: #7d8ce0;
+
+  --selection: #4fb3cf3d;
+
+  --glass-highlight: #ffffff1f;
+  --glass-edge: #ffffff17;
+  --glass-tint: #ffffff0a;
+  --glass-tint-hover: #ffffff14;
+
+  --shadow-low: 0 1px 2px #00000066;
+  --shadow-lift: 0 1px 2px #00000073, 0 8px 20px -14px #000000b3;
 }
 
 @layer base {
@@ -54,9 +134,56 @@
     color: var(--foreground);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
 
-  /* Respect users who have asked the platform to reduce motion. */
+  /*
+    Headings are set tight and are never large. This is a workstation, not a
+    landing page: the hierarchy comes from weight, colour and spacing, and a
+    heading big enough to be decorative is a heading that has pushed a clinical
+    row below the fold.
+  */
+  h1,
+  h2,
+  h3,
+  h4 {
+    letter-spacing: -0.011em;
+    text-wrap: balance;
+  }
+
+  /*
+    Every identifier, count, date and measurement in CloudFilm is set in the mono
+    face, and all of them are read in vertical columns - a Study Instance UID
+    against another, an image count against another. Fixed-width digits are what
+    make those columns comparable at a glance.
+  */
+  :where(.font-mono, code, kbd, samp) {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.005em;
+  }
+
+  /*
+    Thin, low-contrast scrollbars. The metadata rail and the study navigator both
+    scroll beside the reading area, and a default chrome-coloured scrollbar is a
+    bright vertical stripe in a radiologist's peripheral vision.
+  */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-strong) transparent;
+  }
+
+  ::selection {
+    background-color: var(--selection);
+  }
+
+  /*
+    Respect users who have asked the platform to reduce motion.
+
+    The blanket rule removes the duration; the rules under it remove the
+    displacement as well, because a lift that happens in 0.01ms is still a
+    control that moves under the pointer.
+  */
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
@@ -64,5 +191,278 @@
       animation-duration: 0.01ms !important;
       transition-duration: 0.01ms !important;
     }
+
+    .cf-control:hover,
+    .cf-control:active,
+    .cf-lift:hover {
+      transform: none !important;
+    }
+
+    .auth-backdrop,
+    .auth-glow {
+      animation: none !important;
+    }
+  }
+}
+
+@layer components {
+  /*
+    ---------------------------------------------------------------------------
+    The glass control surface.
+    ---------------------------------------------------------------------------
+
+    One base class behind every button in the product, so a control gains depth
+    in exactly one place. Three ideas, and no more than three:
+
+      1. the surface is a gradient rather than a flat fill, wider than the
+         control, so hovering slides the light across it instead of swapping one
+         colour for another;
+      2. a hairline of light sits along the top edge - an inset box-shadow, not
+         a border - which is what makes a rectangle read as a physical surface;
+      3. the control lifts one pixel and drops it again when pressed.
+
+    Everything animated here is transform, opacity, box-shadow or
+    background-position. Nothing reflows, nothing repaints the page, and no
+    JavaScript runs: a hover effect that needs a mouse-move listener is a hover
+    effect that costs a frame on every frame, which is not a trade a workstation
+    should make for a highlight.
+  */
+  .cf-control {
+    background-size: 220% 100%;
+    background-position: 100% 0;
+    transition:
+      background-position var(--motion-slow) var(--ease-out),
+      box-shadow var(--motion-base) var(--ease-out),
+      border-color var(--motion-base) var(--ease-out),
+      color var(--motion-base) var(--ease-out),
+      transform var(--motion-fast) var(--ease-out);
+  }
+
+  .cf-control:hover {
+    background-position: 0 0;
+  }
+
+  .cf-control:hover:not(:disabled) {
+    transform: translateY(-1px);
+  }
+
+  .cf-control:active:not(:disabled) {
+    transform: translateY(0) scale(0.985);
+    transition-duration: var(--motion-fast);
+  }
+
+  /* Primary: an engineered accent surface. The glow is the only coloured
+     shadow in the product, and it only exists while the pointer is on it. */
+  .cf-control-primary {
+    border: 1px solid color-mix(in srgb, var(--accent-deep) 70%, transparent);
+    background-image: linear-gradient(
+      108deg,
+      var(--accent-high) 0%,
+      var(--accent) 42%,
+      var(--accent-deep) 100%
+    );
+    box-shadow:
+      inset 0 1px 0 0 color-mix(in srgb, #fff 26%, transparent),
+      var(--shadow-low);
+  }
+
+  .cf-control-primary:hover:not(:disabled) {
+    box-shadow:
+      inset 0 1px 0 0 color-mix(in srgb, #fff 34%, transparent),
+      var(--shadow-lift),
+      0 6px 20px -12px var(--accent-glow);
+  }
+
+  .cf-control-primary:active:not(:disabled) {
+    box-shadow:
+      inset 0 1px 2px 0 color-mix(in srgb, var(--accent-deep) 45%, transparent),
+      var(--shadow-low);
+  }
+
+  /* Secondary: the same construction, quieter. A translucent tint over whatever
+     surface it sits on rather than a second opaque panel. */
+  .cf-control-secondary {
+    border: 1px solid var(--border);
+    background-color: var(--surface-raised);
+    background-image: linear-gradient(
+      108deg,
+      var(--glass-tint-hover) 0%,
+      var(--glass-tint) 45%,
+      transparent 100%
+    );
+    box-shadow:
+      inset 0 1px 0 0 var(--glass-edge),
+      var(--shadow-low);
+  }
+
+  .cf-control-secondary:hover:not(:disabled) {
+    border-color: color-mix(in srgb, var(--accent) 34%, var(--border-strong));
+    box-shadow:
+      inset 0 1px 0 0 var(--glass-highlight),
+      var(--shadow-lift);
+  }
+
+  .cf-control-secondary:active:not(:disabled) {
+    background-color: var(--surface-overlay);
+    box-shadow: inset 0 1px 2px 0 #0f172a1a;
+  }
+
+  /* Ghost: no surface at all until it is wanted. */
+  .cf-control-ghost {
+    border: 1px solid transparent;
+    background-image: linear-gradient(
+      108deg,
+      var(--glass-tint-hover) 0%,
+      var(--glass-tint) 55%,
+      transparent 100%
+    );
+    background-color: transparent;
+  }
+
+  .cf-control-ghost:hover:not(:disabled) {
+    background-color: var(--surface-overlay);
+    border-color: var(--border);
+  }
+
+  .cf-control-ghost:active:not(:disabled) {
+    background-color: var(--surface-sunken);
+  }
+
+  /*
+    ---------------------------------------------------------------------------
+    The glass field.
+    ---------------------------------------------------------------------------
+
+    A field is a recess where a button is a surface, so the highlight runs along
+    the *inside* of the top edge and the focus state opens a soft ring rather
+    than snapping a hard one on. Nothing moves: a text field that lifts under the
+    caret is a text field that has moved the text you were reading.
+  */
+  .cf-field {
+    background-color: var(--surface-raised);
+    border: 1px solid var(--border);
+    box-shadow: inset 0 1px 2px 0 #0f172a0a;
+    transition:
+      border-color var(--motion-base) var(--ease-out),
+      box-shadow var(--motion-base) var(--ease-out),
+      background-color var(--motion-base) var(--ease-out);
+  }
+
+  .cf-field:hover:not(:disabled) {
+    border-color: var(--border-strong);
+  }
+
+  .cf-field:focus-visible,
+  .cf-field:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow:
+      inset 0 1px 0 0 var(--glass-edge),
+      0 0 0 3px var(--accent-ring);
+  }
+
+  .cf-field-invalid {
+    border-color: color-mix(in srgb, #ef4444 62%, transparent);
+  }
+
+  .cf-field-invalid:focus-visible,
+  .cf-field-invalid:focus {
+    border-color: #ef4444;
+    box-shadow:
+      inset 0 1px 0 0 var(--glass-edge),
+      0 0 0 3px #ef444433;
+  }
+
+  /*
+    ---------------------------------------------------------------------------
+    Panels and rows.
+    ---------------------------------------------------------------------------
+  */
+
+  /*
+    The sign-in surface. The one place in CloudFilm that uses backdrop-filter:
+    it is the only surface with anything behind it worth refracting, and it is
+    one small element on a page with nothing else on it - so the cost is paid
+    once, off the diagnostic path, and never in the workspace.
+  */
+  .cf-glass-panel {
+    background-color: color-mix(in srgb, var(--surface-raised) 82%, transparent);
+    -webkit-backdrop-filter: blur(20px) saturate(1.4);
+    backdrop-filter: blur(20px) saturate(1.4);
+    border: 1px solid var(--border);
+    box-shadow:
+      inset 0 1px 0 0 var(--glass-highlight),
+      var(--shadow-lift);
+  }
+
+  /* A hairline of accent light along the top edge of the sign-in panel. It is
+     the only decorative element on the page and it is one pixel tall. */
+  .cf-glass-panel::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    right: 12%;
+    left: 12%;
+    height: 1px;
+    background-image: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in srgb, var(--accent) 55%, transparent),
+      transparent
+    );
+    pointer-events: none;
+  }
+
+  /* Surfaces that acknowledge the pointer without moving: table rows, list
+     items, panels the reader is scanning rather than pressing. */
+  .cf-lift {
+    transition:
+      border-color var(--motion-base) var(--ease-out),
+      background-color var(--motion-base) var(--ease-out),
+      box-shadow var(--motion-base) var(--ease-out);
+  }
+
+  .cf-lift:hover {
+    border-color: var(--border-strong);
+  }
+
+  /*
+    ---------------------------------------------------------------------------
+    Sign-in atmosphere.
+    ---------------------------------------------------------------------------
+
+    Three layers, all inert, all under 10% alpha: a hairline field, a pool of
+    accent light, and one cool counter-light so the field is not a single flat
+    wash. Static - nothing here animates, because a login page that breathes is
+    a login page somebody has to look at every morning.
+  */
+  .auth-backdrop {
+    background-image:
+      linear-gradient(to right, var(--border) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--border) 1px, transparent 1px);
+    background-size: 64px 64px;
+    background-position: center;
+    opacity: 0.45;
+    -webkit-mask-image: radial-gradient(ellipse 70% 55% at 50% 42%, #000 8%, transparent 72%);
+    mask-image: radial-gradient(ellipse 70% 55% at 50% 42%, #000 8%, transparent 72%);
+  }
+
+  .auth-glow {
+    background-image:
+      radial-gradient(
+        ellipse 46% 38% at 50% 34%,
+        color-mix(in srgb, var(--accent) 16%, transparent),
+        transparent 70%
+      ),
+      radial-gradient(
+        ellipse 34% 30% at 78% 74%,
+        color-mix(in srgb, var(--atmos-violet) 11%, transparent),
+        transparent 72%
+      ),
+      radial-gradient(
+        ellipse 30% 26% at 18% 78%,
+        color-mix(in srgb, var(--atmos-cyan) 10%, transparent),
+        transparent 72%
+      );
   }
 }

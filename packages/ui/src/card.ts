@@ -6,11 +6,18 @@ export interface CardProps extends HTMLAttributes<HTMLDivElement> {
   readonly children?: ReactNode;
 }
 
-/** A bordered surface used to group related information. */
+/**
+ * A bordered surface used to group related information.
+ *
+ * A hairline and a change of surface, and nothing else. The drop shadow this
+ * used to carry made every grouping on a page look like a floating tile; a
+ * clinical layout gets its structure from alignment and rules, and reserves
+ * elevation for things that genuinely sit above the page.
+ */
 export function Card({ className, ...rest }: CardProps) {
   return createElement('div', {
     ...rest,
-    className: cn('rounded-lg border border-border bg-surface-raised shadow-sm', className),
+    className: cn('border-border bg-surface-raised rounded-lg border', className),
   });
 }
 
@@ -18,7 +25,7 @@ export function Card({ className, ...rest }: CardProps) {
 export function CardHeader({ className, ...rest }: CardProps) {
   return createElement('div', {
     ...rest,
-    className: cn('border-b border-border px-5 py-4', className),
+    className: cn('border-border border-b px-5 py-3.5', className),
   });
 }
 

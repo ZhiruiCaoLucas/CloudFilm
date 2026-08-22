@@ -20,14 +20,17 @@ export function Input({ className, invalid = false, type, ...rest }: InputProps)
     type: type ?? 'text',
     'aria-invalid': invalid || undefined,
     className: cn(
-      'min-h-11 w-full rounded-md px-3 text-sm',
-      'bg-surface-raised text-foreground placeholder:text-muted',
-      'ring-1 ring-inset transition-colors',
+      // Matched to the button height so a field and the control beside it sit on
+      // one line without either being nudged.
+      'min-h-10 w-full rounded-md px-3 text-sm',
+      'bg-surface-raised text-foreground placeholder:text-muted/70',
+      'ring-1 ring-inset transition-[color,box-shadow]',
+      'hover:ring-border-strong',
       'focus-visible:ring-2 focus-visible:outline-none',
       invalid
-        ? 'ring-red-500/60 focus-visible:ring-red-500'
+        ? 'ring-red-500/60 hover:ring-red-500/70 focus-visible:ring-red-500'
         : 'ring-border focus-visible:ring-accent',
-      'disabled:cursor-not-allowed disabled:opacity-50',
+      'disabled:cursor-not-allowed disabled:opacity-45',
       className,
     ),
   });

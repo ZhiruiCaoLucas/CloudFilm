@@ -8,8 +8,8 @@ export function DefinitionItem({
 }) {
   return (
     <div className="flex flex-col gap-1">
-      <dt className="text-muted text-xs tracking-wide uppercase">{label}</dt>
-      <dd className="text-foreground text-sm font-medium">{value}</dd>
+      <dt className="text-muted text-[0.625rem] tracking-[0.08em] uppercase">{label}</dt>
+      <dd className="text-foreground text-[0.8125rem] font-medium">{value}</dd>
     </div>
   );
 }

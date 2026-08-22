@@ -1,4 +1,4 @@
-import { Card, CardBody, CardHeader, Skeleton } from '@cloudfilm/ui';
+import { Skeleton } from '@cloudfilm/ui';
 import { PortalShell } from '@/components/portal-shell';
 import { serverTranslations } from '@/lib/locale';
 
@@ -17,27 +17,24 @@ export default async function PatientLoading() {
       <div className="flex flex-col gap-10">
         <Skeleton className="h-5 w-32" />
 
-        <Card>
-          <CardHeader>
-            <Skeleton className="h-6 w-48" />
-          </CardHeader>
-          <CardBody>
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
-              {['mrn', 'gender', 'birth-date'].map((field) => (
-                <div key={field} className="flex flex-col gap-2">
-                  <Skeleton className="h-3 w-24" />
-                  <Skeleton className="h-4 w-32" />
-                </div>
-              ))}
-            </div>
-          </CardBody>
-        </Card>
+        {/* Mirrors PatientSummary: a masthead closed by a rule, not a tile. */}
+        <div className="border-border border-b pb-6">
+          <Skeleton className="h-7 w-48" />
+          <div className="mt-5 grid grid-cols-1 gap-x-10 gap-y-4 sm:grid-cols-3">
+            {['mrn', 'gender', 'birth-date'].map((field) => (
+              <div key={field} className="flex flex-col gap-1.5">
+                <Skeleton className="h-2.5 w-24" />
+                <Skeleton className="h-4 w-32" />
+              </div>
+            ))}
+          </div>
+        </div>
 
         <div className="flex flex-col gap-4">
           <Skeleton className="h-4 w-20" />
           <div className="border-border flex flex-col gap-px overflow-hidden rounded-lg border">
             {['first', 'second', 'third'].map((row) => (
-              <Skeleton key={row} className="h-16 rounded-none" />
+              <Skeleton key={row} className="h-12 rounded-none" />
             ))}
           </div>
         </div>

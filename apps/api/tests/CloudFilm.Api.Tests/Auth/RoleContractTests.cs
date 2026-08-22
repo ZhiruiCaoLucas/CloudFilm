@@ -17,6 +17,8 @@ public sealed class RoleContractTests
 {
     private static readonly string[] _approvedRoles = ["Administrator", "Clinician"];
 
+    private static readonly string[] _policies = ["RequiresApplicationRole", "RequiresAdministrator"];
+
     // -----------------------------------------------------------------------
     // The role set.
     // -----------------------------------------------------------------------
@@ -93,21 +95,46 @@ public sealed class RoleContractTests
     }
 
     // -----------------------------------------------------------------------
-    // The policy.
+    // The policies.
     // -----------------------------------------------------------------------
 
     /// <summary>
-    /// One policy, and its meaning stated once. An authenticated account with no
-    /// application role fails it and is refused - it is never promoted by
+    /// The policy every clinical endpoint carries. An authenticated account with
+    /// no application role fails it and is refused - it is never promoted by
     /// default.
     /// </summary>
     [Fact]
-    public void ThereIsOneApplicationRolePolicy()
-    {
+    public void ThereIsAnApplicationRolePolicy() =>
         AuthorizationPolicies.RequiresApplicationRole.Should().NotBeNullOrWhiteSpace();
 
-        PublicConstants(typeof(AuthorizationPolicies)).Should().ContainSingle();
-    }
+    /// <summary>
+    /// The policy the acts that decide who else may see a study carry. It is not
+    /// about reading patient data - both roles read the same studies - but about
+    /// granting access, which a clinician doing clinical work has no reason to
+    /// do.
+    /// </summary>
+    [Fact]
+    public void ThereIsAnAdministratorOnlyPolicy() =>
+        AuthorizationPolicies.RequiresAdministrator.Should().NotBeNullOrWhiteSpace();
+
+    /// <summary>
+    /// Two policies, and no third arriving unnoticed. Each policy name is a rule
+    /// somebody has to be able to point at, so the set is pinned down here
+    /// rather than left to grow.
+    /// </summary>
+    [Fact]
+    public void ThereAreExactlyTwoPolicies() =>
+        PublicConstants(typeof(AuthorizationPolicies)).Should().BeEquivalentTo(_policies);
+
+    /// <summary>
+    /// The two are different rules and must be different names. One value
+    /// serving both would make an Administrator-only endpoint open to every
+    /// role the day somebody tidied up the duplication.
+    /// </summary>
+    [Fact]
+    public void TheTwoPoliciesAreDistinct() =>
+        AuthorizationPolicies.RequiresAdministrator
+            .Should().NotBe(AuthorizationPolicies.RequiresApplicationRole);
 
     // -----------------------------------------------------------------------
     // How roles appear in the authentication contracts.

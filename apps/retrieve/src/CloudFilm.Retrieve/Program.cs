@@ -33,17 +33,25 @@ builder.Services.AddHospitalAdapters();
 // the internal network only; nothing outside this service knows the address.
 builder.Services.AddHttpClient(OrthancDicomWebAdapter.HttpClientName, client =>
 {
-    client.BaseAddress = new Uri($"{retrieve.OrthancUrl.TrimEnd('/')}/dicom-web/");
+    ConfigureOrthancClient(client);
     client.Timeout = TimeSpan.FromSeconds(30);
+});
 
-    // Orthanc rejects anonymous DICOMweb requests with 401 whenever
-    // AuthenticationEnabled is on. Credentials are attached to the client rather
-    // than to individual calls, so every request the adapter makes carries them,
-    // including its connectivity probe.
-    //
-    // Left unset when no user name is configured: local development runs Orthanc
-    // with authentication disabled, and sending an empty credential there would
-    // be noise rather than a fallback.
+// Shared by both Orthanc clients so the address and the credential are written
+// once. Only the timeout differs between them.
+//
+// Orthanc rejects anonymous DICOMweb requests with 401 whenever
+// AuthenticationEnabled is on. Credentials are attached to the client rather
+// than to individual calls, so every request the adapter makes carries them,
+// including its connectivity probe.
+//
+// Left unset when no user name is configured: local development runs Orthanc
+// with authentication disabled, and sending an empty credential there would be
+// noise rather than a fallback.
+void ConfigureOrthancClient(HttpClient client)
+{
+    client.BaseAddress = new Uri($"{retrieve.OrthancUrl.TrimEnd('/')}/dicom-web/");
+
     if (retrieve.OrthancUsername.Length > 0)
     {
         string credentials = Convert.ToBase64String(
@@ -52,12 +60,34 @@ builder.Services.AddHttpClient(OrthancDicomWebAdapter.HttpClientName, client =>
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Basic", credentials);
     }
+}
+
+// The same address and credential, without the thirty second bound.
+// HttpClient.Timeout covers the body as well as the headers, so a study large
+// enough to be worth downloading would be cut off mid-transfer. This client is
+// bounded by the request's cancellation instead.
+builder.Services.AddHttpClient(OrthancDicomWebAdapter.DownloadHttpClientName, client =>
+{
+    ConfigureOrthancClient(client);
+    client.Timeout = Timeout.InfiniteTimeSpan;
 });
 
 builder.Services.AddHospitalAdapter<OrthancDicomWebAdapter>();
 
+// One Orthanc check, and it is the adapter's own probe.
+//
+// There used to be a second: an anonymous GET of http://orthanc:8042/system.
+// Orthanc answers that with 401 whenever AuthenticationEnabled is on, which is
+// every deployment except one running the development overlay - so readiness was
+// structurally unreachable in production and only looked healthy locally because
+// the overlay turns Orthanc's authentication off.
+//
+// Removing it loses no coverage. HospitalAdapterHealthCheck calls
+// OrthancDicomWebAdapter.ProbeAsync, which issues dicom-web/studies?limit=1 on
+// the client ConfigureOrthancClient built - so it carries the credential, and it
+// exercises the DICOMweb plugin this service actually depends on rather than
+// merely proving that a socket accepts.
 builder.Services.AddHealthChecks()
-    .AddUrlGroup(new Uri($"{retrieve.OrthancUrl.TrimEnd('/')}/system"), name: "orthanc", tags: ["ready"])
     .AddCheck<HospitalAdapterHealthCheck>("hospital-adapters", tags: ["ready"]);
 
 builder.Services.AddProblemDetails();
@@ -82,6 +112,7 @@ app.MapHealthChecks("/health/ready", new HealthCheckOptions
 app.MapHospitalEndpoints();
 app.MapImagingEndpoints();
 app.MapSearchEndpoints();
+app.MapDownloadEndpoints();
 
 try
 {

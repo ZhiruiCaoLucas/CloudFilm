@@ -23,6 +23,56 @@ namespace CloudFilm.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("CloudFilm.Infrastructure.Analysis.StudyAnalysisResult", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CompletedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Findings")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("ModelName")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("ModelVersion")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid?>("RequestedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("StudyInstanceUid")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<DateTimeOffset?>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StudyInstanceUid")
+                        .IsUnique();
+
+                    b.ToTable("StudyAnalysisResults", "cloudfilm");
+                });
+
             modelBuilder.Entity("CloudFilm.Infrastructure.Auditing.AuditLog", b =>
                 {
                     b.Property<Guid>("Id")
@@ -64,6 +114,48 @@ namespace CloudFilm.Infrastructure.Migrations
                     b.HasIndex("ResourceType", "ResourceId");
 
                     b.ToTable("AuditLogs", "cloudfilm");
+                });
+
+            modelBuilder.Entity("CloudFilm.Infrastructure.Grants.AccessGrant", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("ExpiresAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("GrantedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("GranteeUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Permission")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTimeOffset?>("RevokedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("StudyInstanceUid")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GranteeUserId");
+
+                    b.HasIndex("StudyInstanceUid", "GranteeUserId")
+                        .IsUnique()
+                        .HasFilter("\"RevokedAtUtc\" IS NULL");
+
+                    b.ToTable("AccessGrants", "cloudfilm");
                 });
 
             modelBuilder.Entity("CloudFilm.Infrastructure.Identity.ApplicationRole", b =>
@@ -178,6 +270,49 @@ namespace CloudFilm.Infrastructure.Migrations
                     b.ToTable("StudyReadStates", "cloudfilm");
                 });
 
+            modelBuilder.Entity("CloudFilm.Infrastructure.Sharing.ShareLink", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("ExpiresAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Permission")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTimeOffset?>("RevokedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("StudyInstanceUid")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<byte[]>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("bytea");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StudyInstanceUid");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.ToTable("ShareLinks", "cloudfilm");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
                 {
                     b.Property<int>("Id")
@@ -279,6 +414,15 @@ namespace CloudFilm.Infrastructure.Migrations
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("AspNetUserTokens", "cloudfilm");
+                });
+
+            modelBuilder.Entity("CloudFilm.Infrastructure.Grants.AccessGrant", b =>
+                {
+                    b.HasOne("CloudFilm.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("GranteeUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("CloudFilm.Infrastructure.ReadState.StudyReadState", b =>

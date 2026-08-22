@@ -30,6 +30,53 @@ check that no command can make for you.
 
 ---
 
+## Reaching Orthanc from the host
+
+Orthanc is **not published on 8042** by either compose file. It is reachable only
+from the internal Docker network — by the retrieve service and by the viewer's
+proxy, which authorises every DICOMweb request against a viewer session. A host
+port would be a way straight past all of that, which is why there isn't one.
+
+> **The override below exposes an unauthenticated archive.** The development
+> overlay turns Orthanc's authentication off entirely
+> (`services/orthanc/zz-dev.json`), so while the port is published anyone who can
+> reach your machine on 8042 can read every study in it. Publish it for as long as
+> you need it and take it down afterwards. Never on a shared network.
+
+The commands in this runbook, and `scripts/seed-orthanc.mjs` and
+`scripts/verify-imaging.mjs`, talk to `http://localhost:8042`. To run them,
+publish the port deliberately and for as long as you need it, with a local
+override file that is not tracked:
+
+```bash
+cat > docker-compose.orthanc-port.yml <<'YAML'
+services:
+  orthanc:
+    ports:
+      - '8042:8042'
+YAML
+
+docker compose -f docker-compose.yml -f docker-compose.dev.yml \
+  -f docker-compose.orthanc-port.yml up -d orthanc
+```
+
+Bring it back down the same way, without the third file, when you are finished:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d orthanc
+```
+
+For a single question, `docker compose exec orthanc curl -s http://localhost:8042/system`
+needs no port at all.
+
+The Retrieve Service is published, but on loopback only — `127.0.0.1:8082`. That is
+enough for `dotnet run` against a containerised stack and for a `curl` from the
+machine itself. It authenticates nobody and must never be published more widely:
+a request that arrives there has passed no sign-in, no role check and no share
+link.
+
+---
+
 ## Step 1 — Orthanc is running
 
 **Run**
@@ -315,10 +362,10 @@ which is why a fresh clone with no Docker still runs.
 
 ## Ports
 
-| Port | Service |
-| --- | --- |
-| 3000 | Portal |
-| 8080 | API |
-| 8081 | OHIF Viewer |
-| 8082 | Retrieve Service |
-| 8042 | Orthanc — dev overlay only |
+| Port | Service | Reachable from |
+| --- | --- | --- |
+| 3000 | Portal | anywhere the host is |
+| 8080 | API | anywhere the host is |
+| 8081 | OHIF Viewer | anywhere the host is |
+| 8082 | Retrieve Service | **this machine only** (`127.0.0.1`), and it authenticates nobody |
+| — | Orthanc | **not published**; internal network only |

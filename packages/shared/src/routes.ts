@@ -34,6 +34,39 @@ export const API_ROUTES = {
    */
   studyReadState: (studyInstanceUid: string): string =>
     `/api/v1/imaging/studies/${encodeURIComponent(studyInstanceUid)}/read-state`,
+  /**
+   * The analysis of one study.
+   *
+   * Beside the read state and the viewer session, for the same reason: an
+   * analysis is CloudFilm's own workflow rather than part of the archive's
+   * catalogue.
+   *
+   * Two verbs on one path, like the read state. `POST` runs an analysis and is
+   * not idempotent - each call sends the study to the analysis service and is
+   * recorded as having done so. `GET` reads the result CloudFilm stored when it
+   * last did, sends nothing anywhere, and answers `404` for a study that has
+   * never been analysed.
+   */
+  studyAnalysis: (studyInstanceUid: string): string =>
+    `/api/v1/imaging/studies/${encodeURIComponent(studyInstanceUid)}/analysis`,
+
+  /**
+   * A viewer session for one study, for the signed-in caller.
+   *
+   * Beside the read state rather than under `/studies`, for the same reason:
+   * this is CloudFilm's own workflow, not part of the imaging catalogue.
+   */
+  viewerSession: (studyInstanceUid: string): string =>
+    `/api/v1/imaging/studies/${encodeURIComponent(studyInstanceUid)}/viewer-session`,
+
+  /**
+   * A viewer session in exchange for a share token.
+   *
+   * Anonymous. The study is not a parameter - it comes from the link the token
+   * resolves to - so a recipient cannot ask for a different one.
+   */
+  shareViewerSession: (token: string): string =>
+    `/api/v1/share/${encodeURIComponent(token)}/viewer-session`,
   healthLive: '/health/live',
   healthReady: '/health/ready',
 } as const;

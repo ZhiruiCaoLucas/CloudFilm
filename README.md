@@ -9,8 +9,14 @@ components — [Orthanc](https://www.orthanc-server.com/) for DICOM,
 for rendering — and supplies only the business logic that sits between them:
 authentication, hospital integration, access control and audit.
 
-> **Status:** Sprint 4 — the portal reads real patients and studies. The API
-> obtains them from the Retrieve Service, which queries Orthanc over DICOMweb.
+> **Status: roadmap 0–8 complete.** Sign-in, roles, audit and study search are in
+> place, and a study can be shared with somebody who has no account: an expiring
+> link that opens the study in the viewer, downloads it, or both. Every DICOMweb
+> request the viewer makes is authorised against the one study it was admitted to.
+> The portal reads real patients and studies from the Retrieve Service, which
+> queries Orthanc over DICOMweb, and a clinician can send one study to an internal
+> analysis service for automated, non-clinical characterisation — whose result is
+> stored, so reopening the study shows it again without re-running anything.
 > No hospital system is connected yet. See [Roadmap](#roadmap).
 
 ---
@@ -32,8 +38,11 @@ Patient / Clinician
         │      └──────────────► Retrieve Service
         │                       (Hospital Adapter Pattern)
         │                                 │
-   PostgreSQL + Redis                     ▼
-                                  Hospital PACS / VNA
+        │                                 ▼
+        └──────► Analysis Service   Hospital PACS / VNA
+                 (Python FastAPI)
+
+   PostgreSQL + Redis
 ```
 
 Three boundaries carry most of the design:
@@ -107,8 +116,29 @@ portal's defaults work either way.
 | 3000 | Portal | `pnpm dev` and Compose |
 | 8080 | API | `dotnet run` and Compose |
 | 8081 | OHIF Viewer | Compose |
-| 8082 | Retrieve Service | `dotnet run` and the dev overlay |
-| 5432 / 6379 / 8042 | PostgreSQL / Redis / Orthanc | **dev overlay only** |
+| 8082 | Retrieve Service | `dotnet run`, and the dev overlay on **loopback only** |
+| 5432 / 6379 | PostgreSQL / Redis | **dev overlay only** |
+| — | Orthanc | **not published at all** |
+| — | Analysis Service | **not published at all** (listens on 8000 inside its container) |
+
+Orthanc has no host port in either compose file. It holds the images and
+authenticates with one shared credential, so anything that can reach it can read
+every study; it is reachable only from the internal network, by the retrieve
+service and by the viewer's proxy — and the proxy now authorises each DICOMweb
+request against a viewer session. To reach it from the host for seeding or
+diagnosis, publish it deliberately and temporarily: see
+[docs/local-imaging.md](docs/local-imaging.md).
+
+The analysis service has no host port in either compose file either. It listens on
+`8000` inside its container and is reached only by the API, over the internal
+network, at `http://analysis:8000`. It authenticates nobody — everything that
+decides who may have a study analysed happens in the API before a byte is sent —
+so publishing it would be an unauthenticated way to have imaging processed. Its
+one setting is `ANALYSIS_MAX_UPLOAD_BYTES`, which defaults to 67108864 (64 MiB).
+
+The Retrieve Service authenticates nobody, so the dev overlay publishes it as
+`127.0.0.1:8082` — reachable from the machine running the stack and from nowhere
+else. It is a developer convenience, not an access path.
 
 The dev overlay also disables Orthanc's authentication so the viewer proxy can
 read DICOMweb without a credential. Never apply it to a hospital deployment.
@@ -249,10 +279,13 @@ remains the system of record.**
 | **4 — done** | Retrieve queries Orthanc over DICOMweb; the API serves real patients and studies. |
 | **5 — done** | Identity schema and migrations, sign-in and JWT issuance, portal session, PHI endpoints closed by default, English/Chinese UI, clinical access audit. |
 | **6 — done** | Role-based access control; search by name, date and accession number. |
-| 7 | Access grants, sharing links with expiry, download. |
-| 8 | AI analysis service (Python FastAPI) plugged in behind an existing port. |
+| **7 — done** | Access grants; expiring share links; controlled DICOM download; controlled viewer access, with every DICOMweb request authorised against one study. |
+| **8 — done** | AI analysis service (Python FastAPI) plugged in behind an existing port: a clinician sends one authorised study for automated, non-clinical characterisation, through the API and over the internal network only. The result is stored in PostgreSQL, so reopening the study shows it again rather than analysing it a second time. |
 
 One sprint at a time; every sprint leaves the application runnable.
+
+**Roadmap 0–8 complete.** This is the whole of the planned scope; feature
+development stops here.
 
 ---
 

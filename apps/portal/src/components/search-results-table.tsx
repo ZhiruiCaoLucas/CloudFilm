@@ -27,7 +27,7 @@ export async function SearchResultsTable({
     <div className="border-border overflow-x-auto rounded-lg border">
       <table className="w-full min-w-[56rem] border-collapse text-left text-sm">
         <caption className="sr-only">{t('search.tableCaption')}</caption>
-        <thead className="bg-surface-overlay text-muted text-xs tracking-wide uppercase">
+        <thead className="bg-surface-overlay text-muted text-[0.625rem] tracking-[0.08em] uppercase">
           <tr>
             <th scope="col" className="px-4 py-2.5 font-medium">
               {t('search.patient')}

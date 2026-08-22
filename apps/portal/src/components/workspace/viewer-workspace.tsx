@@ -1,7 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import type { Patient, Series, Study } from '@cloudfilm/shared';
+import type { Patient, Series, Study, StudyAnalysis } from '@cloudfilm/shared';
 import { useStudyShortcuts } from '@/hooks/use-study-shortcuts';
 import { StudyMetadataPanel } from './study-metadata-panel';
 import { ViewerPanel } from './viewer-panel';
@@ -24,18 +24,20 @@ export function ViewerWorkspace({
   study,
   studies,
   series,
-  viewerBaseUrl,
   isStudyImported,
   isRead,
+  analysis,
   children,
 }: {
   readonly patient: Patient;
   readonly study: Study;
   readonly studies: readonly Study[];
   readonly series: readonly Series[];
-  readonly viewerBaseUrl: string;
   readonly isStudyImported: boolean;
   readonly isRead: boolean;
+
+  /** The stored analysis of this study, or `null` if it has never been analysed. */
+  readonly analysis: StudyAnalysis | null;
   readonly children: ReactNode;
 }) {
   useStudyShortcuts(studies, study.studyInstanceUid);
@@ -44,12 +46,8 @@ export function ViewerWorkspace({
     <>
       <div className="flex min-h-0 flex-1">
         {children}
-        <ViewerPanel
-          study={study}
-          viewerBaseUrl={viewerBaseUrl}
-          isStudyImported={isStudyImported}
-        />
-        <StudyMetadataPanel patient={patient} study={study} series={series} />
+        <ViewerPanel study={study} isStudyImported={isStudyImported} />
+        <StudyMetadataPanel patient={patient} study={study} series={series} analysis={analysis} />
       </div>
       <WorkspaceStatusBar study={study} isRead={isRead} />
     </>

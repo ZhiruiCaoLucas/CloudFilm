@@ -4,8 +4,8 @@
 # Network segmentation is the core security control here:
 #
 #   edge      portal, ohif, api          reachable from the host / ingress
-#   internal  api, retrieve, orthanc,    no published ports, ever
-#             postgres, redis
+#   internal  api, retrieve, analysis,   no published ports, ever
+#             orthanc, postgres, redis
 #
 # Orthanc, PostgreSQL and Redis are attached to `internal` only. A browser can
 # reach DICOM data exclusively through the OHIF service's reverse proxy, so the
@@ -81,8 +81,15 @@ services:
       - ./services/orthanc/orthanc.json:/etc/orthanc/orthanc.json:ro
       - orthanc-storage:/var/lib/orthanc/db
 
-    ports:
-      - '8042:8042'
+    # No host port. Orthanc holds the images and authenticates with a single
+    # shared credential, so anything that can reach it can read every study of
+    # every patient. Reachable only from the internal network, which means only
+    # the retrieve service and the viewer's proxy - and the proxy now authorises
+    # each request. Publishing 8042 would restore a way past all of it.
+    #
+    # To reach Orthanc from the host - seeding, or scripts/verify-imaging.mjs -
+    # publish it deliberately and temporarily with a local override file that is
+    # not tracked. See docs/local-imaging.md.
 
     healthcheck:
       test: ['CMD', 'python3', '/probes/test-aliveness.py']
@@ -117,11 +124,56 @@ services:
       # on. It asserts a 200 from the real endpoint, so it is a genuine health
       # probe and not merely a TCP connect. Do not switch these services to a
       # -chiseled tag without replacing this: chiselled images have no shell.
-      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8080 && printf 'GET /health/live HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && head -n 1 <&3 | grep -q ' 200 '"]
+      test:
+        [
+          'CMD',
+          'bash',
+          '-c',
+          "exec 3<>/dev/tcp/127.0.0.1/8080 && printf 'GET /health/live HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && head -n 1 <&3 | grep -q ' 200 '",
+        ]
       interval: 15s
       timeout: 5s
       retries: 5
       start_period: 20s
+    networks: [internal]
+
+  analysis:
+    <<: *restart
+    build:
+      context: .
+      # The only Dockerfile outside docker/, because it belongs to the one
+      # service that is not .NET or Node and carries its own requirements.txt
+      # beside it. The build context is still the repository root, so the COPY
+      # paths inside it are repository-relative like every other image here.
+      dockerfile: apps/analysis/docker/analysis.Dockerfile
+    environment:
+      # The upload ceiling, in bytes. The service defaults to the same value; it
+      # is stated here so that raising it is a visible act in the file an
+      # operator reads, rather than an edit inside the image.
+      ANALYSIS_MAX_UPLOAD_BYTES: ${ANALYSIS_MAX_UPLOAD_BYTES:-67108864}
+    healthcheck:
+      # python is the one interpreter this image is guaranteed to have - it is
+      # what the image exists for - and the slim base ships neither curl nor
+      # wget. urllib is in the standard library, so nothing is installed to make
+      # the probe work, and it asserts a 200 from the real endpoint rather than
+      # merely opening a socket.
+      test:
+        [
+          'CMD',
+          'python',
+          '-c',
+          "import urllib.request, sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3).status == 200 else 1)",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+    # No `ports`, deliberately. The analysis service authenticates nobody: it
+    # accepts DICOM and answers, and everything that decides who may have a study
+    # analysed happens in the API before a byte is sent. Published to the host it
+    # would be an unauthenticated way to have imaging processed, which is the same
+    # reasoning that keeps Orthanc and the Retrieve Service off the host.
     networks: [internal]
 
   api:
@@ -135,6 +187,13 @@ services:
       redis:
         condition: service_healthy
       retrieve:
+        condition: service_healthy
+      # Gated on health like the rest. The API decides at start-up whether it has
+      # an analyser at all - the port is registered only when an address is
+      # configured - so an analysis service that is present but not yet answering
+      # would otherwise produce a stack that looks complete and refuses every
+      # analysis until somebody restarts the API.
+      analysis:
         condition: service_healthy
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
@@ -153,6 +212,12 @@ services:
       Portal__AllowedOrigins__0: ${PORTAL_PUBLIC_URL}
       Downstream__RetrieveServiceUrl: 'http://retrieve:8080'
       Downstream__OrthancUrl: 'http://orthanc:8042'
+      # Optional, unlike its two siblings: a deployment without an analysis
+      # service is a complete CloudFilm, and the API registers the port only when
+      # this is set. Setting it here is what turns the capability on - without it
+      # the endpoint answers 501 and the portal reports that analysis is not
+      # configured, which is exactly what it did before this line existed.
+      Downstream__AnalysisServiceUrl: 'http://analysis:8000'
     ports:
       - '${API_PUBLIC_PORT:-8088}:8080'
     healthcheck:
@@ -163,7 +228,13 @@ services:
       # on. It asserts a 200 from the real endpoint, so it is a genuine health
       # probe and not merely a TCP connect. Do not switch these services to a
       # -chiseled tag without replacing this: chiselled images have no shell.
-      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8080 && printf 'GET /health/live HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && head -n 1 <&3 | grep -q ' 200 '"]
+      test:
+        [
+          'CMD',
+          'bash',
+          '-c',
+          "exec 3<>/dev/tcp/127.0.0.1/8080 && printf 'GET /health/live HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && head -n 1 <&3 | grep -q ' 200 '",
+        ]
       interval: 15s
       timeout: 5s
       retries: 5
@@ -178,6 +249,12 @@ services:
     depends_on:
       orthanc:
         condition: service_healthy
+      # The proxy authorises every DICOMweb request against the API. Ordering
+      # only, not a hard requirement: the authorisation subrequest resolves the
+      # API's address per request, so the viewer starts either way and refuses
+      # imaging until the API answers.
+      api:
+        condition: service_started
     environment:
       # Base64 of cloudfilm:<ORTHANC_PASSWORD>. Only nginx sees it; the browser
       # reaches DICOMweb through this proxy and never holds a credential.

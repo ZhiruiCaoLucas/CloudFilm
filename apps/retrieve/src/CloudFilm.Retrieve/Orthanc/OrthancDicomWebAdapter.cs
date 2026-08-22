@@ -23,10 +23,25 @@ namespace CloudFilm.Retrieve.Orthanc;
 /// </remarks>
 internal sealed class OrthancDicomWebAdapter(
     IHttpClientFactory httpClientFactory,
-    ILogger<OrthancDicomWebAdapter> logger) : IHospitalAdapter, IStudySearchSource
+    ILogger<OrthancDicomWebAdapter> logger) : IHospitalAdapter, IStudySearchSource, IStudyDownloadSource
 {
     /// <summary>The named client carrying the Orthanc base address.</summary>
     public const string HttpClientName = "orthanc-dicomweb";
+
+    /// <summary>
+    /// The named client used for bulk retrieval.
+    /// </summary>
+    /// <remarks>
+    /// Separate from <see cref="HttpClientName"/> only because of its timeout.
+    /// <c>HttpClient.Timeout</c> bounds the whole exchange, the body included, so
+    /// the thirty seconds that keeps a metadata query honest would truncate any
+    /// study large enough to be worth downloading. This client is bounded by the
+    /// request's cancellation token instead.
+    /// </remarks>
+    public const string DownloadHttpClientName = "orthanc-dicomweb-download";
+
+    /// <summary>The DICOM representation a study download asks for.</summary>
+    private const string _dicomMediaType = "multipart/related; type=\"application/dicom\"";
 
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
     private readonly ILogger<OrthancDicomWebAdapter> _logger = logger;
@@ -414,6 +429,77 @@ internal sealed class OrthancDicomWebAdapter(
         _logSeriesCount(_logger, series.Count, null);
 
         return series;
+    }
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// <para>
+    /// One WADO-RS request for one study, on the same DICOMweb root every other
+    /// call uses. Nothing here accepts a URL, a series or an instance: the only
+    /// thing that reaches Orthanc is the Study Instance UID it was given, escaped
+    /// into the path.
+    /// </para>
+    /// <para>
+    /// Returns once the headers have arrived, with the body still on the wire.
+    /// The response and the client it was made on are handed to the caller inside
+    /// the <see cref="StudyDownload"/>, because disposing either of them here
+    /// would close the stream before a single byte reached the recipient.
+    /// </para>
+    /// </remarks>
+    public async Task<StudyDownload?> OpenStudyAsync(
+        string studyInstanceUid,
+        CancellationToken cancellationToken = default)
+    {
+        string trimmed = studyInstanceUid?.Trim() ?? string.Empty;
+
+        if (trimmed.Length == 0)
+        {
+            return null;
+        }
+
+        HttpClient client = _httpClientFactory.CreateClient(DownloadHttpClientName);
+        HttpResponseMessage? response = null;
+
+        try
+        {
+            using HttpRequestMessage request = new(
+                HttpMethod.Get,
+                $"studies/{Uri.EscapeDataString(trimmed)}");
+
+            request.Headers.TryAddWithoutValidation("Accept", _dicomMediaType);
+
+            response = await client
+                .SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                // A study the archive does not hold is an ordinary answer, not a
+                // failure. The caller turns it into the same response an unknown
+                // share token gets.
+                return null;
+            }
+
+            Stream content = await response.Content
+                .ReadAsStreamAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            string contentType = response.Content.Headers.ContentType?.ToString() ?? _dicomMediaType;
+
+            StudyDownload download = new(content, contentType, response, client);
+
+            // Ownership has moved into the download; the finally below must not
+            // take it back.
+            response = null;
+            client = null!;
+
+            return download;
+        }
+        finally
+        {
+            response?.Dispose();
+            client?.Dispose();
+        }
     }
 
     private async Task<IReadOnlyList<JsonElement>> ReadDicomJsonArrayAsync(

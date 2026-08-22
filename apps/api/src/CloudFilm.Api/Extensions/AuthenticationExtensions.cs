@@ -84,6 +84,18 @@ internal static class AuthenticationExtensions
                 policy => policy
                     .RequireAuthenticatedUser()
                     .RequireRole(RoleNames.All.ToArray()));
+
+            // Narrower still, for the acts that decide who else may see a
+            // patient's imaging. It is layered on the same mechanism rather than
+            // replacing anything: an endpoint carrying this policy is closed to
+            // a Clinician and to a roleless account alike, and the fallback
+            // still turns an anonymous request away as 401 before either is
+            // considered.
+            options.AddPolicy(
+                AuthorizationPolicies.RequiresAdministrator,
+                policy => policy
+                    .RequireAuthenticatedUser()
+                    .RequireRole(RoleNames.Administrator));
         });
 
         return builder;

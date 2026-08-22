@@ -29,7 +29,10 @@ export function StatusBadge({ tone, children, className }: StatusBadgeProps) {
     'span',
     {
       className: cn(
-        'inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset',
+        // Squared rather than a pill. A status token is a reading, and it sits
+        // beside identifiers and counts set in a fixed-width face; a fully
+        // rounded capsule reads as a notification instead.
+        'inline-flex items-center rounded px-2 py-0.5 text-[0.6875rem] font-medium ring-1 ring-inset',
         TONE_CLASSES[tone],
         className,
       ),

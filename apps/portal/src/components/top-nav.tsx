@@ -27,17 +27,19 @@ export function TopNav({ user }: { readonly user?: CurrentUser | null | undefine
 
   return (
     <header className="border-border bg-surface-raised border-b">
-      <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-4 px-6 py-4">
+      <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between gap-4 px-6">
         <Link
           href="/"
           className="focus-visible:outline-accent flex items-center gap-3 rounded-md focus-visible:outline-2 focus-visible:outline-offset-4"
         >
-          <CloudFilmLogo className="h-8 w-8 shrink-0" />
+          <CloudFilmLogo className="h-7 w-7 shrink-0" />
           <span className="flex flex-col leading-tight">
-            <span className="text-foreground text-sm font-semibold tracking-tight">
+            <span className="text-foreground text-[0.8125rem] font-semibold tracking-tight">
               {t('common.appName')}
             </span>
-            <span className="text-muted text-xs">{t('common.tagline')}</span>
+            <span className="text-muted text-[0.625rem] tracking-[0.08em] uppercase">
+              {t('common.tagline')}
+            </span>
           </span>
         </Link>
 
@@ -55,9 +57,9 @@ export function TopNav({ user }: { readonly user?: CurrentUser | null | undefine
             </Link>
           ) : (
             <div className="flex items-center gap-3">
-              <span className="hidden flex-col leading-tight sm:flex">
+              <span className="hidden flex-col items-end leading-tight sm:flex">
                 <span className="text-foreground text-xs font-medium">{user.displayName}</span>
-                <span className="text-muted text-xs">{user.email}</span>
+                <span className="text-muted text-[0.6875rem]">{user.email}</span>
               </span>
 
               {/* A form, not a link: signing out changes state, so it must not

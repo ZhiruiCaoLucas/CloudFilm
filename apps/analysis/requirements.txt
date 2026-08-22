@@ -1,0 +1,17 @@
+# Runtime dependencies. CPU only, and deliberately few.
+#
+# No PyTorch, TensorFlow, ONNX Runtime, transformers or CUDA: this service
+# characterises DICOM, it does not run a model, and an image that ships a deep
+# learning stack for a job that needs none is gigabytes of attack surface a
+# hospital has to patch.
+#
+# Pinned exactly, like the container images in docker-compose.yml. A hospital
+# deployment that rebuilds and gets different code is not one anybody can audit.
+fastapi==0.141.1
+uvicorn[standard]==0.52.3
+python-multipart==0.0.32
+pydicom==3.0.2
+
+# pydicom reads pixel data through NumPy. Without it the service still runs and
+# still characterises geometry - it just reports no pixel statistic.
+numpy==2.2.6

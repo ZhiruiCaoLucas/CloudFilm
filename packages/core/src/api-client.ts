@@ -10,10 +10,12 @@ import {
   type ProblemDetails,
   type RecentPatient,
   type StudyContext,
+  type StudyAnalysis,
   type StudyReadState,
   type StudySearchQuery,
   type StudySearchResult,
   type SystemInfo,
+  type ViewerSession,
 } from '@cloudfilm/shared';
 
 /**
@@ -133,6 +135,60 @@ export interface ApiClient {
    * this call and cannot be smuggled through it.
    */
   searchStudies(query: StudySearchQuery, signal?: AbortSignal): Promise<StudySearchResult>;
+
+  /**
+   * Issues a viewer session for one study to the signed-in caller.
+   *
+   * Scoped to the study being opened, never to everything the caller may see:
+   * the result goes into a cookie that third-party viewer code runs alongside,
+   * and a permit for one study is the most that cookie should be worth.
+   *
+   * Resolves to `null` when the caller may not see the study, for the same
+   * reason as {@link ApiClient.getStudy} - the API answers "no such study"
+   * either way, deliberately.
+   */
+  createViewerSession(
+    studyInstanceUid: string,
+    signal?: AbortSignal,
+  ): Promise<ViewerSession | null>;
+
+  /**
+   * Sends one study to the analysis service and returns what it reports.
+   *
+   * No request body: the study comes from the path, and the bytes are fetched by
+   * the API from the archive it already trusts. There is nowhere in this call to
+   * name a different study, an address, or a file.
+   *
+   * Rejects rather than resolving to `null` for every unhappy answer, because
+   * they do not mean the same thing to a reader: `404` for a study that cannot be
+   * analysed, `501` for a deployment with no analysis service, `500` for a
+   * failure. The caller decides which of those is worth saying out loud.
+   */
+  analyseStudy(studyInstanceUid: string, signal?: AbortSignal): Promise<StudyAnalysis>;
+
+  /**
+   * Reads the analysis CloudFilm stored the last time this study was analysed.
+   *
+   * Resolves to `null` when the study has never been analysed, for the same
+   * reason as {@link ApiClient.getStudy}: the API answers "no such record" and
+   * "not your study" identically and on purpose, and a caller that had to
+   * try/catch to discover that is a caller that will forget to.
+   *
+   * Sends nothing to the analysis service and cannot start one. It is safe to
+   * call on every page load, which is the point - a reader who has already had
+   * a study analysed should not have to ask for it again.
+   */
+  getStudyAnalysis(studyInstanceUid: string, signal?: AbortSignal): Promise<StudyAnalysis | null>;
+
+  /**
+   * Exchanges a share token for a viewer session.
+   *
+   * Anonymous: no bearer token is required and none is used. Resolves to `null`
+   * for a token that is unknown, expired, withdrawn or not permitted to view -
+   * the API answers all four identically, and this client keeps them
+   * indistinguishable rather than inventing a reason.
+   */
+  redeemShareLink(token: string, signal?: AbortSignal): Promise<ViewerSession | null>;
 }
 
 /**
@@ -199,9 +255,10 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
     absentStatuses: readonly number[],
     signal?: AbortSignal,
     body?: unknown,
+    method?: string,
   ): Promise<T | null> {
     try {
-      return await request<T>(path, signal, body);
+      return await request<T>(path, signal, body, method);
     } catch (error) {
       if (error instanceof ApiError && absentStatuses.includes(error.status)) {
         return null;
@@ -240,6 +297,26 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
       ),
     searchStudies: (query, signal) =>
       request<StudySearchResult>(`${API_ROUTES.studySearch}?${searchParameters(query)}`, signal),
+    analyseStudy: (studyInstanceUid, signal) =>
+      request<StudyAnalysis>(API_ROUTES.studyAnalysis(studyInstanceUid), signal, undefined, 'POST'),
+    getStudyAnalysis: (studyInstanceUid, signal) =>
+      requestOptional<StudyAnalysis>(API_ROUTES.studyAnalysis(studyInstanceUid), [404], signal),
+    createViewerSession: (studyInstanceUid, signal) =>
+      requestOptional<ViewerSession>(
+        API_ROUTES.viewerSession(studyInstanceUid),
+        [401, 404],
+        signal,
+        undefined,
+        'POST',
+      ),
+    redeemShareLink: (token, signal) =>
+      requestOptional<ViewerSession>(
+        API_ROUTES.shareViewerSession(token),
+        [404],
+        signal,
+        undefined,
+        'POST',
+      ),
   };
 }
 

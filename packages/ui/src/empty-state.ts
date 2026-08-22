@@ -24,7 +24,10 @@ export function EmptyState({ title, description, children, className }: EmptySta
     'div',
     {
       className: cn(
-        'border-border flex flex-col items-center gap-1 rounded-lg border border-dashed px-6 py-10 text-center',
+        // A solid hairline, not a dashed one. Dashes read as a drop target or an
+        // unfinished region; this area is neither, it simply has nothing in it
+        // yet, and it says so in words.
+        'border-border bg-surface-raised flex flex-col items-center gap-1.5 rounded-lg border px-6 py-12 text-center',
         className,
       ),
     },

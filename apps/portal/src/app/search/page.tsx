@@ -73,10 +73,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         </nav>
 
         <div className="flex flex-col gap-1">
-          <h1 className="text-foreground text-2xl font-semibold tracking-tight">
+          <h1 className="text-foreground text-lg font-semibold tracking-tight">
             {t('search.title')}
           </h1>
-          <p className="text-muted text-sm">{t('search.subtitle')}</p>
+          <p className="text-muted text-[0.8125rem]">{t('search.subtitle')}</p>
         </div>
 
         {/*
@@ -84,11 +84,9 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           the question, then the answer - rather than one long column in which
           the criteria and the results run together.
         */}
-        <Card>
-          <CardBody className="py-5">
-            <StudySearchForm initial={fields} />
-          </CardBody>
-        </Card>
+        <div className="border-border bg-surface-raised rounded-lg border px-5 py-5">
+          <StudySearchForm initial={fields} />
+        </div>
 
         <section aria-labelledby="search-results-heading" className="flex flex-col gap-3">
           {outcome === null ? (

@@ -1,6 +1,5 @@
 'use client';
 
-import { buildViewerUrl } from '@cloudfilm/core';
 import type { Study } from '@cloudfilm/shared';
 import { ViewerNoData } from './viewer-no-data';
 import { useTranslations } from '@/components/locale-provider';
@@ -15,6 +14,11 @@ import { useTranslations } from '@/components/locale-provider';
  * The iframe mounts whenever a viewer address is configured, and loading it is
  * the iframe's own responsibility.
  *
+ * The frame does not point at the viewer directly. It points at a portal route
+ * that obtains a viewer session for this study, sets the cookie the viewer's
+ * proxy checks, and redirects on. The viewer's address is still built by
+ * `buildViewerUrl`, on the server, in that route.
+ *
  * It used to be gated on a reachability probe, which was wrong in a way that
  * could only ever fail closed: the probe is a cross-origin `no-cors` fetch, and
  * OHIF's nginx returns `Cross-Origin-Resource-Policy: same-origin`, so the
@@ -26,11 +30,9 @@ import { useTranslations } from '@/components/locale-provider';
  */
 export function ViewerPanel({
   study,
-  viewerBaseUrl,
   isStudyImported,
 }: {
   readonly study: Study;
-  readonly viewerBaseUrl: string;
   readonly isStudyImported: boolean;
 }) {
   const t = useTranslations();
@@ -43,7 +45,7 @@ export function ViewerPanel({
       {isStudyImported ? (
         <iframe
           title={t('viewer.title', { description: study.description })}
-          src={buildViewerUrl({ viewerBaseUrl, studyInstanceUid: study.studyInstanceUid })}
+          src={`/viewer-session/${encodeURIComponent(study.studyInstanceUid)}`}
           className="h-full w-full border-0"
           allow="fullscreen"
           sandbox="allow-scripts allow-same-origin allow-forms allow-downloads"

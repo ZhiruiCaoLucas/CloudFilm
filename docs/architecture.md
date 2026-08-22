@@ -42,8 +42,8 @@ configurations in `CloudFilm.Infrastructure` — deployed as one process. A hosp
 deployment is a handful of containers on one host; distributing this system across a
 service mesh would add operational cost with no matching benefit.
 
-The one exception is the Retrieve Service, for reasons that are about security rather
-than scale (§4).
+Two components sit outside that process, both for reasons about security rather than
+scale: the Retrieve Service (§4) and the analysis service (§9).
 
 ## 3. Request flow
 
@@ -54,10 +54,14 @@ Browser ──► Portal (Next.js, server component)
             CloudFilm API ──► PostgreSQL   (accounts, grants, audit)
                 │           ──► Redis        (short-lived metadata, TTL enforced)
                 │
-                └──► Retrieve Service ──► Hospital Adapter ──► Hospital PACS
-                                                │
-                                                ▼
-                                             Orthanc  (staging cache)
+                ├──► Retrieve Service ──► Hospital Adapter ──► Hospital PACS
+                │                               │
+                │                               ▼
+                │                            Orthanc  (staging cache)
+                │
+                └──► Analysis Service  (Python, internal only)
+                     the API fetches the study and posts the bytes;
+                     the service is never told where imaging lives
 
 Browser ──► OHIF (own origin, iframe) ──► nginx /dicom-web ──► Orthanc
 ```
@@ -117,6 +121,34 @@ OHIF runs as its own container, on its own origin, embedded in an iframe. The po
 builds the URL through `buildViewerUrl()` in `@cloudfilm/core` and knows nothing else
 about the viewer.
 
+The viewer reaches DICOM over its own path, which never passes through the API, so
+that path is authorised at its own edge:
+
+```
+Portal  ──►  POST .../viewer-session        (or /share/{token} for a recipient)
+             ├─ authorises the caller: study access policy, or the share link
+             └─ returns an opaque session id, bound to ONE StudyInstanceUID
+
+Browser ──►  Set-Cookie: cloudfilm_viewer   (HttpOnly, host-only, ~15 minutes)
+        ──►  OHIF (:8081)
+             └─ nginx  ──auth_request──►  API DICOMweb gate
+                                          ├─ cookie resolves to a session?
+                                          ├─ does the request name that study?
+                                          └─ is the share link still live?
+                        204 ──►  Orthanc (internal network only)
+                        401 ──►  nginx rewrites to an empty 404
+```
+
+The portal never links the iframe straight at the viewer. It points at a portal
+route that obtains a session for the study on screen, sets the cookie and redirects
+— because a page cannot set a cookie while rendering, and the viewer's first
+DICOMweb request must already carry one.
+
+Two properties this buys, both enforced in one place: a viewer can reach exactly the
+study it was admitted to, and an unfiltered study-list query — the archive's whole
+index — is refused. OHIF's own study list is switched off in `app-config.js`
+accordingly.
+
 Why not import OHIF as a React dependency:
 
 - **Upgradeability.** The viewer moves fast. An iframe boundary makes an upgrade an
@@ -140,6 +172,12 @@ CloudFilm holds imaging data transiently; the hospital archive is the system of 
   throws otherwise.
 - Redis runs with `--maxmemory-policy volatile-ttl` and no persistence. Cached
   imaging metadata never survives a restart.
+- Redis also holds viewer-session state — the short-lived record of which study a
+  browser has been admitted to — and the share-link rate-limit counters. Both are
+  deliberately transient: a session cannot outlive its own time to live even if
+  nothing deletes it. The consequence is that a restart, or eviction under memory
+  pressure, ends viewing in progress. That fails closed, and the viewer's next
+  request is refused rather than admitted.
 
 ## 8. Configuration and secrets
 
@@ -151,12 +189,54 @@ Secrets exist only in the environment. `.env` is git-ignored; `.env.example` con
 placeholders; `scripts/generate-secrets.sh` produces real ones and refuses to
 overwrite an existing file.
 
-## 9. Extension points already in place
+## 9. Automated analysis
+
+A study can be sent for automated characterisation: instance count, modality,
+geometry, bit depth, and a normalised mean pixel intensity. **Nothing it produces is
+a clinical finding**, and the portal says so wherever a result appears.
+
+It runs as its own process, in Python, for the same reason the Retrieve Service does
+- what it is allowed to reach, not how fast it is:
+
+```
+POST /api/v1/imaging/studies/{uid}/analysis
+        │
+        ├─ RequiresApplicationRole            a role, or 403
+        ├─ IStudyAccessPolicy (Download)      denied ⇒ 404, before anything is fetched
+        ├─ IStudyDownloadSource               the study, streamed from Retrieve
+        ├─ IStudyAnalyser ──► analysis        the bytes, over the internal network
+        └─ ANALYSE_STUDY                      recorded before the result is returned
+```
+
+Three properties hold this together:
+
+1. **Authorisation happens before retrieval.** A caller who may not see the study
+   never causes the archive to produce it.
+2. **The analyser is handed bytes, not an address.** `IStudyAnalyser` takes an open
+   `StudyDownload`; there is no identifier for it to resolve and no URL field
+   anywhere in the request. It makes no outbound call of any kind, so it cannot
+   reach imaging nobody authorised - a property of the port's shape rather than of
+   the service's good behaviour.
+3. **It publishes no port.** It authenticates nobody, so its only protection is that
+   nothing outside the compose network can address it. `SECURITY.md` covers the
+   consequences, including that it holds PHI: DICOM carries patient identifiers in
+   its own tags whatever the request envelope says.
+
+The capability is optional. Without `Downstream:AnalysisServiceUrl` the API registers
+no analyser, the endpoint answers `501`, and the portal reports that analysis is
+unavailable in this deployment.
+
+The adapter bridges two multiparts that are not the same shape: the archive answers
+WADO-RS with `multipart/related`, and the service accepts a `multipart/form-data`
+upload. `DicomFormDataContent` rewrites one into the other while the request is being
+written, one instance at a time, so a study is never held in memory.
+
+## 10. Extension points already in place
 
 | Future work | Plugs in via | Existing code changed |
 | --- | --- | --- |
 | A new hospital | `IHospitalAdapter` + `AddHospitalAdapter<T>()` | None |
-| AI analysis service | A new port in `CloudFilm.Application`, adapter in `CloudFilm.Infrastructure` | Composition root only |
+| A different analyser | `IStudyAnalyser` — the port §9 already produced | Composition root only |
 | Object storage (MinIO) | Orthanc storage plugin, or an `ICacheStore` sibling | None |
 | A different viewer | `buildViewerUrl()` in `@cloudfilm/core` | One function |
 | A different database | `CloudFilm.Infrastructure` | Nothing above it |

@@ -24,11 +24,11 @@ export function SignInForm({ returnUrl }: { readonly returnUrl: string }) {
   const errorId = useId();
 
   return (
-    <form action={formAction} className="flex flex-col gap-4" noValidate>
+    <form action={formAction} className="flex flex-col gap-5" noValidate>
       <input type="hidden" name="returnUrl" value={returnUrl} />
 
-      <div className="flex flex-col gap-2">
-        <label htmlFor={emailId} className="text-foreground text-sm font-medium">
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor={emailId} className="text-foreground text-xs font-medium">
           {t('auth.email')}
         </label>
         <Input
@@ -42,8 +42,8 @@ export function SignInForm({ returnUrl }: { readonly returnUrl: string }) {
         />
       </div>
 
-      <div className="flex flex-col gap-2">
-        <label htmlFor={passwordId} className="text-foreground text-sm font-medium">
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor={passwordId} className="text-foreground text-xs font-medium">
           {t('auth.password')}
         </label>
         <Input
@@ -57,8 +57,18 @@ export function SignInForm({ returnUrl }: { readonly returnUrl: string }) {
         />
       </div>
 
+      {/*
+        A rule in the error colour rather than a filled panel. The message is
+        already announced, already red, and already attached to both fields by
+        aria-describedby; a tinted box around it would be the loudest thing on a
+        page whose whole job is to stay calm.
+      */}
       {state.error === null ? null : (
-        <p id={errorId} role="alert" className="text-sm text-red-500">
+        <p
+          id={errorId}
+          role="alert"
+          className="border-l-2 border-red-500 pl-3 text-[0.8125rem] leading-relaxed text-red-600 dark:text-red-400"
+        >
           {t(state.error)}
         </p>
       )}
@@ -77,7 +87,7 @@ function SubmitButton() {
   const { pending } = useFormStatus();
 
   return (
-    <Button type="submit" disabled={pending}>
+    <Button type="submit" disabled={pending} aria-busy={pending} className="mt-1 w-full">
       {pending ? t('auth.submitting') : t('auth.submit')}
     </Button>
   );

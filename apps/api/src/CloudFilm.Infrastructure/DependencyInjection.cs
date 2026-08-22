@@ -1,12 +1,15 @@
 using CloudFilm.Application.Abstractions;
+using CloudFilm.Infrastructure.Analysis;
 using CloudFilm.Infrastructure.Access;
 using CloudFilm.Infrastructure.Auditing;
 using CloudFilm.Infrastructure.Caching;
 using CloudFilm.Infrastructure.Configuration;
+using CloudFilm.Infrastructure.Grants;
 using CloudFilm.Infrastructure.Identity;
 using CloudFilm.Infrastructure.Imaging;
 using CloudFilm.Infrastructure.Persistence;
 using CloudFilm.Infrastructure.Persistence.Interceptors;
+using CloudFilm.Infrastructure.Sharing;
 using CloudFilm.Infrastructure.ReadState;
 using CloudFilm.Infrastructure.Time;
 using Microsoft.AspNetCore.Identity;
@@ -25,6 +28,19 @@ namespace CloudFilm.Infrastructure;
 /// </remarks>
 public static class DependencyInjection
 {
+    /// <summary>
+    /// How long one analysis may take, end to end.
+    /// </summary>
+    /// <remarks>
+    /// Five minutes: the request carries a whole study to the analyser and waits
+    /// for an answer, so it is bounded by the upload rather than by the work. It
+    /// is deliberately finite - the download client's infinite timeout exists
+    /// because a body being streamed to a browser must not be cut off mid-study,
+    /// and none of that applies to a call that either produces a result or does
+    /// not.
+    /// </remarks>
+    private static readonly TimeSpan _analysisTimeout = TimeSpan.FromMinutes(5);
+
     /// <summary>
     /// Registers persistence, caching, identity storage and supporting services.
     /// </summary>
@@ -105,6 +121,40 @@ public static class DependencyInjection
         // one transaction.
         services.AddScoped<IStudyReadStateStore, StudyReadStateStore>();
 
+        // The stored analysis of a study. Registered unconditionally, unlike
+        // IStudyAnalyser above it: a deployment that has since removed its
+        // analysis service must still be able to show the results it produced
+        // while it had one, and reading them needs no service to be running.
+        services.AddScoped<IStudyAnalysisResultStore, StudyAnalysisResultStore>();
+
+        // Resource-level access grants. Scoped for the same reason: a grant and
+        // the audit record of it must be able to travel in one transaction.
+        services.AddScoped<IAccessGrantStore, AccessGrantStore>();
+
+        // The read half, registered separately so code that only asks "may this
+        // account reach this study" never receives the ability to answer yes.
+        services.AddScoped<IAccessGrantQuery, AccessGrantQuery>();
+
+        // Turns roles and grants into "how much of this study may this caller
+        // see", before anything is read from the archive.
+        services.AddScoped<IStudyAccessPolicy, StudyAccessPolicy>();
+
+        // Share links. Scoped like the rest, so issuing or withdrawing one and
+        // the audit record of it can travel in a single transaction.
+        services.AddScoped<IShareLinkStore, ShareLinkStore>();
+
+        // Viewer sessions live in the cache, which is a singleton, but the store
+        // is scoped like everything else so a future dependency on the request's
+        // DbContext does not become a captive dependency.
+        services.AddScoped<IViewerSessionStore, ViewerSessionStore>();
+
+        // Read-only, and asked once per DICOMweb request by the imaging gateway.
+        services.AddScoped<IShareLinkStatus, ShareLinkStatusQuery>();
+
+        // Existence checks for the account a grant names. Scoped, because
+        // UserManager is.
+        services.AddScoped<IUserDirectory, IdentityUserDirectory>();
+
         // The transaction boundary itself. Scoped for the same reason: it must
         // open its transaction on the same context the writers are using, or it
         // would enclose nothing.
@@ -141,6 +191,43 @@ public static class DependencyInjection
         // registered for IImagingCatalog - and a test that substitutes that port
         // would turn search into an InvalidCastException at run time.
         services.AddHttpClient<IStudySearchCatalog, RetrieveImagingCatalog>(ConfigureRetrieveClient);
+
+        // Bulk retrieval gets its own typed client, and deliberately not the
+        // thirty second timeout the others carry: HttpClient.Timeout bounds the
+        // body as well as the headers, so a study large enough to be worth
+        // downloading would be cut off mid-transfer. This one is bounded by the
+        // request's cancellation instead.
+        services.AddHttpClient<IStudyDownloadSource, RetrieveStudyDownload>(client =>
+        {
+            client.BaseAddress = new Uri($"{retrieveServiceUrl}/");
+            client.Timeout = Timeout.InfiniteTimeSpan;
+        });
+
+        // The analysis service, when a deployment has one. Registered only when it
+        // is configured: a stack without an analyser is a complete CloudFilm, and
+        // the alternative to absence would be a client pointed at nothing that
+        // fails on the first study rather than at start-up. A caller that needs
+        // this port asks for it optionally and reports that the capability is not
+        // configured - it never falls back to a default address.
+        string analysisServiceUrl =
+            configuration["Downstream:AnalysisServiceUrl"]?.Trim().TrimEnd('/') ?? string.Empty;
+
+        if (analysisServiceUrl.Length > 0)
+        {
+            services.AddHttpClient<IStudyAnalyser, StudyAnalyser>(client =>
+            {
+                client.BaseAddress = new Uri($"{analysisServiceUrl}/");
+
+                // Longer than the thirty seconds a metadata call gets, and finite
+                // unlike a download. This one request carries a whole study up to
+                // the analyser and waits for it to be read: the upload alone can
+                // take minutes on a hospital network. It is bounded anyway,
+                // because an analyser that has stopped answering must not hold a
+                // request open indefinitely - and because HttpClient.Timeout is
+                // the only bound that covers the body as well as the headers.
+                client.Timeout = _analysisTimeout;
+            });
+        }
 
         if (options.AutoMigrate)
         {

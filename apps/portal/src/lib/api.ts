@@ -131,6 +131,26 @@ function withAuthorizationRedirects(client: ApiClient, returnUrl: string): ApiCl
     markStudyUnread: (studyInstanceUid, signal) =>
       guard(() => client.markStudyUnread(studyInstanceUid, signal)),
     searchStudies: (query, signal) => guard(() => client.searchStudies(query, signal)),
+    createViewerSession: (studyInstanceUid, signal) =>
+      guard(() => client.createViewerSession(studyInstanceUid, signal)),
+
+    // Guarded like every other signed-in call: a 401 sends the caller to sign in
+    // and a 403 to the no-role page, rather than being reported as an analysis
+    // that failed.
+    analyseStudy: (studyInstanceUid, signal) =>
+      guard(() => client.analyseStudy(studyInstanceUid, signal)),
+
+    // Guarded too. It runs during the workspace's server render, so an expired
+    // session must send the reader to sign in rather than render a study page
+    // whose analysis silently went missing.
+    getStudyAnalysis: (studyInstanceUid, signal) =>
+      guard(() => client.getStudyAnalysis(studyInstanceUid, signal)),
+
+    // Not guarded, and never sent with a bearer token by its callers. A refused
+    // share token is an ordinary outcome that the share page renders itself;
+    // bouncing an anonymous visitor to a sign-in form would be an invitation to
+    // an account they do not have.
+    redeemShareLink: (token, signal) => client.redeemShareLink(token, signal),
 
     // Not guarded. Signing in is how a caller stops being unauthenticated, so a
     // 401 here is the answer, not a reason to bounce them somewhere else.
