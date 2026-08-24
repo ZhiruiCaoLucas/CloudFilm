@@ -23,7 +23,7 @@ RUN dotnet publish apps/api/src/CloudFilm.Api/CloudFilm.Api.csproj \
     --no-restore \
     --output /app
 
-FROM mcr.microsoft.com/dotnet/aspnet:9.0-noble AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-noble AS runtime
 WORKDIR /app
 
 ENV ASPNETCORE_URLS=http://+:8080 \
