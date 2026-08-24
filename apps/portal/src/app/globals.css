@@ -4,6 +4,11 @@
   Dark mode is class driven rather than media driven so that a clinician can pin a
   light reading room to dark, and so that the viewer chrome can be forced dark
   independently of the operating system.
+
+  Atrium is a light system. The plumbing below is kept - and given a parallel
+  Atrium palette - because removing it would be a behavioural change, not a
+  visual one. The handoff flags dark mode as an open product decision rather than
+  something to resolve silently, so nothing here deletes it.
 */
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -20,113 +25,175 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-accent-soft: var(--accent-soft);
 
+  /* Atrium roles, exposed to Tailwind so a call site can reach for them by name
+     rather than by hex. Text tokens only - the two decorative steps are
+     deliberately absent from this list so `text-atrium-sky` cannot be written. */
+  --color-atrium-ink: var(--atrium-ink);
+  --color-atrium-deep: var(--atrium-deep);
+  --color-atrium-primary: var(--atrium-primary);
+  --color-atrium-body: var(--atrium-body);
+  --color-atrium-muted: var(--atrium-muted);
+  --color-atrium-panel: var(--atrium-panel);
+  --color-atrium-white: var(--atrium-white);
+  --color-atrium-surface: var(--atrium-surface);
+  --color-atrium-sky-100: var(--atrium-sky-100);
+  --color-atrium-border: var(--atrium-border);
+  --color-atrium-border-strong: var(--atrium-border-strong);
+
   --font-sans: var(--font-sans);
   --font-mono: var(--font-mono);
 }
 
 /*
-  One accent, four surfaces, two text weights.
+  ---------------------------------------------------------------------------
+  Atrium.
+  ---------------------------------------------------------------------------
 
-  The palette is deliberately narrow and close to neutral. Colour in this product
-  has to mean something - a status, an action, a value out of range - so the
-  chrome is kept grey enough that anything coloured reads as deliberate. The greys
-  are near-neutral rather than blue-tinted, because a blue cast in the chrome
-  competes with the greyscale image the reader is actually looking at.
+  Hospital blue as identity, white and pale blue as surface. Instrument Sans for
+  interface and display; IBM Plex Mono reserved for values that are read
+  character by character - MRNs, accession numbers, Study and Series UIDs, dates,
+  counts, build strings - and for nothing else.
 
-  The accent is stated three times - a light, a base and a deep - so that a
-  control can be given a gradient without inventing colours at the call site. The
-  two atmospheric tones exist only for translucent light: they never colour a
-  surface, a label or a border, and they appear at single-digit alpha or not at
-  all.
+  Two of these are decorative and must never carry text: --atrium-sky-300 and
+  --atrium-muted-2. Every other text token clears 4.5:1 on white and on
+  --atrium-surface.
+
+  The semantic layer underneath (--surface, --foreground, --accent and the rest)
+  is re-pointed at these values rather than replaced. Every component in the
+  portal already reads through it, so the identity lands everywhere at once and
+  the screens that need structural work can be taken one at a time.
 */
 :root {
-  --surface: #fbfbfc;
-  --surface-raised: #ffffff;
-  --surface-overlay: #f3f4f6;
-  --surface-sunken: #eeeff2;
-  --border: #e4e6ea;
-  --border-strong: #d0d4da;
-  --foreground: #14161a;
-  --muted: #666d78;
+  --atrium-ink: #0a2a63;
+  --atrium-deep: #12377f;
+  --atrium-primary: #1a56db;
+  --atrium-primary-dark: #1546b0;
+  --atrium-primary-hi: #2f6fe4;
+  --atrium-sky-300: #9dc0f7;
+  --atrium-sky-100: #e4eefc;
+  --atrium-panel: #f7faff;
+  --atrium-surface: #fbfcff;
+  --atrium-white: #ffffff;
+  --atrium-border: #e6eefa;
+  --atrium-border-strong: #cfe0f8;
+  --atrium-body: #52627d;
+  --atrium-muted: #5b6b85;
+  --atrium-muted-2: #c3d3ea;
+  --atrium-success: #0f7a52;
+  --atrium-success-bg: #e6f6ef;
+  --atrium-warning: #8a5200;
+  --atrium-warning-bg: #fdf3e2;
+  --atrium-danger: #b42318;
+  --atrium-danger-bg: #fdecea;
+  --atrium-neutral-badge: #52627d;
+  --atrium-neutral-badge-bg: #f1f4f9;
 
-  --accent: #0f6f8c;
-  --accent-high: #1a8cad;
-  --accent-deep: #0a5a73;
+  /* The imaging viewport and its status strip. The only dark surfaces in
+     Atrium, and they exist so the image is the brightest thing on screen. */
+  --atrium-viewport: #0d1017;
+  --atrium-tile: #1c2230;
+
+  --atrium-focus: #1a56db47;
+  --atrium-ring: 0 0 0 3px var(--atrium-focus);
+
+  --shadow-sm: 0 1px 2px #0a2a630d;
+  --shadow-md: 0 1px 2px #0a2a630d, 0 8px 24px -14px #0a2a6340;
+  --shadow-lg: 0 2px 4px #0a2a6310, 0 26px 60px -26px #0a2a6366;
+
+  --radius-ctrl: 8px;
+  --radius-panel: 12px;
+  --radius-console: 16px;
+
+  --motion: 180ms;
+  --ease-atrium: cubic-bezier(0.22, 0.61, 0.28, 1);
+
+  /* Semantic layer, pointed at Atrium. */
+  --surface: var(--atrium-surface);
+  --surface-raised: var(--atrium-white);
+  --surface-overlay: var(--atrium-panel);
+  --surface-sunken: #eef4fd;
+  --border: var(--atrium-border);
+  --border-strong: var(--atrium-border-strong);
+  --foreground: var(--atrium-ink);
+  --muted: var(--atrium-muted);
+  --accent: var(--atrium-primary);
   --accent-foreground: #ffffff;
-  --accent-soft: #0f6f8c14;
-  --accent-ring: #0f6f8c33;
-  --accent-glow: #0f6f8c3d;
-
-  /* Atmospheric only. Never a surface, never a border, never type. */
-  --atmos-cyan: #1f9cc4;
-  --atmos-violet: #6172c9;
-
-  --selection: #0f6f8c2e;
-
-  /* Glass. One highlight, one tint, so every translucent control agrees. */
-  --glass-highlight: #ffffffcc;
-  --glass-edge: #ffffff59;
-  --glass-tint: #ffffffa6;
-  --glass-tint-hover: #ffffffd9;
-
-  --shadow-low: 0 1px 2px #0f172a0f;
-  --shadow-lift: 0 1px 2px #0f172a12, 0 6px 16px -12px #0f172a2e;
-
-  --motion-fast: 120ms;
-  --motion-base: 200ms;
-  --motion-slow: 320ms;
-  --ease-out: cubic-bezier(0.22, 0.61, 0.28, 1);
+  --accent-soft: #1a56db14;
+  --selection: #1a56db2e;
 
   --font-sans:
-    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    var(--font-instrument-sans), ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
   --font-mono:
-    ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+    var(--font-ibm-plex-mono), ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono',
+    monospace;
 }
 
 /*
-  Graphite rather than navy. The workspace puts this chrome directly beside a
-  black viewport holding a greyscale image, and a blue-black surround shifts the
-  apparent tone of everything in it.
-
-  Glass inverts in the dark: the highlight becomes a faint white edge rather than
-  a wash, and the tint becomes a lift of the surface underneath rather than a
-  veil over it.
+  The parallel Atrium set for the retained dark mode. Same roles, same
+  relationships, re-grounded on graphite so the chrome never out-glows the
+  greyscale image beside it.
 */
 .dark {
-  --surface: #0b0d10;
-  --surface-raised: #14171b;
-  --surface-overlay: #1c2026;
-  --surface-sunken: #08090b;
-  --border: #232830;
-  --border-strong: #343b45;
-  --foreground: #e6e8ec;
-  --muted: #98a0ab;
+  --atrium-ink: #e8edf6;
+  --atrium-deep: #b9cdf2;
+  --atrium-primary: #6ea2f5;
+  --atrium-primary-dark: #3f7ad6;
+  --atrium-primary-hi: #8ab8f8;
+  --atrium-sky-300: #3f5f96;
+  /*
+    Ascending, and that order is the whole point: viewport < surface < panel <
+    white. The previous set had `panel` lighter than `white`, so a raised card
+    sank into the rail it was sitting on and the analysis module - the one thing
+    in the rail meant to stand up - was the dimmest object in it.
+  */
+  --atrium-sky-100: #17253f;
+  --atrium-surface: #0c1017;
+  --atrium-panel: #141a26;
+  --atrium-white: #1c2434;
+  --atrium-border: #2b3549;
+  --atrium-border-strong: #3f4d6b;
 
-  --accent: #4fb3cf;
-  --accent-high: #74cbe4;
-  --accent-deep: #2f8ea9;
-  --accent-foreground: #06212b;
-  --accent-soft: #4fb3cf1f;
-  --accent-ring: #4fb3cf40;
-  --accent-glow: #4fb3cf47;
+  /* Darker than every piece of chrome, so the image is unambiguously the
+     darkest and therefore the most contrasted region on screen. */
+  --atrium-viewport: #08090d;
+  --atrium-tile: #0f1420;
+  --atrium-body: #a8b4c8;
+  --atrium-muted: #94a2ba;
+  --atrium-muted-2: #3a465c;
+  --atrium-success: #4ac394;
+  --atrium-success-bg: #0f2a20;
+  --atrium-warning: #e0a44b;
+  --atrium-warning-bg: #2b2010;
+  --atrium-danger: #f08076;
+  --atrium-danger-bg: #2e1512;
+  --atrium-neutral-badge: #a8b4c8;
+  --atrium-neutral-badge-bg: #1a212c;
 
-  --atmos-cyan: #3fb6da;
-  --atmos-violet: #7d8ce0;
+  --atrium-focus: #6ea2f552;
+  --shadow-sm: 0 1px 2px #00000066;
+  --shadow-md: 0 1px 2px #00000073, 0 8px 24px -14px #000000b3;
+  --shadow-lg: 0 2px 4px #00000080, 0 26px 60px -26px #000000cc;
 
-  --selection: #4fb3cf3d;
-
-  --glass-highlight: #ffffff1f;
-  --glass-edge: #ffffff17;
-  --glass-tint: #ffffff0a;
-  --glass-tint-hover: #ffffff14;
-
-  --shadow-low: 0 1px 2px #00000066;
-  --shadow-lift: 0 1px 2px #00000073, 0 8px 20px -14px #000000b3;
+  --surface-sunken: #070a0f;
+  --accent-foreground: #06131f;
+  --accent-soft: #6ea2f51f;
+  --selection: #6ea2f53d;
 }
 
 @layer base {
+  /*
+    Light unless the reader has explicitly chosen otherwise. `light dark` here
+    let the operating system decide how native controls, form widgets and
+    scrollbars were painted, which put dark scrollbars and dark autofill on an
+    otherwise white Atrium page.
+  */
   html {
-    color-scheme: light dark;
+    color-scheme: light;
+  }
+
+  html.dark {
+    color-scheme: dark;
   }
 
   body {
@@ -139,38 +206,35 @@
   }
 
   /*
-    Headings are set tight and are never large. This is a workstation, not a
-    landing page: the hierarchy comes from weight, colour and spacing, and a
-    heading big enough to be decorative is a heading that has pushed a clinical
-    row below the fold.
+    Atrium's headings are tightly tracked and never decorative. The scale is
+    applied at the call site through the `atrium-*` type classes below, so the
+    only thing set globally is the tracking every size shares.
   */
   h1,
   h2,
   h3,
   h4 {
-    letter-spacing: -0.011em;
+    letter-spacing: -0.02em;
     text-wrap: balance;
   }
 
   /*
-    Every identifier, count, date and measurement in CloudFilm is set in the mono
-    face, and all of them are read in vertical columns - a Study Instance UID
-    against another, an image count against another. Fixed-width digits are what
-    make those columns comparable at a glance.
+    Mono is not a texture. It appears only where digits are compared in a
+    vertical column or a value is read character by character, and where it does
+    appear the digits must be fixed width or the column is not comparable.
   */
   :where(.font-mono, code, kbd, samp) {
     font-variant-numeric: tabular-nums;
-    letter-spacing: -0.005em;
   }
 
   /*
-    Thin, low-contrast scrollbars. The metadata rail and the study navigator both
+    Thin, low-contrast scrollbars. The navigator and the metadata rail both
     scroll beside the reading area, and a default chrome-coloured scrollbar is a
     bright vertical stripe in a radiologist's peripheral vision.
   */
   * {
     scrollbar-width: thin;
-    scrollbar-color: var(--border-strong) transparent;
+    scrollbar-color: var(--atrium-border-strong) transparent;
   }
 
   ::selection {
@@ -178,11 +242,20 @@
   }
 
   /*
-    Respect users who have asked the platform to reduce motion.
+    One focus treatment for the whole product: a 3px ring at 28% of the primary,
+    with the border resolving to the primary itself. Applied through the
+    primitives so every consumer inherits it.
+  */
+  :where(a, button, [role='button'], summary):focus-visible {
+    outline: 2px solid var(--atrium-primary);
+    outline-offset: 2px;
+  }
 
-    The blanket rule removes the duration; the rules under it remove the
-    displacement as well, because a lift that happens in 0.01ms is still a
-    control that moves under the pointer.
+  /*
+    Respect users who have asked the platform to reduce motion. The blanket rule
+    removes the duration; the rules under it remove the displacement too, because
+    a lift that completes in 0.01ms is still a control that has moved under the
+    pointer.
   */
   @media (prefers-reduced-motion: reduce) {
     *,
@@ -192,15 +265,36 @@
       transition-duration: 0.01ms !important;
     }
 
+    .atrium-lift:hover,
     .cf-control:hover,
     .cf-control:active,
     .cf-lift:hover {
       transform: none !important;
     }
 
-    .auth-backdrop,
-    .auth-glow {
+    /* Entrances become instant presence rather than a fast slide. */
+    .atrium-enter,
+    .atrium-enter-1,
+    .atrium-enter-2,
+    .atrium-enter-3,
+    .atrium-enter-4 {
       animation: none !important;
+      opacity: 1 !important;
+      transform: none !important;
+    }
+
+    /*
+      The processing pulse stops; the badge still says "Processing".
+
+      The descendant selector is load-bearing: the utility that starts the
+      animation sits on the badge, but the animation itself runs on the dot
+      inside it, so silencing only the element carrying the class would leave
+      the dot pulsing.
+    */
+    [class*='atrium-breathe'],
+    [class*='atrium-breathe'] > * {
+      animation: none !important;
+      opacity: 1 !important;
     }
   }
 }
@@ -208,38 +302,174 @@
 @layer components {
   /*
     ---------------------------------------------------------------------------
-    The glass control surface.
+    Motion.
     ---------------------------------------------------------------------------
 
-    One base class behind every button in the product, so a control gains depth
-    in exactly one place. Three ideas, and no more than three:
+    One curve, three durations, and a single entrance. Everything animated in
+    CloudFilm is `opacity`, `transform`, `box-shadow`, `border-color`,
+    `background-color`, `color`, `filter` or `gap` - all compositable or cheap on
+    a small element. Nothing loops, nothing waits longer than 300ms, and the
+    whole layer is switched off under prefers-reduced-motion.
 
-      1. the surface is a gradient rather than a flat fill, wider than the
-         control, so hovering slides the light across it instead of swapping one
-         colour for another;
-      2. a hairline of light sits along the top edge - an inset box-shadow, not
-         a border - which is what makes a rectangle read as a physical surface;
-      3. the control lifts one pixel and drops it again when pressed.
-
-    Everything animated here is transform, opacity, box-shadow or
-    background-position. Nothing reflows, nothing repaints the page, and no
-    JavaScript runs: a hover effect that needs a mouse-move listener is a hover
-    effect that costs a frame on every frame, which is not a trade a workstation
-    should make for a highlight.
+    The entrance exists because a server-rendered page arrives all at once: every
+    band appearing in the same frame is what makes the product feel assembled
+    rather than opened. A 6px rise staggered four ways is enough to give the page
+    an order without becoming an animation anybody watches.
   */
-  .cf-control {
-    background-size: 220% 100%;
-    background-position: 100% 0;
-    transition:
-      background-position var(--motion-slow) var(--ease-out),
-      box-shadow var(--motion-base) var(--ease-out),
-      border-color var(--motion-base) var(--ease-out),
-      color var(--motion-base) var(--ease-out),
-      transform var(--motion-fast) var(--ease-out);
+  @keyframes atrium-rise {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
   }
 
-  .cf-control:hover {
-    background-position: 0 0;
+  /* Work in flight. Opacity only, on a 5px dot, and never on anything the
+     reader has to read. */
+  @keyframes atrium-breathe {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.35;
+    }
+  }
+
+  @keyframes atrium-fade {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  .atrium-enter,
+  .atrium-enter-1,
+  .atrium-enter-2,
+  .atrium-enter-3,
+  .atrium-enter-4 {
+    animation: atrium-rise 280ms var(--ease-atrium) both;
+  }
+
+  .atrium-enter-1 {
+    animation-delay: 40ms;
+  }
+
+  .atrium-enter-2 {
+    animation-delay: 90ms;
+  }
+
+  .atrium-enter-3 {
+    animation-delay: 140ms;
+  }
+
+  .atrium-enter-4 {
+    animation-delay: 190ms;
+  }
+
+  /* Content that replaces itself in place - a page of results, a panel body -
+     arrives by fading rather than rising, so nothing shifts under the pointer. */
+  .atrium-swap {
+    animation: atrium-fade 220ms var(--ease-atrium) both;
+  }
+
+  /*
+    ---------------------------------------------------------------------------
+    Type scale.
+    ---------------------------------------------------------------------------
+    Named rather than expressed as utility soup, because the sizes carry
+    tracking and weight with them and a heading that keeps the size but loses the
+    tracking is not the same heading.
+  */
+  .atrium-display {
+    font-size: 54px;
+    line-height: 1.08;
+    letter-spacing: -0.032em;
+    font-weight: 600;
+  }
+
+  .atrium-h1 {
+    font-size: 34px;
+    line-height: 1.15;
+    letter-spacing: -0.026em;
+    font-weight: 600;
+  }
+
+  .atrium-h2 {
+    font-size: 22px;
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+    font-weight: 600;
+  }
+
+  .atrium-h3 {
+    font-size: 17px;
+    line-height: 1.35;
+    letter-spacing: -0.015em;
+    font-weight: 600;
+  }
+
+  .atrium-body {
+    font-size: 14.5px;
+    line-height: 1.6;
+    font-weight: 400;
+  }
+
+  .atrium-label {
+    font-size: 12.5px;
+    line-height: 1;
+    font-weight: 500;
+  }
+
+  /* The kicker above a section. Uppercase, widely tracked, never a heading in
+     its own right - the real heading follows it. */
+  .atrium-eyebrow {
+    font-size: 11.5px;
+    line-height: 1;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+
+  .atrium-mono {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    line-height: 1;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Column labels in a data table: smaller and more tightly tracked than an
+     eyebrow, because a table header repeats across six columns. */
+  .atrium-colhead {
+    font-size: 10.5px;
+    line-height: 1;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+
+  /*
+    ---------------------------------------------------------------------------
+    Controls.
+    ---------------------------------------------------------------------------
+    Three surfaces, one motion. Everything animated is transform, box-shadow,
+    border-color, background-color, color or filter - no layout property, no
+    JavaScript, nothing continuous.
+  */
+  .cf-control {
+    transition:
+      transform var(--motion) var(--ease-atrium),
+      box-shadow var(--motion) var(--ease-atrium),
+      border-color var(--motion) var(--ease-atrium),
+      background-color var(--motion) var(--ease-atrium),
+      color var(--motion) var(--ease-atrium),
+      filter var(--motion) var(--ease-atrium);
   }
 
   .cf-control:hover:not(:disabled) {
@@ -247,222 +477,308 @@
   }
 
   .cf-control:active:not(:disabled) {
-    transform: translateY(0) scale(0.985);
-    transition-duration: var(--motion-fast);
+    transform: translateY(0);
   }
 
-  /* Primary: an engineered accent surface. The glow is the only coloured
-     shadow in the product, and it only exists while the pointer is on it. */
   .cf-control-primary {
-    border: 1px solid color-mix(in srgb, var(--accent-deep) 70%, transparent);
+    border: 1px solid var(--atrium-primary-dark);
     background-image: linear-gradient(
-      108deg,
-      var(--accent-high) 0%,
-      var(--accent) 42%,
-      var(--accent-deep) 100%
+      180deg,
+      var(--atrium-primary-hi) 0%,
+      var(--atrium-primary) 58%,
+      var(--atrium-primary-dark) 100%
     );
     box-shadow:
-      inset 0 1px 0 0 color-mix(in srgb, #fff 26%, transparent),
-      var(--shadow-low);
+      inset 0 1px 0 #ffffff42,
+      0 2px 4px #0a2a6324;
   }
 
   .cf-control-primary:hover:not(:disabled) {
+    filter: brightness(1.06);
     box-shadow:
-      inset 0 1px 0 0 color-mix(in srgb, #fff 34%, transparent),
-      var(--shadow-lift),
-      0 6px 20px -12px var(--accent-glow);
+      inset 0 1px 0 #ffffff42,
+      var(--shadow-md);
   }
 
-  .cf-control-primary:active:not(:disabled) {
-    box-shadow:
-      inset 0 1px 2px 0 color-mix(in srgb, var(--accent-deep) 45%, transparent),
-      var(--shadow-low);
-  }
-
-  /* Secondary: the same construction, quieter. A translucent tint over whatever
-     surface it sits on rather than a second opaque panel. */
   .cf-control-secondary {
-    border: 1px solid var(--border);
-    background-color: var(--surface-raised);
-    background-image: linear-gradient(
-      108deg,
-      var(--glass-tint-hover) 0%,
-      var(--glass-tint) 45%,
-      transparent 100%
-    );
-    box-shadow:
-      inset 0 1px 0 0 var(--glass-edge),
-      var(--shadow-low);
+    border: 1px solid var(--atrium-border-strong);
+    background-color: var(--atrium-white);
+    box-shadow: var(--shadow-sm);
   }
 
   .cf-control-secondary:hover:not(:disabled) {
-    border-color: color-mix(in srgb, var(--accent) 34%, var(--border-strong));
-    box-shadow:
-      inset 0 1px 0 0 var(--glass-highlight),
-      var(--shadow-lift);
+    border-color: var(--atrium-primary);
+    box-shadow: var(--shadow-md);
   }
 
-  .cf-control-secondary:active:not(:disabled) {
-    background-color: var(--surface-overlay);
-    box-shadow: inset 0 1px 2px 0 #0f172a1a;
-  }
-
-  /* Ghost: no surface at all until it is wanted. */
   .cf-control-ghost {
     border: 1px solid transparent;
-    background-image: linear-gradient(
-      108deg,
-      var(--glass-tint-hover) 0%,
-      var(--glass-tint) 55%,
-      transparent 100%
-    );
     background-color: transparent;
   }
 
   .cf-control-ghost:hover:not(:disabled) {
-    background-color: var(--surface-overlay);
-    border-color: var(--border);
+    background-color: var(--atrium-panel);
+    color: var(--atrium-primary);
   }
 
-  .cf-control-ghost:active:not(:disabled) {
-    background-color: var(--surface-sunken);
+  .cf-control:disabled {
+    opacity: 0.45;
   }
 
   /*
     ---------------------------------------------------------------------------
-    The glass field.
+    Fields.
     ---------------------------------------------------------------------------
-
-    A field is a recess where a button is a surface, so the highlight runs along
-    the *inside* of the top edge and the focus state opens a soft ring rather
-    than snapping a hard one on. Nothing moves: a text field that lifts under the
-    caret is a text field that has moved the text you were reading.
+    A field is a recess where a button is a surface: the highlight runs along the
+    inside of the top edge, and focus trades that inset for the ring rather than
+    stacking the two. Nothing moves - a field that lifts under the caret has
+    moved the text being read.
   */
   .cf-field {
-    background-color: var(--surface-raised);
-    border: 1px solid var(--border);
-    box-shadow: inset 0 1px 2px 0 #0f172a0a;
+    background-color: #fdfeff;
+    border: 1px solid var(--atrium-border-strong);
+    box-shadow: inset 0 1px 2px #0a2a630a;
     transition:
-      border-color var(--motion-base) var(--ease-out),
-      box-shadow var(--motion-base) var(--ease-out),
-      background-color var(--motion-base) var(--ease-out);
+      border-color var(--motion) var(--ease-atrium),
+      box-shadow var(--motion) var(--ease-atrium),
+      background-color var(--motion) var(--ease-atrium);
   }
 
   .cf-field:hover:not(:disabled) {
-    border-color: var(--border-strong);
+    border-color: var(--atrium-primary);
   }
 
   .cf-field:focus-visible,
   .cf-field:focus {
     outline: none;
-    border-color: var(--accent);
-    box-shadow:
-      inset 0 1px 0 0 var(--glass-edge),
-      0 0 0 3px var(--accent-ring);
+    border-color: var(--atrium-primary);
+    box-shadow: var(--atrium-ring);
   }
 
   .cf-field-invalid {
-    border-color: color-mix(in srgb, #ef4444 62%, transparent);
+    border-color: var(--atrium-danger);
   }
 
   .cf-field-invalid:focus-visible,
   .cf-field-invalid:focus {
-    border-color: #ef4444;
-    box-shadow:
-      inset 0 1px 0 0 var(--glass-edge),
-      0 0 0 3px #ef444433;
+    border-color: var(--atrium-danger);
+    box-shadow: 0 0 0 3px #b4231847;
   }
 
   /*
     ---------------------------------------------------------------------------
-    Panels and rows.
+    Surfaces.
     ---------------------------------------------------------------------------
   */
 
-  /*
-    The sign-in surface. The one place in CloudFilm that uses backdrop-filter:
-    it is the only surface with anything behind it worth refracting, and it is
-    one small element on a page with nothing else on it - so the cost is paid
-    once, off the diagnostic path, and never in the workspace.
-  */
-  .cf-glass-panel {
-    background-color: color-mix(in srgb, var(--surface-raised) 82%, transparent);
-    -webkit-backdrop-filter: blur(20px) saturate(1.4);
-    backdrop-filter: blur(20px) saturate(1.4);
-    border: 1px solid var(--border);
+  /* The elevated console: the home and advanced-search cards that carry the
+     search itself and overlap the band above them. */
+  .atrium-console {
+    background-color: var(--atrium-white);
+    border: 1px solid var(--atrium-border);
+    border-radius: var(--radius-console);
+    /* Deeper than shadow-lg, and with a hairline of light along the top edge.
+       The console overlaps a photograph now, and it has to read as sitting in
+       front of it rather than as a white rectangle laid on top. */
     box-shadow:
-      inset 0 1px 0 0 var(--glass-highlight),
-      var(--shadow-lift);
+      inset 0 1px 0 0 #ffffff,
+      0 2px 4px #0a2a6314,
+      0 34px 74px -30px #0a2a6380;
   }
 
-  /* A hairline of accent light along the top edge of the sign-in panel. It is
-     the only decorative element on the page and it is one pixel tall. */
-  .cf-glass-panel::before {
-    content: '';
-    position: absolute;
-    top: -1px;
-    right: 12%;
-    left: 12%;
-    height: 1px;
-    background-image: linear-gradient(
-      90deg,
-      transparent,
-      color-mix(in srgb, var(--accent) 55%, transparent),
-      transparent
-    );
-    pointer-events: none;
+  /*
+    The resting card. Elevation in Atrium says "this is in front of something",
+    so a panel with nothing behind it gets a hairline and the sm shadow, and
+    only the console that overlaps the hero gets the lg one.
+  */
+  .atrium-card {
+    background-color: var(--atrium-white);
+    border: 1px solid var(--atrium-border);
+    border-radius: var(--radius-panel);
+    box-shadow: var(--shadow-sm);
   }
 
-  /* Surfaces that acknowledge the pointer without moving: table rows, list
-     items, panels the reader is scanning rather than pressing. */
+  /* Panels that are read rather than pressed: they acknowledge the pointer by
+     brightening their own edge and do not move out from under it. */
+  .atrium-lift,
   .cf-lift {
     transition:
-      border-color var(--motion-base) var(--ease-out),
-      background-color var(--motion-base) var(--ease-out),
-      box-shadow var(--motion-base) var(--ease-out);
+      border-color var(--motion) var(--ease-atrium),
+      background-color var(--motion) var(--ease-atrium),
+      box-shadow var(--motion) var(--ease-atrium);
   }
 
+  .atrium-lift:hover,
   .cf-lift:hover {
-    border-color: var(--border-strong);
+    border-color: var(--atrium-border-strong);
+  }
+
+  /* A row in a list or a table. Tint only - a row that lifts is a row that has
+     shifted every value in it out of its column. */
+  .atrium-row {
+    transition: background-color var(--motion) var(--ease-atrium);
+  }
+
+  .atrium-row {
+    /* An inset rule down the leading edge, drawn with a shadow so it costs no
+       layout and cannot shift the row's contents when it appears. */
+    box-shadow: inset 3px 0 0 -3px var(--atrium-primary);
+    transition:
+      background-color var(--motion) var(--ease-atrium),
+      box-shadow var(--motion) var(--ease-atrium);
+  }
+
+  .atrium-row:hover,
+  .atrium-row:focus-visible {
+    background-color: var(--atrium-panel);
+    box-shadow: inset 3px 0 0 0 var(--atrium-primary);
+  }
+
+  /*
+    Interactive thumbnails and tiles. A tile is a stand-in for an image, so it
+    brightens its own edge rather than moving: nothing that represents a picture
+    should shift under the pointer.
+  */
+  .atrium-tile-interactive {
+    transition:
+      box-shadow var(--motion) var(--ease-atrium),
+      filter var(--motion) var(--ease-atrium);
+  }
+
+  a:hover .atrium-tile-interactive,
+  a:focus-visible .atrium-tile-interactive {
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--atrium-sky-300) 70%, transparent);
+    filter: brightness(1.12);
+  }
+
+  /* Arrows inside a hovered row lean forward with it. */
+  .atrium-row .atrium-arrow {
+    transition: transform var(--motion) var(--ease-atrium);
+  }
+
+  .atrium-row:hover .atrium-arrow,
+  .atrium-row:focus-visible .atrium-arrow {
+    transform: translateX(3px);
+  }
+
+  /* The chevron affordance: the gap opens rather than the arrow translating, so
+     the whole control reads as leaning forward. */
+  .atrium-next {
+    transition: gap var(--motion) var(--ease-atrium);
+  }
+
+  .atrium-next:hover {
+    gap: 12px;
   }
 
   /*
     ---------------------------------------------------------------------------
-    Sign-in atmosphere.
+    Atmosphere.
     ---------------------------------------------------------------------------
-
-    Three layers, all inert, all under 10% alpha: a hairline field, a pool of
-    accent light, and one cool counter-light so the field is not a single flat
-    wash. Static - nothing here animates, because a login page that breathes is
-    a login page somebody has to look at every morning.
+    Four elements, all inert, all aria-hidden at the call site, none of which may
+    appear inside or behind the imaging viewport. They belong to chrome: headers,
+    hero bands, empty states.
   */
-  .auth-backdrop {
-    background-image:
-      linear-gradient(to right, var(--border) 1px, transparent 1px),
-      linear-gradient(to bottom, var(--border) 1px, transparent 1px);
-    background-size: 64px 64px;
-    background-position: center;
-    opacity: 0.45;
-    -webkit-mask-image: radial-gradient(ellipse 70% 55% at 50% 42%, #000 8%, transparent 72%);
-    mask-image: radial-gradient(ellipse 70% 55% at 50% 42%, #000 8%, transparent 72%);
+  .atrium-dots {
+    background-image: radial-gradient(circle, #1a56db33 1px, transparent 1.4px);
+    background-size: 22px 22px;
+    -webkit-mask-image: radial-gradient(ellipse 60% 70% at 30% 30%, #000, transparent 74%);
+    mask-image: radial-gradient(ellipse 60% 70% at 30% 30%, #000, transparent 74%);
   }
 
-  .auth-glow {
+  .atrium-radial {
+    background-image: radial-gradient(ellipse 60% 70% at 70% 40%, #1a56db24, transparent 72%);
+  }
+
+  .atrium-radial-top {
+    background-image: radial-gradient(ellipse 70% 60% at 50% 0%, #1a56db1f, transparent 70%);
+  }
+
+  /*
+    The home hero's photograph.
+
+    Masked rather than cropped: the left edge of the image dissolves into the
+    hero's own ground over a third of its width, and the right and bottom edges
+    are pulled in slightly, so no straight photographic edge is ever visible. The
+    picture ends up reading as part of the band rather than as a banner dropped
+    into it.
+  */
+  .atrium-hero-photo {
+    -webkit-mask-image:
+      linear-gradient(to right, transparent 0%, rgba(0, 0, 0, 0.45) 26%, #000 58%),
+      linear-gradient(to bottom, #000 62%, rgba(0, 0, 0, 0.55) 88%, transparent 100%);
+    -webkit-mask-composite: source-in;
+    mask-image:
+      linear-gradient(to right, transparent 0%, rgba(0, 0, 0, 0.45) 26%, #000 58%),
+      linear-gradient(to bottom, #000 62%, rgba(0, 0, 0, 0.55) 88%, transparent 100%);
+    mask-composite: intersect;
+  }
+
+  /*
+    The blue that holds the photograph inside Atrium.
+
+    A wash of the deep clinical blue over the picture, heaviest where the picture
+    is strongest, so the photograph sits in the same atmosphere as the rest of
+    the band instead of introducing a second colour temperature.
+  */
+  .atrium-hero-tint {
     background-image:
-      radial-gradient(
-        ellipse 46% 38% at 50% 34%,
-        color-mix(in srgb, var(--accent) 16%, transparent),
-        transparent 70%
-      ),
-      radial-gradient(
-        ellipse 34% 30% at 78% 74%,
-        color-mix(in srgb, var(--atmos-violet) 11%, transparent),
-        transparent 72%
-      ),
-      radial-gradient(
-        ellipse 30% 26% at 18% 78%,
-        color-mix(in srgb, var(--atmos-cyan) 10%, transparent),
-        transparent 72%
+      linear-gradient(to right, var(--atrium-sky-100) 12%, rgba(228, 238, 252, 0) 62%),
+      linear-gradient(
+        200deg,
+        rgba(18, 55, 127, 0.34) 0%,
+        rgba(26, 86, 219, 0.16) 46%,
+        transparent 78%
       );
+  }
+
+  /*
+    The sign-in pane's photograph.
+
+    The same masking idea as the home hero, turned through ninety degrees: the
+    picture fills the pane and is dissolved at the bottom and along its inner
+    edge, so it resolves into the deep blue ground rather than ending on a line.
+  */
+  .atrium-auth-photo {
+    -webkit-mask-image:
+      linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.62) 58%, transparent 92%),
+      linear-gradient(to left, #000 62%, rgba(0, 0, 0, 0.55) 84%, transparent 100%);
+    -webkit-mask-composite: source-in;
+    mask-image:
+      linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.62) 58%, transparent 92%),
+      linear-gradient(to left, #000 62%, rgba(0, 0, 0, 0.55) 84%, transparent 100%);
+    mask-composite: intersect;
+  }
+
+  /*
+    The blue that holds it. Heavier than the home hero's, because the copy on
+    this pane is white and has to clear the building behind it: the ground rises
+    from the bottom-left corner where the headline sits and thins towards the
+    top-right where the picture is strongest.
+  */
+  .atrium-auth-tint {
+    background-image:
+      linear-gradient(
+        to top,
+        rgba(7, 29, 71, 0.95) 8%,
+        rgba(10, 42, 99, 0.72) 42%,
+        transparent 82%
+      ),
+      linear-gradient(
+        to right,
+        rgba(10, 42, 99, 0.8) 0%,
+        rgba(18, 55, 127, 0.35) 55%,
+        transparent 100%
+      );
+  }
+
+  /* The sign-in hero pane: deep blue ground resolving into the page. */
+  .atrium-scrim {
+    background-image: linear-gradient(
+      135deg,
+      var(--atrium-deep) 0%,
+      var(--atrium-ink) 48%,
+      #071d47 100%
+    );
   }
 }

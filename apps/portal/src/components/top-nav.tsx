@@ -2,10 +2,11 @@
 
 import Link from 'next/link';
 import type { CurrentUser } from '@cloudfilm/shared';
-import { Button, buttonClasses } from '@cloudfilm/ui';
+import { Button } from '@cloudfilm/ui';
 import { CloudFilmLogo } from './cloudfilm-logo';
 import { EnvironmentBadge } from './environment-badge';
 import { LocaleSwitcher } from './locale-switcher';
+import { ThemeSwitcher } from './theme-switcher';
 import { useTranslations } from './locale-provider';
 import { signOut } from '@/app/signin/actions';
 import { isDevelopment } from '@/lib/runtime';
@@ -21,30 +22,41 @@ import { isDevelopment } from '@/lib/runtime';
  * the client and reads the locale from `LocaleProvider`.
  *
  * `user` stays a prop for the same reason: reading a cookie is server work.
+ *
+ * Atrium sets this bar at 70px on white, closed by one hairline, with the
+ * dividers drawn as their own elements rather than as borders on flex children -
+ * a divider that belongs to a neighbour disappears the moment that neighbour is
+ * conditionally rendered.
  */
 export function TopNav({ user }: { readonly user?: CurrentUser | null | undefined }) {
   const t = useTranslations();
 
   return (
-    <header className="border-border bg-surface-raised sticky top-0 z-30 border-b bg-linear-to-b from-white/70 to-transparent shadow-[inset_0_-1px_0_0_var(--glass-edge)] dark:from-white/[0.03]">
-      <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between gap-4 px-6">
-        <Link
-          href="/"
-          className="focus-visible:outline-accent flex items-center gap-3 rounded-md focus-visible:outline-2 focus-visible:outline-offset-4"
-        >
-          <CloudFilmLogo className="h-7 w-7 shrink-0" />
-          <span className="flex flex-col leading-tight">
-            <span className="text-foreground text-[0.8125rem] font-semibold tracking-tight">
+    <header className="border-atrium-border bg-atrium-white sticky top-0 z-30 border-b">
+      <div className="mx-auto flex h-[70px] w-full max-w-[1180px] items-center justify-between gap-6 px-8">
+        <div className="flex min-w-0 items-center gap-[18px]">
+          <Link
+            href="/"
+            className="focus-visible:outline-atrium-primary group/mark flex shrink-0 items-center gap-3 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4"
+          >
+            <CloudFilmLogo className="h-9 w-9 shrink-0 transition-transform duration-[180ms] group-hover/mark:scale-[1.04]" />
+            <span className="text-atrium-ink text-[16px] font-semibold tracking-[-0.02em]">
               {t('common.appName')}
             </span>
-            <span className="text-muted text-[0.625rem] tracking-[0.08em] uppercase">
-              {t('common.tagline')}
-            </span>
-          </span>
-        </Link>
+          </Link>
 
-        <div className="flex items-center gap-3">
+          <span aria-hidden="true" className="bg-atrium-border h-7 w-px shrink-0" />
+
+          <span className="atrium-eyebrow text-atrium-muted hidden truncate sm:block">
+            {t('common.tagline')}
+          </span>
+        </div>
+
+        <div className="flex shrink-0 items-center gap-[18px]">
           <LocaleSwitcher />
+          <ThemeSwitcher />
+
+          <span aria-hidden="true" className="bg-atrium-border hidden h-7 w-px sm:block" />
 
           <EnvironmentBadge
             isProduction={!isDevelopment}
@@ -52,20 +64,30 @@ export function TopNav({ user }: { readonly user?: CurrentUser | null | undefine
           />
 
           {user === null || user === undefined ? (
-            <Link href="/signin" className={buttonClasses('secondary', 'min-h-9 px-3 text-xs')}>
+            <Link
+              href="/signin"
+              className="text-atrium-primary hover:text-atrium-deep focus-visible:outline-atrium-primary rounded text-[13px] font-semibold underline decoration-[var(--atrium-sky-300)] decoration-2 underline-offset-4 transition-colors focus-visible:outline-2 focus-visible:outline-offset-4"
+            >
               {t('nav.signIn')}
             </Link>
           ) : (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-[18px]">
               <span className="hidden flex-col items-end leading-tight sm:flex">
-                <span className="text-foreground text-xs font-medium">{user.displayName}</span>
-                <span className="text-muted text-[0.6875rem]">{user.email}</span>
+                <span className="text-atrium-ink text-[13px] font-semibold">
+                  {user.displayName}
+                </span>
+                <span className="text-atrium-muted text-[11.5px]">{user.email}</span>
               </span>
 
               {/* A form, not a link: signing out changes state, so it must not
                   be reachable by a prefetch or a crawler. */}
               <form action={signOut}>
-                <Button type="submit" variant="ghost" className="min-h-9 px-3 text-xs">
+                <Button
+                  type="submit"
+                  variant="ghost"
+                  size="sm"
+                  className="text-atrium-primary min-h-0 px-0 font-semibold underline decoration-[var(--atrium-sky-300)] decoration-2 underline-offset-4 hover:bg-transparent"
+                >
                   {t('nav.signOut')}
                 </Button>
               </form>

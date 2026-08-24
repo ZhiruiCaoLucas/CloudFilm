@@ -50,7 +50,10 @@ export function WorkspaceStatusBar({
   return (
     <footer
       aria-label={t('workspace.statusLabel')}
-      className="border-border bg-surface-raised text-muted flex min-h-9 shrink-0 flex-wrap items-center gap-x-7 gap-y-1 border-t px-4 py-1.5 text-[0.6875rem]"
+      // Inside the viewport column now rather than spanning all three zones, so
+      // it is drawn on the image's own ground: the strip reports the study on
+      // screen and the count of images in it, and both belong to the image.
+      className="flex min-h-9 shrink-0 flex-wrap items-center gap-x-7 gap-y-1 border-t border-white/8 bg-[var(--atrium-viewport)] px-4 py-1.5 text-[11px] text-[#8fa2c2]"
     >
       <StatusField label={t('study.studyUid')} value={study.studyInstanceUid} mono truncate />
       <StatusField label={t('study.images')} value={String(study.instanceCount)} mono />
@@ -75,13 +78,15 @@ export function WorkspaceStatusBar({
         aria-busy={isSaving}
         title={isRead ? t('workspace.markUnread') : t('workspace.markRead')}
         className={cn(
-          'inline-flex min-h-6 items-center gap-1.5 rounded px-2 py-0.5 text-[0.6875rem] font-medium',
-          'ring-1 transition-[color,background-color,box-shadow] duration-200 ring-inset',
-          'focus-visible:outline-accent focus-visible:outline-2 focus-visible:outline-offset-2',
+          'inline-flex min-h-6 items-center gap-[7px] rounded px-2.5 py-[5px] text-[11px] font-semibold',
+          'transition-[color,background-color,box-shadow] duration-[180ms]',
+          'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#6ea2f5]',
           'disabled:pointer-events-none disabled:opacity-60',
+          // Both states are legible on the dark ground, and both keep the dot
+          // and the word so the control never depends on hue alone.
           isRead
-            ? 'bg-linear-to-b from-emerald-500/16 to-emerald-500/8 text-emerald-700 ring-emerald-500/30 dark:text-emerald-400'
-            : 'ring-border hover:bg-surface-overlay hover:ring-border-strong hover:text-foreground',
+            ? 'bg-[#0f7a5229] text-[#63d2a4] shadow-[inset_0_0_0_1px_#4ac39440]'
+            : 'bg-white/6 text-[#a8bcdd] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.12)] hover:bg-white/10 hover:text-white',
         )}
       >
         <span aria-hidden="true" className="font-mono">
@@ -92,11 +97,11 @@ export function WorkspaceStatusBar({
 
       {/* Discoverability: a shortcut nobody is told about is a shortcut nobody uses. */}
       <span className="ml-auto hidden lg:inline">
-        <kbd className="border-border bg-surface-overlay text-foreground rounded border px-1.5 py-px font-mono">
+        <kbd className="rounded border border-white/12 bg-white/8 px-1.5 py-px font-mono text-[#c7d6ef]">
           [
         </kbd>
         {' / '}
-        <kbd className="border-border bg-surface-overlay text-foreground rounded border px-1.5 py-px font-mono">
+        <kbd className="rounded border border-white/12 bg-white/8 px-1.5 py-px font-mono text-[#c7d6ef]">
           ]
         </kbd>{' '}
         {t('workspace.shortcutHint')}
@@ -127,9 +132,9 @@ function StatusField({
 }) {
   return (
     <div className={cn('flex items-baseline gap-2', truncate && 'min-w-0')}>
-      <span className="tracking-[0.06em] uppercase">{label}</span>
+      <span className="text-[10px] tracking-[0.1em] text-[#7387a8] uppercase">{label}</span>
       <span
-        className={cn('text-foreground font-medium', mono && 'font-mono', truncate && 'truncate')}
+        className={cn('font-medium text-[#dbe6fb]', mono && 'font-mono', truncate && 'truncate')}
       >
         {value}
       </span>

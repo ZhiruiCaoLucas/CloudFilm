@@ -24,11 +24,7 @@ export function LocaleSwitcher() {
   const [isPending, startTransition] = useTransition();
 
   return (
-    <div
-      role="group"
-      aria-label={t('locale.label')}
-      className="border-border bg-surface-raised flex items-center overflow-hidden rounded-md border shadow-[inset_0_1px_0_0_var(--glass-edge)]"
-    >
+    <div role="group" aria-label={t('locale.label')} className="flex items-center gap-3">
       {LOCALES.map((locale) => (
         <button
           key={locale}
@@ -38,16 +34,16 @@ export function LocaleSwitcher() {
           disabled={isPending || locale === active}
           onClick={() => startTransition(() => setLocale(locale))}
           className={cn(
-            'focus-visible:outline-accent min-h-9 px-2.5 text-xs',
-            'transition-[color,background-color,box-shadow] duration-200',
-            'focus-visible:outline-2 focus-visible:-outline-offset-2',
+            'focus-visible:outline-atrium-primary rounded text-[12.5px]',
+            'transition-colors duration-[180ms]',
+            'focus-visible:outline-2 focus-visible:outline-offset-4',
             'disabled:pointer-events-none',
-            // The selected segment is lit from inside rather than merely filled:
-            // a tint of the accent plus a hairline under the top edge, so the
-            // pair reads as one machined control with one position pressed.
+            // Two words, not a segmented control. Atrium marks the active
+            // language by weight and a rule under it, which is the same
+            // treatment every other "you are here" in the product uses.
             locale === active
-              ? 'bg-accent-soft text-foreground font-medium shadow-[inset_0_1px_0_0_var(--glass-highlight)]'
-              : 'text-muted hover:bg-surface-overlay hover:text-foreground',
+              ? 'text-atrium-ink font-semibold underline decoration-[var(--atrium-sky-300)] decoration-2 underline-offset-[6px]'
+              : 'text-atrium-muted hover:text-atrium-primary font-medium',
           )}
         >
           {t(localeLabelKey(locale))}

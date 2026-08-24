@@ -16,7 +16,7 @@ export function ViewerNoData({ studyInstanceUid }: { readonly studyInstanceUid: 
     <div className="flex h-full flex-col items-center justify-center gap-5 px-6 text-center">
       <svg
         viewBox="0 0 48 48"
-        className="h-16 w-16 text-slate-600"
+        className="h-16 w-16 text-[#2b3a55]"
         role="presentation"
         aria-hidden="true"
         focusable="false"
@@ -40,12 +40,14 @@ export function ViewerNoData({ studyInstanceUid }: { readonly studyInstanceUid: 
       </svg>
 
       <div className="flex flex-col gap-2">
-        <p className="text-base font-medium text-slate-200">{t('viewer.noDataTitle')}</p>
-        <p className="max-w-md text-sm text-slate-400">{t('viewer.noDataBody')}</p>
-        <p className="font-mono text-xs break-all text-slate-500">{studyInstanceUid}</p>
+        <p className="text-[15px] font-semibold tracking-[-0.015em] text-[#dbe6fb]">
+          {t('viewer.noDataTitle')}
+        </p>
+        <p className="atrium-body max-w-md text-[#93a6c6]">{t('viewer.noDataBody')}</p>
+        <p className="font-mono text-[11.5px] break-all text-[#6c7f9f]">{studyInstanceUid}</p>
       </div>
 
-      <p className="max-w-md text-sm text-slate-500">
+      <p className="max-w-md text-[12.5px] leading-relaxed text-[#6c7f9f]">
         {t('viewer.noDataHint', { command: 'pnpm seed:orthanc' })}
       </p>
     </div>

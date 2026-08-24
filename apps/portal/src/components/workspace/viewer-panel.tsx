@@ -40,21 +40,31 @@ export function ViewerPanel({
   return (
     <section
       aria-label={t('viewer.label')}
-      className="relative flex min-w-0 flex-1 flex-col bg-black"
+      // The viewport ground and nothing else. No dot field, no gradient, no
+      // atmospheric mark may appear inside or behind the image.
+      //
+      // Inset from the column edges rather than bled to them: the image now sits
+      // in a framed aperture with a hairline of its own, which is what separates
+      // "the image" from "the chrome around it" on a single dark ground. The
+      // iframe still fills whatever it is given, so the viewer's own layout is
+      // untouched.
+      className="relative flex min-h-0 min-w-0 flex-1 flex-col p-3 xl:p-4"
     >
-      {isStudyImported ? (
-        <iframe
-          title={t('viewer.title', { description: study.description })}
-          src={`/viewer-session/${encodeURIComponent(study.studyInstanceUid)}`}
-          className="h-full w-full border-0"
-          allow="fullscreen"
-          sandbox="allow-scripts allow-same-origin allow-forms allow-downloads"
-        />
-      ) : (
-        <div className="flex h-full w-full items-center justify-center">
-          <ViewerNoData studyInstanceUid={study.studyInstanceUid} />
-        </div>
-      )}
+      <div className="min-h-0 flex-1 overflow-hidden rounded-lg bg-black ring-1 ring-white/8">
+        {isStudyImported ? (
+          <iframe
+            title={t('viewer.title', { description: study.description })}
+            src={`/viewer-session/${encodeURIComponent(study.studyInstanceUid)}`}
+            className="h-full w-full border-0"
+            allow="fullscreen"
+            sandbox="allow-scripts allow-same-origin allow-forms allow-downloads"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center">
+            <ViewerNoData studyInstanceUid={study.studyInstanceUid} />
+          </div>
+        )}
+      </div>
     </section>
   );
 }

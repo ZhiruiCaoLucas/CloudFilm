@@ -25,6 +25,12 @@ export const en = {
     reference: 'Reference {digest} — quote this when reporting the problem.',
   },
 
+  theme: {
+    label: 'Colour scheme',
+    system: 'Follow system',
+    light: 'Light',
+    dark: 'Dark',
+  },
   locale: {
     label: 'Language',
     en: 'English',
@@ -53,6 +59,15 @@ export const en = {
     recentEmptyTitle: 'No recent searches',
     recentEmptyBody: 'Patients you open will be listed here.',
     advancedSearch: 'Search by name, accession number or date',
+    heroEyebrow: 'Patient lookup',
+    // The explainer beside recent searches. It describes a property of the
+    // implementation - recent-searches.tsx stores identifiers and never names -
+    // so it is a statement of fact rather than a marketing claim.
+    privacyPointStorage: 'Medical record number only \u2014 never a patient\u2019s name.',
+    privacyPointAudit: 'Recorded with your account and the study identifier.',
+    privacyTitle: 'Privacy by construction',
+    privacyBody:
+      'Recent searches record the medical record number only, never a patient\u2019s name. Every study you open is written to the access audit with your account and the study identifier.',
   },
 
   search: {
@@ -72,6 +87,9 @@ export const en = {
     errorDateOrder: 'The start date must not be later than the end date.',
     promptTitle: 'No search yet',
     promptBody: 'Fill in at least one field above to search for studies.',
+    editCriteria: 'Edit criteria',
+    criteriaLabel: 'Applied criteria',
+    removeCriterion: 'Remove this criterion',
     resultsHeading: 'Results',
     resultCountOne: '{count} study on this page',
     resultCountOther: '{count} studies on this page',
@@ -151,6 +169,13 @@ export const en = {
     navigatorLabel: 'Study navigator',
     studiesLabel: 'Studies',
     metadata: 'Metadata',
+    backToPatient: 'Patient record',
+    analysisSection: 'Analysis',
+    studyDetails: 'Study details',
+    studyInformation: 'Study information',
+    seriesInformation: 'Series information',
+    patientInformation: 'Patient information',
+    technicalMetadata: 'Technical metadata',
     metadataLabel: 'Study metadata',
     hide: 'Hide',
     info: 'Info',
@@ -195,6 +220,12 @@ export const en = {
     run: 'Run analysis',
     running: 'Analysing…',
     disclosure: 'Sends this study to the analysis service.',
+    emptyTitle: 'AI-assisted analysis',
+    emptyBody: 'No analysis has been run for this study yet.',
+    rerun: 'Run again',
+    stateCompleted: 'Completed',
+    stateRunning: 'Processing',
+    stateFailed: 'Failed',
     disclaimer:
       'Automated image characterisation. This is not a diagnosis, not a medical device, and not a substitute for clinical review.',
     model: 'Model',
@@ -210,6 +241,12 @@ export const en = {
     pageTitle: 'Sign in · CloudFilm',
     title: 'Sign in to CloudFilm',
     body: 'Accounts are issued by your administrator. CloudFilm has no self-service registration.',
+    // Atrium's identity pane. Both claims are statements about how this
+    // deployment behaves - the audit trail and the role gate are implemented -
+    // rather than certifications CloudFilm has not been assessed against.
+    heroTitle: 'Hospital imaging, reachable from the browser.',
+    trustCompliance: 'Every access audited',
+    trustAccess: 'Role-based access control',
     email: 'E-mail address',
     password: 'Password',
     submit: 'Sign in',

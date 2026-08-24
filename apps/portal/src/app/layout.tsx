@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import { IBM_Plex_Mono, Instrument_Sans } from 'next/font/google';
 import { getTranslations } from '@cloudfilm/shared';
 import { LocaleProvider } from '@/components/locale-provider';
 import { ThemeScript } from '@/components/theme-script';
@@ -25,6 +26,39 @@ export const viewport: Viewport = {
 };
 
 /**
+ * Atrium's interface face.
+ *
+ * Self-hosted by `next/font`, which downloads the files at build time and serves
+ * them from CloudFilm's own origin. A hospital deployment therefore makes no
+ * request to Google at run time, and no font request carries a referrer naming
+ * the page a clinician is on.
+ *
+ * `display: 'swap'` on purpose: a portal that renders a blank patient name until
+ * a webfont arrives is worse than one that renders it in the fallback for a
+ * frame.
+ */
+const instrumentSans = Instrument_Sans({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-instrument-sans',
+  display: 'swap',
+});
+
+/**
+ * The technical face.
+ *
+ * Reserved for values read character by character - MRNs, accession numbers,
+ * Study and Series UIDs, dates, counts, build strings. Two weights, because
+ * that is all those values need.
+ */
+const ibmPlexMono = IBM_Plex_Mono({
+  subsets: ['latin'],
+  weight: ['400', '500'],
+  variable: '--font-ibm-plex-mono',
+  display: 'swap',
+});
+
+/**
  * Document shell only.
  *
  * Page chrome is chosen per route: {@link PortalShell} for the document-style
@@ -39,7 +73,11 @@ export default async function RootLayout({ children }: { readonly children: Reac
     // `lang` is not decoration: it tells a screen reader which voice to use and
     // the browser which font stack and line-breaking rules apply. Getting it
     // wrong makes Chinese unreadable to assistive technology.
-    <html lang={locale} suppressHydrationWarning>
+    <html
+      lang={locale}
+      suppressHydrationWarning
+      className={`${instrumentSans.variable} ${ibmPlexMono.variable}`}
+    >
       <head>
         <ThemeScript />
       </head>

@@ -37,11 +37,11 @@ export default async function PatientPage({ params }: PatientPageProps) {
 
   return (
     <PortalShell user={user}>
-      <div className="flex flex-col gap-10">
+      <div className="atrium-enter flex flex-col gap-[34px]">
         <nav aria-label={t('patient.breadcrumbLabel')}>
           <Link
             href="/"
-            className="text-muted hover:text-foreground focus-visible:outline-accent rounded-md text-sm focus-visible:outline-2 focus-visible:outline-offset-4"
+            className="text-atrium-muted hover:text-atrium-primary focus-visible:outline-atrium-primary rounded text-[13px] font-medium focus-visible:outline-2 focus-visible:outline-offset-4"
           >
             {t('patient.breadcrumb')}
           </Link>
@@ -49,12 +49,15 @@ export default async function PatientPage({ params }: PatientPageProps) {
 
         <PatientSummary patient={record.patient} />
 
-        <section aria-labelledby="studies-heading" className="flex flex-col gap-4">
+        <section
+          aria-labelledby="studies-heading"
+          className="atrium-enter-2 flex flex-col gap-[18px]"
+        >
           <div className="flex items-baseline justify-between gap-4">
-            <h2 id="studies-heading" className="text-foreground text-sm font-medium">
+            <h2 id="studies-heading" className="atrium-eyebrow text-atrium-muted">
               {t('patient.studiesHeading')}
             </h2>
-            <p className="text-muted text-xs">
+            <p className="text-atrium-muted font-mono text-[11.5px]">
               {t(
                 record.studies.length === 1 ? 'patient.studyCountOne' : 'patient.studyCountOther',
                 { count: record.studies.length },

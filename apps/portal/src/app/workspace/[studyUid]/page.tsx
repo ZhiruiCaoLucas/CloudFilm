@@ -95,9 +95,14 @@ export default async function WorkspacePage({ params }: WorkspacePageProps) {
         isRead={readState.read}
         analysis={analysis}
       >
+        {/* `series` is the same array the metadata rail receives - the
+            navigator now lists the open study's series under it, so choosing
+            what to look at and seeing what is in it happen in one place. No
+            additional request is made for it. */}
         <StudyNavigator
           patient={context.patient}
           studies={context.studies}
+          series={context.series}
           selectedStudyInstanceUid={context.selectedStudy.studyInstanceUid}
         />
       </ViewerWorkspace>

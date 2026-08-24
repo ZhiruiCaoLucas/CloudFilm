@@ -96,7 +96,7 @@ export function StudySearchForm({ initial }: { readonly initial: StudySearchFiel
   }
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="flex w-full flex-col gap-4">
+    <form onSubmit={handleSubmit} noValidate className="flex w-full flex-col gap-[22px]">
       {/*
         Two columns from the sm breakpoint up, one below it. The four criteria
         are equally weighted - none is the primary one - so they get equal
@@ -105,7 +105,7 @@ export function StudySearchForm({ initial }: { readonly initial: StudySearchFiel
         inside a field, so the grid needs less of it between rows than between
         columns.
       */}
-      <div className="grid gap-x-4 gap-y-3 sm:grid-cols-2">
+      <div className="grid gap-x-[22px] gap-y-[18px] min-[900px]:grid-cols-2">
         <Field
           id={nameId}
           label={t('search.patientName')}
@@ -168,9 +168,13 @@ export function StudySearchForm({ initial }: { readonly initial: StudySearchFiel
         was. It still comes before the buttons in source order, so a screen
         reader reaches it first.
       */}
-      <div className="border-border flex flex-wrap items-center justify-end gap-3 border-t pt-4">
+      <div className="border-atrium-border flex flex-wrap items-center justify-end gap-3 border-t pt-5">
         {error !== null ? (
-          <p id={errorId} role="alert" className="mr-auto text-sm text-red-600 dark:text-red-400">
+          <p
+            id={errorId}
+            role="alert"
+            className="mr-auto rounded-[10px] bg-[var(--atrium-danger-bg)] px-3.5 py-2 text-[12.5px] text-[var(--atrium-danger)] shadow-[inset_0_0_0_1px_#b423183d]"
+          >
             {error}
           </p>
         ) : null}
@@ -200,13 +204,13 @@ function Field({
   readonly children: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="text-foreground text-sm font-medium">
+    <div className="flex flex-col gap-2">
+      <label htmlFor={id} className="atrium-label text-atrium-ink">
         {label}
       </label>
       {children}
       {hint !== undefined ? (
-        <p id={hintId} className="text-muted text-xs">
+        <p id={hintId} className="text-atrium-muted text-[11.5px] leading-relaxed">
           {hint}
         </p>
       ) : null}

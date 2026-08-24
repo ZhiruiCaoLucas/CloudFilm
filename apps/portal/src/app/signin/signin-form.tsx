@@ -24,11 +24,11 @@ export function SignInForm({ returnUrl }: { readonly returnUrl: string }) {
   const errorId = useId();
 
   return (
-    <form action={formAction} className="flex flex-col gap-5" noValidate>
+    <form action={formAction} className="flex flex-col gap-[22px]" noValidate>
       <input type="hidden" name="returnUrl" value={returnUrl} />
 
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor={emailId} className="text-foreground text-xs font-medium">
+      <div className="flex flex-col gap-2">
+        <label htmlFor={emailId} className="atrium-label text-atrium-ink">
           {t('auth.email')}
         </label>
         <Input
@@ -42,8 +42,8 @@ export function SignInForm({ returnUrl }: { readonly returnUrl: string }) {
         />
       </div>
 
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor={passwordId} className="text-foreground text-xs font-medium">
+      <div className="flex flex-col gap-2">
+        <label htmlFor={passwordId} className="atrium-label text-atrium-ink">
           {t('auth.password')}
         </label>
         <Input
@@ -67,7 +67,7 @@ export function SignInForm({ returnUrl }: { readonly returnUrl: string }) {
         <p
           id={errorId}
           role="alert"
-          className="border-l-2 border-red-500 pl-3 text-[0.8125rem] leading-relaxed text-red-600 dark:text-red-400"
+          className="rounded-[10px] bg-[var(--atrium-danger-bg)] px-3.5 py-3 text-[12.5px] leading-relaxed text-[var(--atrium-danger)] shadow-[inset_0_0_0_1px_#b423183d]"
         >
           {t(state.error)}
         </p>
@@ -87,7 +87,7 @@ function SubmitButton() {
   const { pending } = useFormStatus();
 
   return (
-    <Button type="submit" disabled={pending} aria-busy={pending} className="mt-1 w-full">
+    <Button type="submit" size="lg" disabled={pending} aria-busy={pending} className="mt-1 w-full">
       {pending ? t('auth.submitting') : t('auth.submit')}
     </Button>
   );

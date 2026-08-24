@@ -21,14 +21,17 @@ export function EnvironmentBadge({
   return (
     <span
       className={cn(
-        // Squared and small, matching StatusBadge. Both are readings rather
-        // than notifications, and they appear beside one another.
-        'inline-flex items-center rounded px-2 py-0.5 text-[0.6875rem] font-medium ring-1 ring-inset',
+        // The same construction as StatusBadge, because it is one: a dot that
+        // repeats the state in a second channel, then a mono uppercase label.
+        'inline-flex items-center gap-2 rounded-md px-2.5 py-[5px]',
+        'transition-colors duration-[180ms]',
+        'font-mono text-[10.5px] font-medium tracking-[0.1em] uppercase',
         isProduction
-          ? 'bg-surface-overlay text-muted ring-border'
-          : 'bg-amber-500/10 text-amber-700 ring-amber-500/30 dark:text-amber-400',
+          ? 'bg-[var(--atrium-neutral-badge-bg)] text-[var(--atrium-neutral-badge)] shadow-[inset_0_0_0_1px_#52627d29]'
+          : 'bg-[var(--atrium-warning-bg)] text-[var(--atrium-warning)] shadow-[inset_0_0_0_1px_#8a52003d]',
       )}
     >
+      <span aria-hidden="true" className="h-1.5 w-1.5 shrink-0 rounded-full bg-current" />
       {label}
     </span>
   );

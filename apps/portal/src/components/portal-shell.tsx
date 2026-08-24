@@ -19,15 +19,31 @@ import { SiteFooter } from './site-footer';
  */
 export function PortalShell({
   user,
+  wide = false,
   children,
 }: {
   readonly user?: CurrentUser | null | undefined;
+
+  /**
+   * Opens the page with a band rather than a heading.
+   *
+   * The home page starts with a full-width hero, which needs less air above it
+   * than a page that starts with a breadcrumb and a title. The column measure is
+   * the same either way - it has to be, or the navigation's logo and the page's
+   * first character would sit on two different left edges.
+   */
+  readonly wide?: boolean;
   readonly children: ReactNode;
 }) {
   return (
     <>
       <TopNav user={user} />
-      <main id="main" className="mx-auto w-full max-w-5xl flex-1 px-6 py-10">
+      <main
+        id="main"
+        className={`mx-auto w-full max-w-[1180px] flex-1 px-6 sm:px-8 ${
+          wide ? 'pt-8 pb-[72px]' : 'pt-10 pb-[72px]'
+        }`}
+      >
         {children}
       </main>
       <SiteFooter />

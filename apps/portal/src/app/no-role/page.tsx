@@ -43,14 +43,12 @@ export default async function NoRolePage() {
       <div className="flex flex-col gap-6 py-8">
         <Card className="mx-auto w-full max-w-xl">
           <CardHeader>
-            <h1 className="text-foreground text-lg font-semibold tracking-tight">
-              {t('noRole.title')}
-            </h1>
+            <h1 className="atrium-h2 text-atrium-ink">{t('noRole.title')}</h1>
           </CardHeader>
 
           <CardBody className="flex flex-col gap-4">
-            <p className="text-foreground text-sm">{t('noRole.body')}</p>
-            <p className="text-muted text-sm">{t('noRole.detail')}</p>
+            <p className="text-atrium-ink text-sm">{t('noRole.body')}</p>
+            <p className="atrium-body text-atrium-body">{t('noRole.detail')}</p>
 
             <div className="flex flex-wrap items-center gap-3 pt-2">
               {/*
@@ -66,7 +64,7 @@ export default async function NoRolePage() {
 
               <Link
                 href="/"
-                className="text-muted hover:text-foreground focus-visible:outline-accent rounded-md text-sm focus-visible:outline-2 focus-visible:outline-offset-4"
+                className="text-atrium-muted hover:text-atrium-ink focus-visible:outline-atrium-primary rounded-md text-sm focus-visible:outline-2 focus-visible:outline-offset-4"
               >
                 {t('noRole.home')}
               </Link>

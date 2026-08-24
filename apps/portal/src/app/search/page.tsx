@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ApiError } from '@cloudfilm/core';
 import { STUDY_SEARCH, type StudySearchResult, type Translator } from '@cloudfilm/shared';
-import { buttonClasses, Card, CardBody, CardHeader, EmptyState } from '@cloudfilm/ui';
+import { buttonClasses, EmptyState } from '@cloudfilm/ui';
 import { PortalShell } from '@/components/portal-shell';
 import { SearchResultsTable } from '@/components/search-results-table';
 import { StudySearchForm, type StudySearchFields } from '@/components/study-search-form';
@@ -62,62 +62,78 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
   return (
     <PortalShell user={user}>
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-[34px]">
         <nav aria-label={t('patient.breadcrumbLabel')}>
           <Link
             href="/"
-            className="text-muted hover:text-foreground focus-visible:outline-accent rounded-md text-sm focus-visible:outline-2 focus-visible:outline-offset-4"
+            className="text-atrium-muted hover:text-atrium-primary focus-visible:outline-atrium-primary rounded text-[13px] font-medium focus-visible:outline-2 focus-visible:outline-offset-4"
           >
             {t('search.breadcrumb')}
           </Link>
         </nav>
 
-        {/* A two-pixel accent rule to the left of the title. It is the only
-            colour above the fold, and it is what tells the eye where the page
-            starts without a heading large enough to do the same job. */}
-        <div className="border-accent flex flex-col gap-1 border-l-2 pl-4">
-          <h1 className="text-foreground text-lg font-semibold tracking-tight">
-            {t('search.title')}
-          </h1>
-          <p className="text-muted text-[0.8125rem]">{t('search.subtitle')}</p>
+        {/*
+          Masthead and the criteria that produced what is below it, on one line:
+          the reader's question on the left, its current answer on the right.
+        */}
+        <div className="atrium-enter-1 flex flex-wrap items-end justify-between gap-x-8 gap-y-5">
+          <div className="border-atrium-primary flex min-w-0 flex-col gap-2 border-l-[3px] pl-[18px]">
+            <h1 className="atrium-h1 text-atrium-ink">{t('search.title')}</h1>
+            <p className="atrium-body text-atrium-body max-w-[62ch]">{t('search.subtitle')}</p>
+          </div>
+
+          {hasCriteria ? <CriteriaChips fields={fields} t={t} /> : null}
         </div>
 
         {/*
-          The form sits on a raised surface so the page reads as two blocks -
-          the question, then the answer - rather than one long column in which
-          the criteria and the results run together.
+          The criteria form. Open when there is nothing to show, folded away
+          behind "Edit criteria" once there is - a native `details`, so the form
+          stays in the DOM, submits identically, and needs no JavaScript to
+          disclose. Nothing about the search itself changes.
         */}
-        <div className="border-border bg-surface-raised cf-lift rounded-lg border bg-linear-to-b from-white/60 to-transparent px-5 py-5 shadow-[inset_0_1px_0_0_var(--glass-edge)] dark:from-white/[0.02]">
-          <StudySearchForm initial={fields} />
-        </div>
+        <details open={outcome === null || outcome === 'refused'} className="atrium-enter-2 group">
+          <summary className="marker:content-none [&::-webkit-details-marker]:hidden">
+            <span className={buttonClasses('secondary', 'cursor-pointer', 'sm')}>
+              <span className="atrium-arrow inline-block transition-transform duration-[180ms] group-open:rotate-90">
+                ›
+              </span>
+              {t('search.editCriteria')}
+            </span>
+          </summary>
 
-        <section aria-labelledby="search-results-heading" className="flex flex-col gap-3">
+          <div className="atrium-card atrium-swap mt-4 px-6 py-7 sm:px-8 sm:py-8">
+            <StudySearchForm initial={fields} />
+          </div>
+        </details>
+
+        <section
+          aria-labelledby="search-results-heading"
+          className="atrium-enter-3 flex flex-col gap-[18px]"
+        >
           {outcome === null ? (
             <>
-              <h2 id="search-results-heading" className="text-foreground text-sm font-medium">
+              <h2 id="search-results-heading" className="atrium-eyebrow text-atrium-muted">
                 {t('search.resultsHeading')}
               </h2>
               <EmptyState title={t('search.promptTitle')} description={t('search.promptBody')} />
             </>
           ) : outcome === 'refused' ? (
             <>
-              <h2 id="search-results-heading" className="text-foreground text-sm font-medium">
+              <h2 id="search-results-heading" className="atrium-eyebrow text-atrium-muted">
                 {t('search.resultsHeading')}
               </h2>
-              <Card>
-                <CardHeader>
-                  <h3 className="text-foreground text-sm font-medium">
-                    {t('search.invalidTitle')}
-                  </h3>
-                </CardHeader>
-                <CardBody>
-                  <p className="text-muted text-sm">{t('search.invalidBody')}</p>
-                </CardBody>
-              </Card>
+              <div className="rounded-xl bg-[var(--atrium-danger-bg)] px-5 py-4 shadow-[inset_0_0_0_1px_#b423183d]">
+                <h3 className="atrium-h3 text-[var(--atrium-danger)]">
+                  {t('search.invalidTitle')}
+                </h3>
+                <p className="atrium-body mt-1.5 text-[var(--atrium-danger)]/90">
+                  {t('search.invalidBody')}
+                </p>
+              </div>
             </>
           ) : outcome.items.length === 0 ? (
             <>
-              <h2 id="search-results-heading" className="text-foreground text-sm font-medium">
+              <h2 id="search-results-heading" className="atrium-eyebrow text-atrium-muted">
                 {t('search.resultsHeading')}
               </h2>
               <EmptyState
@@ -131,6 +147,59 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         </section>
       </div>
     </PortalShell>
+  );
+}
+
+/**
+ * The criteria currently applied, each removable.
+ *
+ * Every chip is a link to the same search minus one field, built by the same
+ * `searchHref` the pager uses - so removing a criterion is a normal navigation
+ * that the back button undoes, and no filter state exists anywhere but the URL.
+ * The page resets to zero when a criterion is dropped, because page four of the
+ * old query is not a meaningful position in the new one.
+ */
+function CriteriaChips({
+  fields,
+  t,
+}: {
+  readonly fields: StudySearchFields;
+  readonly t: Translator;
+}) {
+  const applied = (
+    [
+      ['patientName', 'search.patientName'],
+      ['accessionNumber', 'search.accessionNumber'],
+      ['studyDateFrom', 'search.dateFrom'],
+      ['studyDateTo', 'search.dateTo'],
+    ] as const
+  ).filter(([field]) => fields[field].length > 0);
+
+  if (applied.length === 0) {
+    return null;
+  }
+
+  return (
+    <ul aria-label={t('search.criteriaLabel')} className="flex flex-wrap items-center gap-2">
+      {applied.map(([field, labelKey]) => (
+        <li key={field}>
+          <Link
+            href={searchHref({ ...fields, [field]: '' }, 0)}
+            className="border-atrium-border-strong bg-atrium-white text-atrium-body hover:border-atrium-primary hover:text-atrium-ink focus-visible:outline-atrium-primary group inline-flex items-center gap-2 rounded-lg border py-1.5 pr-2.5 pl-3 text-[12px] shadow-[var(--shadow-sm)] transition-[color,border-color,box-shadow] duration-[180ms] focus-visible:outline-2 focus-visible:outline-offset-2"
+          >
+            <span className="text-atrium-muted">{t(labelKey)}</span>
+            <span className="text-atrium-ink font-mono text-[11.5px]">{fields[field]}</span>
+            <span
+              aria-hidden="true"
+              className="group-hover:text-atrium-primary text-[13px] leading-none text-[var(--atrium-muted-2)] transition-colors duration-[180ms]"
+            >
+              ×
+            </span>
+            <span className="sr-only">{t('search.removeCriterion')}</span>
+          </Link>
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -195,19 +264,27 @@ function Results({
         pushes the first result below the fold on a laptop.
       */}
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <h2 id="search-results-heading" className="text-foreground text-sm font-medium">
+        <h2 id="search-results-heading" className="atrium-eyebrow text-atrium-muted">
           {t('search.resultsHeading')}
         </h2>
-        <p className="text-muted text-xs">
-          {t(result.items.length === 1 ? 'search.resultCountOne' : 'search.resultCountOther', {
-            count: result.items.length,
-          })}
-          <span aria-hidden="true"> · </span>
-          {t('search.pagePosition', { page: result.page + 1 })}
+        <p className="text-atrium-muted flex items-baseline gap-2 text-[12px]">
+          <span>
+            {t(result.items.length === 1 ? 'search.resultCountOne' : 'search.resultCountOther', {
+              count: result.items.length,
+            })}
+          </span>
+          <span aria-hidden="true" className="text-[var(--atrium-muted-2)]">
+            ·
+          </span>
+          <span className="text-atrium-body font-mono text-[11.5px]">
+            {t('search.pagePosition', { page: result.page + 1 })}
+          </span>
         </p>
       </div>
 
-      <SearchResultsTable items={result.items} />
+      <div className="atrium-swap">
+        <SearchResultsTable items={result.items} />
+      </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         {/*
@@ -216,28 +293,42 @@ function Results({
           "there is more" is the only honest thing that can be said about what
           was not shown.
         */}
-        <p className="text-muted max-w-prose text-xs">
+        <p className="text-atrium-muted max-w-prose text-[12px]">
           {result.hasMore ? t('search.moreAvailable') : null}
         </p>
 
         <nav aria-label={t('search.resultsHeading')} className="flex items-center gap-2">
+          {/* The reachable side is a control; the unreachable side is plain
+              text. A disabled link is a thing that looks pressable and is not. */}
           {isFirstPage ? (
             <PagerPlaceholder>{t('search.previous')}</PagerPlaceholder>
           ) : (
             <Link
-              href={pageHref(fields, result.page - 1)}
-              className={buttonClasses('secondary', 'min-h-9 px-3')}
+              href={searchHref(fields, result.page - 1)}
+              className="text-atrium-body hover:text-atrium-primary focus-visible:outline-atrium-primary group inline-flex min-h-9 items-center gap-1.5 rounded px-2 text-[13px] font-semibold transition-colors duration-[180ms] focus-visible:outline-2 focus-visible:outline-offset-2"
             >
+              <span
+                aria-hidden="true"
+                className="inline-block transition-transform duration-[180ms] group-hover:-translate-x-0.5"
+              >
+                ‹
+              </span>
               {t('search.previous')}
             </Link>
           )}
 
           {result.hasMore ? (
             <Link
-              href={pageHref(fields, result.page + 1)}
-              className={buttonClasses('secondary', 'min-h-9 px-3')}
+              href={searchHref(fields, result.page + 1)}
+              className={buttonClasses('secondary', 'group border-atrium-border-strong', 'sm')}
             >
               {t('search.next')}
+              <span
+                aria-hidden="true"
+                className="inline-block transition-transform duration-[180ms] group-hover:translate-x-0.5"
+              >
+                ›
+              </span>
             </Link>
           ) : (
             <PagerPlaceholder>{t('search.next')}</PagerPlaceholder>
@@ -257,18 +348,20 @@ function Results({
  */
 function PagerPlaceholder({ children }: { readonly children: React.ReactNode }) {
   return (
-    <span className="text-muted inline-flex min-h-9 items-center px-3 text-sm">{children}</span>
+    <span className="inline-flex min-h-9 items-center px-3 text-[13px] font-medium text-[var(--atrium-muted-2)]">
+      {children}
+    </span>
   );
 }
 
 /**
- * The address of another page of the same search.
+ * The address of one search: its criteria and a page number.
  *
  * Carries the criteria and the page number, and nothing else. The archive's own
  * vocabulary - limits, offsets, wildcards - is the API's business and never
  * appears in a URL a clinician can see or edit.
  */
-function pageHref(fields: StudySearchFields, page: number): string {
+function searchHref(fields: StudySearchFields, page: number): string {
   const parameters = new URLSearchParams();
 
   for (const [name, value] of Object.entries(fields)) {

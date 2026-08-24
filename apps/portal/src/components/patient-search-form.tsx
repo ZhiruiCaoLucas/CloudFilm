@@ -54,15 +54,20 @@ export function PatientSearchForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="flex w-full flex-col gap-3">
-      <label htmlFor={inputId} className="text-foreground text-sm font-medium">
+    <form onSubmit={handleSubmit} noValidate className="flex w-full flex-col gap-3.5">
+      {/* The label is visually hidden here only: the console section around
+          this form already carries the same string as its heading, so showing
+          it twice would repeat the words on screen. Screen readers still get a
+          properly associated label. */}
+      <label htmlFor={inputId} className="sr-only">
         {t('home.searchLabel')}
       </label>
 
-      <div className="flex flex-col gap-3 sm:flex-row">
+      <div className="flex flex-col gap-3 sm:flex-row sm:gap-[14px]">
         <Input
           id={inputId}
           name="patientId"
+          inputSize="lg"
           value={value}
           onChange={(event) => setValue(event.target.value)}
           invalid={error !== null}
@@ -71,20 +76,27 @@ export function PatientSearchForm() {
           autoComplete="off"
           enterKeyHint="search"
           spellCheck={false}
-          className="sm:flex-1"
+          className="font-mono tracking-[0.01em] sm:flex-1"
         />
-        <Button type="submit" disabled={isNavigating} className="sm:w-32">
+        {/* A fixed width rather than a share of the row: the label changes
+            length while a search is running, and a button that resizes under
+            the pointer mid-submit is a button that moves away from it. */}
+        <Button type="submit" size="xl" disabled={isNavigating} className="sm:w-[168px]">
           {isNavigating ? t('home.searchSubmitting') : t('home.searchSubmit')}
         </Button>
       </div>
 
       {error !== null ? (
-        <p id={errorId} role="alert" className="text-sm text-red-600 dark:text-red-400">
+        <p
+          id={errorId}
+          role="alert"
+          className="rounded-[10px] bg-[var(--atrium-danger-bg)] px-3.5 py-2.5 text-[12.5px] text-[var(--atrium-danger)] shadow-[inset_0_0_0_1px_#b423183d]"
+        >
           {error}
         </p>
       ) : null}
 
-      <p id={hintId} className="text-muted text-sm">
+      <p id={hintId} className="text-atrium-muted mt-1 max-w-[46ch] text-[12.5px] leading-relaxed">
         {t('home.searchHint')}
       </p>
     </form>

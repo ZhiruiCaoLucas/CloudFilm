@@ -37,21 +37,19 @@ export default async function PatientNotFound() {
       <div className="flex flex-col gap-8">
         <Card>
           <CardHeader>
-            <h1 className="text-foreground text-xl font-semibold tracking-tight">
-              {t('patient.notFoundTitle')}
-            </h1>
+            <h1 className="atrium-h2 text-atrium-ink">{t('patient.notFoundTitle')}</h1>
           </CardHeader>
 
           <CardBody className="flex flex-col gap-4">
-            <p className="text-muted text-sm">{t('patient.notFoundBody')}</p>
+            <p className="atrium-body text-atrium-body">{t('patient.notFoundBody')}</p>
 
             {knownNumbers.length > 0 && (
-              <p className="text-muted text-sm">
+              <p className="atrium-body text-atrium-body">
                 {t('patient.notFoundKnown')}{' '}
                 {knownNumbers.map((number) => (
                   <code
                     key={number}
-                    className="bg-surface-overlay text-foreground mr-1 rounded px-1.5 py-0.5 font-mono text-xs"
+                    className="bg-atrium-panel text-atrium-ink mr-1 rounded px-1.5 py-0.5 font-mono text-xs"
                   >
                     {number}
                   </code>

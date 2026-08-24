@@ -24,27 +24,27 @@ export async function SearchResultsTable({
   const t = await serverTranslations();
 
   return (
-    <div className="border-border cf-lift overflow-x-auto rounded-lg border">
+    <div className="border-atrium-border bg-atrium-white atrium-lift overflow-x-auto rounded-xl border">
       <table className="w-full min-w-[56rem] border-collapse text-left text-sm">
         <caption className="sr-only">{t('search.tableCaption')}</caption>
-        <thead className="bg-surface-overlay text-muted text-[0.625rem] tracking-[0.08em] uppercase shadow-[inset_0_-1px_0_0_var(--color-border)]">
+        <thead className="bg-atrium-panel border-atrium-border text-atrium-muted atrium-colhead border-b">
           <tr>
-            <th scope="col" className="px-4 py-2.5 font-medium">
+            <th scope="col" className="px-4 py-3 text-left font-semibold">
               {t('search.patient')}
             </th>
-            <th scope="col" className="px-4 py-2.5 font-medium">
+            <th scope="col" className="px-4 py-3 text-left font-semibold">
               {t('patient.medicalRecordNumber')}
             </th>
-            <th scope="col" className="px-4 py-2.5 font-medium whitespace-nowrap">
+            <th scope="col" className="px-4 py-3 text-left font-semibold whitespace-nowrap">
               {t('study.date')}
             </th>
-            <th scope="col" className="px-4 py-2.5 font-medium">
+            <th scope="col" className="px-4 py-3 text-left font-semibold">
               {t('study.modality')}
             </th>
-            <th scope="col" className="px-4 py-2.5 font-medium">
+            <th scope="col" className="px-4 py-3 text-left font-semibold">
               {t('study.description')}
             </th>
-            <th scope="col" className="px-4 py-2.5 font-medium">
+            <th scope="col" className="px-4 py-3 text-left font-semibold">
               {t('study.accession')}
             </th>
 
@@ -52,13 +52,13 @@ export async function SearchResultsTable({
               Counts are right aligned so their digits line up down the column,
               which is what makes a column of numbers scannable at all.
             */}
-            <th scope="col" className="px-4 py-2.5 text-right font-medium">
+            <th scope="col" className="px-4 py-3 text-right font-semibold">
               {t('study.series')}
             </th>
-            <th scope="col" className="px-4 py-2.5 text-right font-medium">
+            <th scope="col" className="px-4 py-3 text-right font-semibold">
               {t('study.images')}
             </th>
-            <th scope="col" className="px-4 py-2.5 text-right font-medium">
+            <th scope="col" className="px-4 py-3 text-right font-semibold">
               <span className="sr-only">{t('study.actions')}</span>
             </th>
           </tr>
@@ -77,28 +77,28 @@ function ResultRow({ item, t }: { readonly item: StudySearchItem; readonly t: Tr
   const { patient, study } = item;
 
   return (
-    <tr className="border-border hover:bg-surface-overlay/50 border-t align-middle transition-colors duration-200">
+    <tr className="border-atrium-border atrium-row group border-t align-middle">
       {/*
         The patient carries the row. Name at full weight, medical record number
         beside it in the next column at a smaller size and in mono - close
         enough to read together, plainly subordinate to the name.
       */}
-      <th scope="row" className="text-foreground max-w-56 px-4 py-3 font-medium">
+      <th scope="row" className="text-atrium-ink max-w-56 px-4 py-3 font-semibold">
         <Link
           href={`/patient/${encodeURIComponent(patient.medicalRecordNumber)}`}
-          className="hover:text-accent focus-visible:outline-accent block truncate rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2"
+          className="hover:text-atrium-primary focus-visible:outline-atrium-primary block truncate rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2"
           title={patient.fullName}
         >
           {patient.fullName}
         </Link>
       </th>
-      <td className="text-muted px-4 py-3 font-mono text-xs whitespace-nowrap">
+      <td className="text-atrium-body px-4 py-3 font-mono text-xs whitespace-nowrap">
         {patient.medicalRecordNumber}
       </td>
-      <td className="text-foreground px-4 py-3 font-mono text-xs whitespace-nowrap">
+      <td className="text-atrium-ink px-4 py-3 font-mono text-xs whitespace-nowrap">
         {study.performedOn}
       </td>
-      <td className="text-foreground px-4 py-3 whitespace-nowrap">
+      <td className="text-atrium-ink px-4 py-3 whitespace-nowrap">
         {formatModality(study.modality)}
       </td>
 
@@ -108,25 +108,31 @@ function ResultRow({ item, t }: { readonly item: StudySearchItem; readonly t: Tr
         study cannot stretch the table past every other row, with the full value
         on the element itself for anyone who needs it.
       */}
-      <td className="text-muted max-w-72 px-4 py-3">
+      <td className="text-atrium-body max-w-72 px-4 py-3">
         <span className="block truncate" title={study.description}>
           {study.description}
         </span>
       </td>
-      <td className="text-muted max-w-40 px-4 py-3 font-mono text-xs">
+      <td className="text-atrium-muted max-w-40 px-4 py-3 font-mono text-[12px]">
         <span className="block truncate" title={study.accessionNumber}>
           {study.accessionNumber}
         </span>
       </td>
-      <td className="text-muted px-4 py-3 text-right tabular-nums">{study.seriesCount}</td>
-      <td className="text-muted px-4 py-3 text-right tabular-nums">{study.instanceCount}</td>
+      <td className="text-atrium-body px-4 py-3 text-right tabular-nums">{study.seriesCount}</td>
+      <td className="text-atrium-body px-4 py-3 text-right tabular-nums">{study.instanceCount}</td>
       <td className="px-4 py-3">
         <div className="flex justify-end">
           <Link
             href={`/workspace/${encodeURIComponent(study.studyInstanceUid)}`}
-            className={buttonClasses('secondary', 'min-h-9 px-3 whitespace-nowrap')}
+            className={buttonClasses('secondary', 'group/open', 'sm')}
           >
             {t('study.open')}
+            <span
+              aria-hidden="true"
+              className="atrium-arrow inline-block group-hover/open:translate-x-0.5"
+            >
+              ›
+            </span>
 
             {/*
               Every row's button reads "Open Study", so a screen reader listing

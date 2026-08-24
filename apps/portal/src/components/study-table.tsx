@@ -33,27 +33,27 @@ export async function StudyTable({ studies }: { readonly studies: readonly Study
   const t = await serverTranslations();
 
   return (
-    <div className="border-border cf-lift overflow-x-auto rounded-lg border">
+    <div className="border-atrium-border bg-atrium-white atrium-lift overflow-x-auto rounded-xl border">
       <table className="w-full min-w-[42rem] border-collapse text-left text-sm">
         <caption className="sr-only">{t('study.tableCaption')}</caption>
-        <thead className="bg-surface-overlay text-muted text-[0.625rem] tracking-[0.08em] uppercase shadow-[inset_0_-1px_0_0_var(--color-border)]">
+        <thead className="bg-atrium-panel border-atrium-border text-atrium-muted atrium-colhead border-b">
           <tr>
-            <th scope="col" className="px-4 py-2.5 font-medium">
+            <th scope="col" className="px-4 py-3 text-left font-semibold">
               {t('study.modality')}
             </th>
-            <th scope="col" className="px-4 py-2.5 font-medium">
+            <th scope="col" className="px-4 py-3 text-left font-semibold">
               {t('study.description')}
             </th>
-            <th scope="col" className="px-4 py-2.5 font-medium">
+            <th scope="col" className="px-4 py-3 text-left font-semibold">
               {t('study.date')}
             </th>
-            <th scope="col" className="px-4 py-2.5 font-medium">
+            <th scope="col" className="px-4 py-3 text-left font-semibold">
               {t('study.series')}
             </th>
-            <th scope="col" className="px-4 py-2.5 font-medium">
+            <th scope="col" className="px-4 py-3 text-left font-semibold">
               {t('study.status')}
             </th>
-            <th scope="col" className="px-4 py-2.5 text-right font-medium">
+            <th scope="col" className="px-4 py-3 text-right font-semibold">
               <span className="sr-only">{t('study.actions')}</span>
             </th>
           </tr>
@@ -70,13 +70,13 @@ export async function StudyTable({ studies }: { readonly studies: readonly Study
 
 function StudyRow({ study, t }: { readonly study: Study; readonly t: Translator }) {
   return (
-    <tr className="border-border hover:bg-surface-overlay/50 border-t align-middle transition-colors duration-200">
-      <th scope="row" className="text-foreground px-4 py-3 font-medium">
+    <tr className="border-atrium-border atrium-row group border-t align-middle">
+      <th scope="row" className="text-atrium-ink px-4 py-3 font-semibold">
         {formatModality(study.modality)}
       </th>
-      <td className="text-muted px-4 py-3">{study.description}</td>
-      <td className="text-foreground px-4 py-3 font-mono text-xs">{study.performedOn}</td>
-      <td className="text-muted px-4 py-3 tabular-nums">{study.seriesCount}</td>
+      <td className="text-atrium-body px-4 py-3">{study.description}</td>
+      <td className="text-atrium-ink px-4 py-3 font-mono text-xs">{study.performedOn}</td>
+      <td className="text-atrium-body px-4 py-3 tabular-nums">{study.seriesCount}</td>
       <td className="px-4 py-3">
         <StatusBadge tone={STATUS_TONES[study.status]}>
           {t(STUDY_STATUS_MESSAGE_KEYS[study.status])}
@@ -86,9 +86,15 @@ function StudyRow({ study, t }: { readonly study: Study; readonly t: Translator 
         <div className="flex justify-end">
           <Link
             href={`/workspace/${encodeURIComponent(study.studyInstanceUid)}`}
-            className={buttonClasses('secondary', 'min-h-9 px-3 whitespace-nowrap')}
+            className={buttonClasses('secondary', 'group/open', 'sm')}
           >
             {t('study.open')}
+            <span
+              aria-hidden="true"
+              className="atrium-arrow inline-block group-hover/open:translate-x-0.5"
+            >
+              ›
+            </span>
             <span className="sr-only">
               : {formatModality(study.modality)}, {study.performedOn}
             </span>

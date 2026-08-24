@@ -14,15 +14,19 @@ export default async function PatientLoading() {
 
   return (
     <PortalShell>
-      <div className="flex flex-col gap-10">
+      <div className="atrium-swap flex flex-col gap-[34px]">
         <Skeleton className="h-5 w-32" />
 
-        {/* Mirrors PatientSummary: a masthead closed by a rule, not a tile. */}
-        <div className="border-border border-b pb-6">
-          <Skeleton className="h-7 w-48" />
-          <div className="mt-5 grid grid-cols-1 gap-x-10 gap-y-4 sm:grid-cols-3">
+        {/* Mirrors PatientSummary: an icon tile beside the name, closed by a
+            rule, then the three-column definition list. */}
+        <div className="border-atrium-border border-b pb-7">
+          <div className="flex items-center gap-4">
+            <Skeleton className="h-[52px] w-[52px] rounded-xl" />
+            <Skeleton className="h-8 w-56" />
+          </div>
+          <div className="mt-7 grid grid-cols-1 gap-x-10 gap-y-5 sm:grid-cols-3">
             {['mrn', 'gender', 'birth-date'].map((field) => (
-              <div key={field} className="flex flex-col gap-1.5">
+              <div key={field} className="flex flex-col gap-2">
                 <Skeleton className="h-2.5 w-24" />
                 <Skeleton className="h-4 w-32" />
               </div>
@@ -30,9 +34,9 @@ export default async function PatientLoading() {
           </div>
         </div>
 
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-[18px]">
           <Skeleton className="h-4 w-20" />
-          <div className="border-border flex flex-col gap-px overflow-hidden rounded-lg border">
+          <div className="border-atrium-border flex flex-col gap-px overflow-hidden rounded-lg border">
             {['first', 'second', 'third'].map((row) => (
               <Skeleton key={row} className="h-12 rounded-none" />
             ))}

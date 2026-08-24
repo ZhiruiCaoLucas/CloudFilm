@@ -14,41 +14,42 @@ export interface StatusBadgeProps {
 /**
  * Per-tone surface.
  *
- * A tint, a ring and a text colour, exactly as before. What is new is the
- * gradient: the tint is slightly stronger at the top edge than the bottom, which
- * is enough to make the token read as a small physical chip beside the
- * fixed-width values it sits with - and not enough to be seen as colour.
+ * A tinted fill, a hairline of the same hue at 24%, and text in the full-strength
+ * tone. The dot in front repeats the state in a second channel, so the badge
+ * survives being read in greyscale or by somebody who cannot separate the hues.
  */
 const TONE_CLASSES: Record<StatusTone, string> = {
   healthy:
-    'bg-linear-to-b from-emerald-500/15 to-emerald-500/8 text-emerald-700 ring-emerald-500/30 dark:text-emerald-400',
+    'bg-[var(--atrium-success-bg)] text-[var(--atrium-success)] shadow-[inset_0_0_0_1px_#0f7a523d]',
   degraded:
-    'bg-linear-to-b from-amber-500/15 to-amber-500/8 text-amber-700 ring-amber-500/30 dark:text-amber-400',
+    'bg-[var(--atrium-warning-bg)] text-[var(--atrium-warning)] shadow-[inset_0_0_0_1px_#8a52003d]',
   unhealthy:
-    'bg-linear-to-b from-red-500/15 to-red-500/8 text-red-700 ring-red-500/30 dark:text-red-400',
+    'bg-[var(--atrium-danger-bg)] text-[var(--atrium-danger)] shadow-[inset_0_0_0_1px_#b423183d]',
   unknown:
-    'bg-linear-to-b from-slate-500/12 to-slate-500/6 text-slate-600 ring-slate-500/25 dark:text-slate-400',
+    'bg-[var(--atrium-neutral-badge-bg)] text-[var(--atrium-neutral-badge)] shadow-[inset_0_0_0_1px_#52627d3d]',
 };
 
 /**
  * Reports service state.
  *
- * Colour is paired with a text label so the badge stays readable for colour vision
- * deficient users and in monochrome print.
+ * Colour is paired with a text label and a filled dot, so the badge stays
+ * readable for colour vision deficient users and in monochrome print.
  */
 export function StatusBadge({ tone, children, className }: StatusBadgeProps) {
   return createElement(
     'span',
     {
       className: cn(
-        // Squared rather than a pill. A status token is a reading, and it sits
-        // beside identifiers and counts set in a fixed-width face; a fully
-        // rounded capsule reads as a notification instead.
-        'inline-flex items-center rounded px-2 py-0.5 text-[0.6875rem] font-medium ring-1 ring-inset',
+        'inline-flex items-center gap-[7px] rounded-md px-[11px] py-[5px] text-[11.5px] font-semibold',
         TONE_CLASSES[tone],
         className,
       ),
     },
+    createElement('span', {
+      key: 'dot',
+      'aria-hidden': true,
+      className: 'h-[5px] w-[5px] shrink-0 rounded-full bg-current',
+    }),
     children,
   );
 }

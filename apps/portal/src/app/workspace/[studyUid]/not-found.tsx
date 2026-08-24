@@ -16,12 +16,10 @@ export default async function WorkspaceNotFound() {
     <div id="main" className="flex h-dvh items-center justify-center px-6">
       <Card className="max-w-lg">
         <CardHeader>
-          <h1 className="text-foreground text-lg font-semibold tracking-tight">
-            {t('workspace.notFoundTitle')}
-          </h1>
+          <h1 className="atrium-h2 text-atrium-ink">{t('workspace.notFoundTitle')}</h1>
         </CardHeader>
         <CardBody className="flex flex-col gap-4">
-          <p className="text-muted text-sm">{t('workspace.notFoundBody')}</p>
+          <p className="atrium-body text-atrium-body">{t('workspace.notFoundBody')}</p>
           <div>
             <Link href="/" className={buttonClasses()}>
               {t('patient.backToSearch')}

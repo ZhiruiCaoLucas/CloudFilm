@@ -16,6 +16,8 @@ export interface SkeletonProps {
 export function Skeleton({ className }: SkeletonProps) {
   return createElement('div', {
     'aria-hidden': true,
-    className: cn('bg-surface-overlay rounded-md', className),
+    // Atrium's skeleton step: one stop darker than the panel surface, so a
+    // placeholder reads as pending rather than as an empty row.
+    className: cn('rounded-lg bg-[#e8eff9] dark:bg-[#1b2330]', className),
   });
 }

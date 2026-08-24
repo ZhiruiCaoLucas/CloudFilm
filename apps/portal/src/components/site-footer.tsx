@@ -15,9 +15,9 @@ export function SiteFooter() {
   const t = useTranslations();
 
   return (
-    <footer className="border-border mt-20 border-t">
-      <div className="text-muted mx-auto flex w-full max-w-5xl flex-col gap-2 px-6 py-5 text-[0.6875rem] sm:flex-row sm:items-center sm:justify-between">
-        <span className="text-foreground font-medium">{t('common.appName')}</span>
+    <footer className="border-atrium-border bg-atrium-white border-t">
+      <div className="text-atrium-muted mx-auto flex w-full max-w-[1180px] flex-col gap-2 px-6 py-6 text-[11.5px] sm:flex-row sm:items-center sm:justify-between sm:px-8">
+        <span className="text-atrium-ink font-medium">{t('common.appName')}</span>
         <dl className="flex flex-wrap items-center gap-x-6 gap-y-1">
           <div className="flex items-center gap-1.5">
             <dt>{t('common.version')}</dt>
