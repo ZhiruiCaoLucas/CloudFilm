@@ -14,15 +14,15 @@
     "@cloudfilm/core": "workspace:*",
     "@cloudfilm/shared": "workspace:*",
     "@cloudfilm/ui": "workspace:*",
-    "next": "16.2.11",
+    "next": "16.3.2",
     "react": "19.2.8",
     "react-dom": "19.2.8"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "4.3.3",
     "@types/node": "22.20.0",
-    "@types/react": "19.2.17",
-    "@types/react-dom": "19.2.3",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.4",
     "tailwindcss": "4.3.3",
     "typescript": "5.9.3"
   }
