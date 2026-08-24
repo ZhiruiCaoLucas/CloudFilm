@@ -5,7 +5,7 @@
 # surface small and free of build tooling.
 # ---------------------------------------------------------------------------
 
-FROM mcr.microsoft.com/dotnet/sdk:9.0-noble AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0-noble AS build
 WORKDIR /src
 
 # Restore first, using only the project graph, so that a source-only change does

@@ -5,7 +5,7 @@
 # image so it can be deployed inside the hospital DMZ independently of the API.
 # ---------------------------------------------------------------------------
 
-FROM mcr.microsoft.com/dotnet/sdk:9.0-noble AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0-noble AS build
 WORKDIR /src
 
 COPY global.json Directory.Build.props Directory.Packages.props .editorconfig ./
