@@ -5,7 +5,7 @@
 # node_modules instead of the full workspace install.
 # ---------------------------------------------------------------------------
 
-FROM node:22-alpine AS build
+FROM node:26-alpine AS build
 ENV CI=true \
     NEXT_TELEMETRY_DISABLED=1 \
     COREPACK_ENABLE_DOWNLOAD_PROMPT=0 \
@@ -52,7 +52,7 @@ COPY . .
 
 RUN pnpm --filter @cloudfilm/portal build
 
-FROM node:22-alpine AS runtime
+FROM node:26-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
