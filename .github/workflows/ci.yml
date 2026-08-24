@@ -122,7 +122,7 @@ jobs:
       # Built but not pushed: CI proves every image is buildable from a clean
       # checkout. Publishing is handled by the release workflow.
       - name: Build ${{ matrix.name }} image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: ${{ matrix.dockerfile }}
